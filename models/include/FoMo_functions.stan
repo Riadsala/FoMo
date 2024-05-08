@@ -1,14 +1,14 @@
-  vector compute_prox(vector x, vector y, int n_targets, array [ ] int Q, int jj) {
+vector compute_prox(vector x, vector y, int n_targets, array [ ] int Q, int jj) {
 
-    vector[n_targets] delta;
+  vector[n_targets] delta;
 
-    // compute delta
-    delta = (x[Q[jj-1]] - x)^2 + (y[Q[jj-1]] - y)^2;
-    delta = sqrt(delta);
+  // compute delta
+  delta = (x[Q[jj-1]] - x)^2 + (y[Q[jj-1]] - y)^2;
+  delta = sqrt(delta);
 
-    return(delta);
+  return(delta);
 
-  }
+}
 
 
 vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
@@ -32,20 +32,20 @@ vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj
 }
 
 
-  vector compute_matching(array [ ] int item_class, int n_targets,array [ ] int Q, int jj) {
+vector compute_matching(array [ ] int item_class, int n_targets, array [ ] int Q, int jj) {
 
-   // S: which items match the previously selected item?
+  // S: which items match the previously selected item?
   vector[n_targets] S;
 
  
-    for (tt in 1:n_targets) {
+  for (tt in 1:n_targets) {
       
-      if (item_class[tt] == item_class[Q[jj-1]]) {
-        S[tt] = 1;
-      } else {
-        S[tt] = -1;
-      }
+     if (item_class[tt] == item_class[Q[jj-1]]) {
+      S[tt] = 1;
+    } else {
+      S[tt] = -1;
     }
+  }
 
   return(S);
 }

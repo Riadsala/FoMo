@@ -213,8 +213,7 @@ generated quantities {
 
           // set the weight of each target to be its class weight
           weights = (b_a[k]) * to_vector(item_class[t]);
-
-            
+           
           // delta_j: distance to previously selected item
           Sj = rep_vector(0, n_targets);
           delta_j = rep_vector(1, n_targets);
@@ -230,7 +229,6 @@ generated quantities {
 
           // multiply weights by stick/switch preference
           weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
-
 
           // compute spatial weights
           weights = weights .* compute_spatial_weights(jj, n_targets,
