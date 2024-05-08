@@ -121,7 +121,7 @@ import_clarke2022qjep <- function(small_test) {
     found = col_double(),
     RT = col_double())
   
-  d <- read_csv("../../data/clarke2022/clarke2022qjep_collected.csv", 
+  d <- read_csv("../../data/clarke2022qjep/clarke2022qjep_collected.csv", 
                 col_types = my_spec)
   
   d  %>%

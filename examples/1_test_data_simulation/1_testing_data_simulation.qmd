@@ -360,6 +360,7 @@ For now, assume no variation in absolute random directions (as a pain to code up
 TODO: add init sel params
 
 ```{r multilevel}
+
 item_class_weights = list(c(0.5, 0.5, 0, 0), 
                           c(0.7, 0.3, 0, 0))
 
@@ -372,10 +373,10 @@ rho_psi = c(-1, -1)
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
 
-d <- sim_foraging_people(n_people = 25,
+d <- sim_foraging_people(n_people = 12,
                     n_conditions = 2,
                     cond_lab = c("A", "B"),
-                    n_trials_per_cond = 10,
+                    n_trials_per_cond = 8,
                     n_item_class = 2, n_item_per_class = 10,
                     item_class_weights, sd_bA = 0.2,
                     b_stick = b_stick, sd_b_stick = 1,
@@ -426,7 +427,6 @@ d_sacc %>% filter(person == 1, trial == 1, condition == "feature") %>%
   ggrepel::geom_label_repel(aes(label = round(180*theta/pi)))
 
 ```
-
 
 ## Some simulated trials
 
