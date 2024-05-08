@@ -1,0 +1,12 @@
+Datasets from the following papers:
+
+Clarke 2022: Stable individual differences in strategies, within, but not between, visual search tasks.
+Full dataset available at https://osf.io/y6qbv/.
+
+Kristjansson 2014: Common attentional constraints in visual foraging.
+Full information available at https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100752.
+
+Tagu 2022: The selection balance: contrasting value, proximity and priming in a multitarget foraging task
+Full dataset available at https://osf.io/e7cnd/https://osf.io/e7cnd/.
+
+Wolfe 2012: personal communication data from Jeremy Wolfe, foraging data from circa 2012.
