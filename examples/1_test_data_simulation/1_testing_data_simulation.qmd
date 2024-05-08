@@ -1,0 +1,487 @@
+---
+title: "Testing Simulation Code"
+author: "A Clarke"
+format: html
+editor: source
+---
+
+This file contains for for checking that our foraging simulation code runs correctly.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(patchwork)
+library(cmdstanr)
+
+options(mc.cores = 8, 
+        digits = 2)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+
+source("../../functions/sim_foraging_data.R")
+source("../../functions/plot_data.R")
+source("../../functions/import_data.R")
+
+# why do we have to define this here?
+# what was the reasoning again?
+class_lab  = c("feature", "conjunction")
+```
+
+The aim of this supp. mat is to 
+- test our code for simulating the visual foraging paramdigm in R. Do the parameters what we want them to do?
+- test our pre-processing code for calculating various features and statistics from foraging data. I.e., run length, inter-target distances and directions. 
+
+
+
+# Simulating a Trial
+
+```{r}
+trl = 1 
+n_item_class = 4
+n_item_per_class = 10
+item_labels = c("A", "B", "d1", "d2")
+```
+
+## Proximity Bias Only
+
+Set targets to be equally attractive; stick bias to 0. Both relative and ab_stickolute direction components switched off. Memory switched off. Super strong proximity bias.
+
+```{r prox_bias_only}
+item_class_weights = c(0.5, 0.5, 0, 0)
+
+b_stick  <- 0  # no stick or switching
+b_memory <- 0 # no memory of previous weights
+
+rho_delta <- 50 # proximity tuning
+rho_psi   <- 0  # rel. direction tuning
+abs_dir_tuning <- list(kappa = rep(0, 4), theta = rep(1, 4))
+
+# initial bias params
+inital_sel_params <- tibble(
+  a1x = 2,
+  b1x = 2,
+  a2x = 1,
+  b2x = 10,
+  a1y = 2,
+  b1y = 2,
+  a2y = 10,
+  b2y = 1) 
+
+init_sel_lambda <- 0
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        b_memory,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = FALSE)
+
+plot_a_trial(d$stim, d$found, "delta")
+
+```
+
+Now set to 0 prox bias!
+
+```{r check_zero_prox_bias}
+rho_delta = 0 
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Checking Relative Direction works as expected
+
+Relative Direction is also known as momentum.
+
+### Forward Momentum
+
+```{r forward_mom}
+rho_delta = 10
+rho_psi = 10
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning, 
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found, "psi")
+
+```
+
+### Negative Momentum
+
+```{r negative_mom}
+rho_psi = -10
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda)
+
+plot_a_trial(d$stim, d$found)
+
+```
+
+## Does Absolute Direction Work?
+
+### Horizontal Bias
+
+```{r ab_stick_dir, fig.height=3}
+abs_dir_tuning = list(kappa = rep(2, 4), theta = c(1, 0, 1, 0))
+
+# plot absolute tuning curve
+d <- tibble(phi = seq(1, 360),
+            z = compute_all_von_mises(phi=phi, abs_dir_tuning$theta, abs_dir_tuning$kappa))
+
+ggplot(d, aes(phi, z)) + geom_path()
+
+```
+
+```{r ab_stick_dir2}
+rho_delta = 5
+rho_psi = 1
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+### Vertical Bias
+
+```{r vert_bias}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(0, 1, 0, 1))
+rho_delta = 5
+rho_psi = 1
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+### Right Bias
+
+```{r right_bias}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0, 0, 0))
+rho_delta = 5
+rho_psi = 1
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+### Up Bias
+
+```{r up_bias}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(0, 2, 0, 0))
+rho_delta = 5
+rho_psi = 1
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Run behaviour
+
+### Expected human-like run behaviour
+
+```{r human_like_run}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 20
+rho_psi = 1
+
+b_stick = 3
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Memory (one back)
+
+### Expected human-like run behaviour
+
+```{r mem_one_back}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 10
+rho_psi = 0
+b_memory = 2
+
+b_stick = 2
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        b_memory,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+# Simulating Multiple Trials
+
+## A Condition (Block) of $n$ trials
+
+```{r sim_multiple_trials}
+n_trials_per_cond <- 9
+
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0.5
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 15
+rho_psi = 1
+
+d <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels =item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda) 
+```
+
+### Check Run Statistics
+
+The code for computing run statistics is in this file:
+
+```{r run_stats, message = FALSE}
+source("../../functions/compute_summary_stats.R")
+
+get_run_info_over_trials(d$found %>% rename(trial_p = "trial")) %>% knitr::kable()
+```
+
+Plot a trial and manually check it the run length statistics are correct
+
+```{r check_run_plot}
+plot_a_trial(d$stim, d$found, trial = 3)
+```
+
+# Simulate Multiple People & Conditions
+
+Let us generate two conditions, and multiple participants.
+
+Our simulation assumes zero correlation in the random effects.
+
+For now, assume no variation in absolute random directions (as a pain to code up)
+
+TODO: add init sel params
+
+```{r}
+item_class_weights = list(c(0.5, 0.5, 0, 0), 
+                          c(0.7, 0.3, 0, 0))
+
+b_stick = c(0, 2)
+
+rho_delta = c(20, 15)
+sd_rho_delta = 5
+
+rho_psi = c(-1, -1)
+
+abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
+
+d <- sim_foraging_people(n_people = 25,
+                    n_conditions = 2,
+                    cond_lab = c("A", "B"),
+                    n_trials_per_cond = 10,
+                    n_item_class = 2, n_item_per_class = 10,
+                    item_class_weights, sd_bA = 0.2,
+                    b_stick = b_stick, sd_b_stick = 1,
+                    rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
+                    rho_psi = rho_psi, sd_rho_psi = 0.5,
+                    abs_dir_tuning = abs_dir_tuning,
+                    inital_sel_params = inital_sel_params) 
+
+```
+
+## Do people with a higher $b_S$ have fewer runs?
+
+```{r}
+get_run_info_over_trials(d$found) %>%
+  group_by(person, condition) %>%
+  summarise(median_n_runs = median(n_runs), .groups = "drop") %>%
+  full_join(d$dp) %>%
+  ggplot(aes(b_stick, median_n_runs, colour = condition)) + geom_point(shape = 3, size = 5)
+```
+
+
+# Check pre-processing
+
+Here, we compute and visualise the observed distributions of inter-target directions.
+
+```{r, message = FALSE}
+
+# read in human data
+d <- import_data("clarke2022qjep")
+
+d_trials <- d$found %>% group_by(person, condition, trial) %>% 
+  summarise(.groups = "drop") 
+
+d_sacc <- pmap_df(d_trials, get_inter_targ_stats, d$found) 
+
+```
+
+## Plotting a trial
+
+Here, we visualise an example trial in the feature condition.
+
+```{r}
+
+d_sacc %>% filter(person == 1, trial == 1, condition == "feature") %>%
+  ggplot(aes(x, y)) +
+  geom_label(aes(label = id), size = 2) + 
+  geom_path() +
+  ggrepel::geom_label_repel(aes(label = round(180*theta/pi)))
+
+```
+
+
+## Some simulated trials
+
+This allows us to be sure of which way we are going. Some example code for going leftwards is below...
+
+```{r}
+d_left <- tibble(
+  person = 100,
+  condition = "feature",
+  trial = 1,
+  id = 1:40,
+  found = 1:40,
+  item_class = 1,
+  x = (40:1)/41,
+  y = 0)
+
+d_trials_left <- d_left %>% group_by(person, trial, condition) %>% 
+  summarise(.groups = "drop") 
+
+d_left2 <- pmap_df(d_trials_left, get_inter_targ_stats, d_left) 
+
+d_left2 %>% 
+  ggplot(aes(x, y)) +
+  geom_label(aes(label = id), size = 2) + 
+  geom_path() +
+  ggrepel::geom_label_repel(aes(label = round(180*theta/pi)))
+
+```
+```{r}
+
+d_down <- tibble(
+  person = 100,
+  condition = "feature",
+  trial = 1,
+  id = 1:40,
+  found = 1:40,
+  item_class = 1,
+  x = 0,
+  y = (40:1)/41
+)
+
+d_trials_down <- d_down %>% group_by(person, trial, condition) %>% 
+  summarise(.groups = "drop") 
+
+d_down2 <- pmap_df(d_trials_down, get_inter_targ_stats, d_down) 
+
+d_down2 %>% 
+  ggplot(aes(x, y)) +
+  geom_label(aes(label = id), size = 2) + 
+  geom_path() +
+  ggrepel::geom_label_repel(aes(label = round(180*theta/pi)))
+
+```
+
+Going left = 180 degrees.
+Down = -90 degrees.
+Up = 90 degrees.
+Right = 0 degrees.
