@@ -2,7 +2,6 @@ library(tidyverse)
 library(patchwork)
 library(cmdstanr)
 
-
 ### Initial simple example
 # Test model on single level data
 
@@ -25,8 +24,8 @@ b_stick = 2
 b_memory = 0
 
 abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
-rho_delta = 15
-rho_psi = 1
+rho_delta = 10
+rho_psi = 5
 
 d <- sim_foraging_multiple_trials(person = 1, 
                                   condition = "test",
@@ -43,7 +42,6 @@ d <- sim_foraging_multiple_trials(person = 1,
 iter = 500
 mod <- cmdstan_model("../../models/simple/FoMo1.stan", 
                      cpp_options = list(stan_threads = TRUE))
-
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 
@@ -81,3 +79,7 @@ plot_model_accuracy(pred)
 
 # plot comparison between a real and simulated trial
 
+pltreal <- plot_a_trial(d$stim, d$found, 1)
+pltsim <- plot_a_trial(d$stim, pred$sim %>% filter(.draw == 1), trial = 1)
+
+pltreal + pltsim

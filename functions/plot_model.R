@@ -15,9 +15,8 @@ library(tidybayes)
 # plot_model_spatial () will need fixed at some point
 
 theme_set(theme_minimal())
-
-options(ggplot2.discrete.colour = ggthemes::ptol_pal()(4),
-        ggplot2.discrete.fill = ggthemes::ptol_pal()(4))
+options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
+        ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
 plot_model_accuracy <- function(pred) {
   
@@ -32,8 +31,6 @@ plot_model_accuracy <- function(pred) {
     geom_ribbon(aes(ymin = .lower, ymax = .upper), alpha = 0.5) + 
     geom_path() + 
     geom_path(data = baseline, linetype = 2)
-  
-  
 }
 
 plot_model_fixed <- function(post, gt=NULL)

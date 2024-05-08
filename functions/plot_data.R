@@ -27,7 +27,7 @@ plot_a_trial <- function(ds, df,
   plt <- ggplot(data = ds, aes(x, y)) + 
     geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
     ggrepel::geom_label_repel(data = df, aes(label = found), size = 3) + 
-    scale_fill_manual(values = c(18, 15, 3, 4)) + 
+    scale_colour_manual(values = c(18, 15, 3, 4)) + 
     scale_shape_manual(values = c(15, 19, 3, 4))
   
   # if segLabel has been left unspecified, add a simple geom_path to connect selected items

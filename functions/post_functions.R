@@ -139,7 +139,6 @@ summarise_postpred <- function(m, d, draw_sample_frac = 0.1) {
     select(-n, -item_class, -x, -y) %>%
     mutate(model_correct = (P == id))
   
-  
   sim <- m$draws("Q", format = "df")  %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
@@ -147,7 +146,8 @@ summarise_postpred <- function(m, d, draw_sample_frac = 0.1) {
     separate(name, c("condition", "trial", "found"), sep = ",") %>%
     mutate(condition = parse_number(condition),
            trial = parse_number(trial),
-           found = parse_number(found))
+           found = parse_number(found)) %>%
+    full_join(d$stim, by = join_by(trial, id))
   
   return(list(acc = pred, sim = sim))
   
