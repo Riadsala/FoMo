@@ -40,9 +40,6 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   inital_sel_params = inital_sel_params,
                                   init_sel_lambda = init_sel_lambda)
 
-
-
-
 iter = 500
 mod <- cmdstan_model("../../models/simple/FoMo1.stan", 
                      cpp_options = list(stan_threads = TRUE))
@@ -59,6 +56,7 @@ d_list$prior_mu_rho_delta <- 15
 d_list$prior_sd_rho_delta <- 5
 d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
+d_list$n_trials_to_sim <- 10
 
 # run model
 m <- mod$sample(data = d_list, 
@@ -81,7 +79,5 @@ pred <- summarise_postpred(m, d)
 
 plot_model_accuracy(pred)
 
-
-
-# plot comparison between a real and simualted trial
+# plot comparison between a real and simulated trial
 

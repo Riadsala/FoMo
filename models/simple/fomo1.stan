@@ -222,9 +222,9 @@ generated quantities {
            
           if (jj > 1) {
 
-            Sj      = compute_matching(item_class[t], n_targets, Q[k, t, jj-1]);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[k, t, jj-1]);
-             psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[k, t, ], jj); 
+            Sj      = compute_matching(item_class[t], n_targets, Q[k, t, ], jj);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[k, t, ], jj);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[k, t, ], jj); 
               
           }
 

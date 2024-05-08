@@ -1,5 +1,6 @@
 library(tidyverse)
 library(patchwork)
+library(tidybayes)
 
 # plotting our foraging model
 
