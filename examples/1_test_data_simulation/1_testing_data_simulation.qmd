@@ -359,7 +359,7 @@ For now, assume no variation in absolute random directions (as a pain to code up
 
 TODO: add init sel params
 
-```{r}
+```{r multilevel}
 item_class_weights = list(c(0.5, 0.5, 0, 0), 
                           c(0.7, 0.3, 0, 0))
 
