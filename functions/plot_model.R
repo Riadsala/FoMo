@@ -77,7 +77,6 @@ plt_post_prior <- function(post, prior, var, gt=NULL) {
   
 }
 
-
 plot_model_random <- function(post) 
 {
   
@@ -89,7 +88,7 @@ plot_model_random <- function(post)
   d_hpdi %>% ggplot(aes(person, ymin = .lower, y = value, ymax = .upper, color = condition)) +
     geom_hline(linetype = 2, yintercept = 0) + 
     geom_linerange() +
-    facet_wrap(~param, scales = "free") 
+    facet_wrap(~param, scales = "free") -> plt
   
   return(plt)
   

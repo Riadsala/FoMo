@@ -35,7 +35,7 @@ extract_post <- function(m, d, multi_level = TRUE) {
     post_random <- extract_post_random(m, cl)
     post_var <- extract_var(m, cl, param_names)
     
-    post_list <- append(postlist(random = 
+    post_list <- append(post_list, list(random = 
                                    post_random, variances = post_var))
   }
   
