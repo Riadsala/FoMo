@@ -26,7 +26,6 @@ vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj
     }
   }
 
-
   return(psi);
 
 }

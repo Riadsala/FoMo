@@ -120,7 +120,7 @@ model {
 
   for (ii in 1:K) {
     // priors for fixed effects
-    target += normal_lpdf(b_a[ii]        | 0, prior_sd_b_a);
+    target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
@@ -157,7 +157,9 @@ model {
     //print("item y ", item_y[t]);
     //print(weights);
 
-    target += log((weights)[Y[ii]]);      
+    target += log((weights)[Y[ii]]);
+
+   
   }
 }
 
