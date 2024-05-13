@@ -1,5 +1,12 @@
+/* ####### FoMo (Foraging Model 1.1)  #######
 
-// spatial foraging project
+This model makes a small change from 1.0 in how proximity 
+is treated. We now divide all distances by the distance
+from the current target to the closest remaining item.
+
+This version of the model is single level (unclustered data)
+*/
+
 functions {
 
   #include /../include/FoMo_functions.stan
@@ -43,9 +50,12 @@ data {
 
 transformed data{
 
-  array[N] vector[n_targets] remaining_items;
-  remaining_items = calc_remaining_items(N, n_targets, Y, found_order);
+  array[N] vector[n_targets] remaining_items, delta_n;
 
+  // compute remaining items
+  remaining_items = calc_remaining_items(N, n_targets, Y, found_order);
+  delta_n = scale_all_prox(delta, remaining_items, N, n_targets);
+  
 }
 
 parameters {
@@ -105,7 +115,7 @@ model {
 
     // apply spatial weighting
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-                                 rho_delta[kk], rho_psi[kk], delta[ii], psi[ii], phi[ii],
+                                 rho_delta[kk], rho_psi[kk], delta_n[ii], psi[ii], phi[ii],
                                  item_x[trl], item_y[trl]);
 
     if (found_order[ii] == 1) {
@@ -177,7 +187,7 @@ generated quantities {
 
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets,
          rho_delta[kk], rho_psi[kk], 
-         delta[ii], psi[ii], phi[ii],
+         delta_n[ii], psi[ii], phi[ii],
          item_x[t], item_y[t]);
           
       // remove already-selected items, and standarise to sum = 1 
@@ -223,6 +233,7 @@ generated quantities {
 
             Sj      = compute_matching(item_class[t], n_targets, Q[k, t, ], jj);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[k, t, ], jj);
+            delta_j = scale_prox(delta_j, remaining_items2, n_targets);
             psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[k, t, ], jj); 
               
           }

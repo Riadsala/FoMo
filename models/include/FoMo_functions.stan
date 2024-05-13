@@ -10,6 +10,42 @@ vector compute_prox(vector x, vector y, int n_targets, array [ ] int Q, int jj) 
 
 }
 
+array [ ] vector scale_all_prox(array [ ] vector delta, array [ ] vector ri, int N, int n_targets) {
+  // normalise delta
+  array[N] vector[n_targets] delta_n;
+
+  for (row in 1:N) {
+
+    delta_n[row] = scale_prox(delta[row], ri[row], n_targets);
+
+  }
+
+  return(delta_n);
+}
+
+vector scale_prox(vector p, vector ri, int n_targets) {
+
+  real min_delta = 1000;
+  vector[n_targets] d;
+
+  // first, set delta to 0 for items that we have already found
+  d = p .* ri;
+
+  // we want to find the smallest nonzero value...
+  // so let's first set all the 0s to some large value
+  for (ii in 1:n_targets) {
+    if ((d[ii] < min_delta) && (d[ii] > 0)) {
+      min_delta = d[ii];
+    }
+  }
+
+  // normalise
+  d = d ./ min_delta;
+
+  return(d);
+
+}
+
 
 vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
 

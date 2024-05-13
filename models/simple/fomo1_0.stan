@@ -1,5 +1,11 @@
+/* ####### FoMo (Foraging Model 1.0)  #######
 
-// spatial foraging project
+This is a new implementation of the model described 
+in Clarke et al (2022), Comp Bio.
+
+This version of the model is single level (unclustered data)
+*/
+
 functions {
 
   #include /../include/FoMo_functions.stan

@@ -384,7 +384,6 @@ d <- sim_foraging_people(n_people = 12,
                     rho_psi = rho_psi, sd_rho_psi = 0.5,
                     abs_dir_tuning = abs_dir_tuning,
                     inital_sel_params = inital_sel_params) 
-
 ```
 
 ## Do people with a higher $b_S$ have fewer runs?
@@ -396,7 +395,6 @@ get_run_info_over_trials(d$found) %>%
   full_join(d$dp) %>%
   ggplot(aes(b_stick, median_n_runs, colour = condition)) + geom_point(shape = 3, size = 5)
 ```
-
 
 # Check pre-processing
 
