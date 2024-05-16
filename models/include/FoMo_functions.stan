@@ -109,13 +109,13 @@ vector compute_absdir_weights_fixed_kappa(int n, int n_targets,
   if (n > 1) {
 
     w = w 
-          .* (theta[1]*exp(kappa * cos(A           ))./(2*pi()*modified_bessel_first_kind(0, kappa[1]))
-           +  theta[2]*exp(kappa * cos(A - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[2]))
-           +  theta[1]*exp(kappa * cos(A - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[1]))
-           +  theta[2]*exp(kappa * cos(A - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[2]))
+          .* (theta[1]*exp(kappa * cos(theta           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[2]*exp(kappa * cos(theta - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[1]*exp(kappa * cos(theta - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[2]*exp(kappa * cos(theta - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
            +  1);
   }
-  
+
   return(w);
 }
 
