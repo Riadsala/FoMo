@@ -129,7 +129,7 @@ model {
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* spatial_weights;
+    weights = weights .* prox_weights .* reldir_weights;
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
@@ -188,10 +188,11 @@ generated quantities {
       // multiply weights by stick/switch preference
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
 
-      weights = weights .* compute_spatial_weights(found_order[ii], n_targets,
-         rho_delta[kk], rho_psi[kk], 
-         delta_n[ii], psi[ii], phi[ii],
-         item_x[t], item_y[t]);
+      weights = weights .* compute_prox_weights(found_order[ii], n_targets,
+            rho_delta[kk], delta[ii]);
+
+      weights = weights .* compute_reldir_weights(found_order[ii], n_targets,
+            rho_psi[kk], psi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
@@ -244,11 +245,11 @@ generated quantities {
           // multiply weights by stick/switch preference
           weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
 
-          // compute spatial weights
-          weights = weights .* compute_spatial_weights(jj, n_targets,
-            rho_delta[k], rho_psi[k], 
-            delta_j, psi_j, phi_j,
-             item_x[t], item_y[t]);
+          weights = weights .* compute_prox_weights(jj, n_targets,
+            rho_delta[k], delta_j);
+
+          weights = weights .* compute_reldir_weights(jj, n_targets,
+            rho_psi[k], psi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   

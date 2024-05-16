@@ -290,6 +290,25 @@ m <- mod$sample(data = d_list,
 
 ```
 
+```{r}
+
+# extract post
+post <- extract_post(m, d, multi_level = FALSE)
+
+```
+
+
+```{r}
+
+# plot model
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+
+```
+
+
 ### The multilevel variant
 
 ```{r simdata1, cache=TRUE}
@@ -380,6 +399,8 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
 ```{r plotsim1_1random, fig.cap="random effects"}
 plot_model_random(post)
 ```
+## Comparing 1.1 and 1.0?
+
 
 ## Discussion
 
