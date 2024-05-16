@@ -146,10 +146,11 @@ model {
     // multiply weights by stick/switch preference
     weights = inv_logit(weights) .* inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
 
-    weights = weights .* compute_spatial_weights(found_order[ii], n_targets,
-       u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], 
-       delta[ii], psi[ii], phi[ii],
-       item_x[t], item_y[t]);
+    weights = weights .* compute_prox_weights(found_order[ii], n_targets,
+       u_delta[X[t], Z[ii]], delta[ii]);
+
+    weights = weights .* compute_reldir_weights(found_order[ii], n_targets,
+       u_psi[X[t], Z[ii]], psi[ii]);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);   

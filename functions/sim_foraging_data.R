@@ -164,56 +164,15 @@ sim_foraging_trial <- function(trl = 1,
   # calculate total number of items
   n <- sum(n_item_per_class) 
   
-  # set up dataframe for storing things
-  # if we have passed in `items`, use that.
-  # otherwise generate a new random stimulus
-  if (is.null(items)) {
-    
-    d_stim <- 
-      tibble(
-        trial = trl,
-        id = 1:n,
-        item_class = rep(1:n_item_class, n_item_per_class))
-
-        #class_lab = as_factor(rep(item_labels, n_item_per_class)))
-    
-    # generate (x, y) locations....
-    # we should make this more sophisticated
-    d_stim$x <- runif(n, 0, 1)
-    d_stim$y <- runif(n, 0, 1)
-    
-    d_stim %>% mutate(  x = x - min(x),
-                        y = y - min(y),
-                        x = x/max(x),
-                        y = y/max(y)) -> d_stim
-    
-    d_stim$found = -1
-    
-  } else {
-    
-    d_stim = items 
-    rm(items)
-    
-  }
-  
-  # debug code - plot stimulus
-  # ggplot(d_stim, aes(x, y, colour = class_lab, shape = class_lab)) + 
-  #   geom_point(size = 5) + 
-  #   scale_shape_manual(values = c(18, 16, 3, 4))
+  d_stim <- get_stimulus(items, n, n_item_class, n_item_per_class)
+  d_stim$trial <- trl
   
   # pick a first point at random, 
   # b is based only on the item_class_weights
   
   d_remain <- d_stim %>%
-    mutate(
-      found = -1,
-      delta = 0,
-      phi = 0,
-      psi = 0,
-      prox = 0,
-      rel_dir = 0,
-      abs_dir_tuning = 0,
-      b = item_class_weights[d_stim$item_class])  %>%
+    mutate(found = -1, delta = 0,  phi = 0, psi = 0, 
+           prox = 0, rel_dir = 0, abs_dir_tuning = 0, b = item_class_weights[d_stim$item_class])  %>%
     mutate(W = b/sum(b),
            Wprev = 0,
            Wnew = 0)
@@ -228,7 +187,6 @@ sim_foraging_trial <- function(trl = 1,
   #   W = W * (init_sel_lambda * w1 + (init_sel_lambda - 1) * w2),
   #   W = W / sum(W)) -> d_remain
    
-  
   d_found <- sample_n(d_remain, 1, weight = W) %>%
     mutate(found = 1)
   
@@ -301,10 +259,8 @@ sim_foraging_trial <- function(trl = 1,
   d_stim %>% select(-found) -> d_stim
   d_found %>% arrange(found) -> f_found
   
-  
   return(list(stim = d_stim, found = d_found))
 }
-
 
 check_and_rep_param <- function(p, r) {
   
@@ -362,10 +318,10 @@ compute_all_von_mises <- function(theta, kappa, phi) {
  # theta <- theta/(sum(theta) + 1)
   
   z <- compute_von_mises(0,   phi, theta[1], kappa[1]) + 
-    compute_von_mises(pi/2,   phi, theta[2], kappa[2]) +
-    compute_von_mises(pi,     phi, theta[3], kappa[3]) +
-    compute_von_mises(3*pi/2, phi, theta[4], kappa[4]) +
-    1
+       compute_von_mises(pi/2,   phi, theta[2], kappa[2]) +
+       compute_von_mises(pi,     phi, theta[3], kappa[3]) +
+       compute_von_mises(3*pi/2, phi, theta[4], kappa[4]) +
+       1
   
   return(z)
   
@@ -376,4 +332,47 @@ compute_von_mises <- function(x, phi, theta, kappa) {
   z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
   return(z)
   
+}
+
+get_stimulus <- function(items, n, n_item_class, n_item_per_class) {
+  
+  # set up dataframe for storing things
+  # if we have passed in `items`, use that.
+  # otherwise generate a new random stimulus
+  if (is.null(items)) {
+    
+    d_stim <- gen_stimulus(n, n_item_class, n_item_per_class)
+
+  } else {
+    
+    d_stim = items
+    
+  }
+  
+  d_stim$found = -1
+  
+  return(d_stim)
+  
+}
+
+gen_stimulus <- function(n, n_item_class, n_item_per_class) {
+  
+  d_stim <- 
+    tibble(
+      id = 1:n,
+      item_class = rep(1:n_item_class, n_item_per_class))
+  
+  #class_lab = as_factor(rep(item_labels, n_item_per_class)))
+  
+  # generate (x, y) locations....
+  # we should make this more sophisticated
+  d_stim$x <- runif(n, 0, 1)
+  d_stim$y <- runif(n, 0, 1)
+  
+  d_stim %>% mutate(  x = x - min(x),
+                      y = y - min(y),
+                      x = x/max(x),
+                      y = y/max(y)) -> d_stim
+  
+  return(d_stim)
 }

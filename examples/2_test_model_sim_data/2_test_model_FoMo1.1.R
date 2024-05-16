@@ -67,7 +67,7 @@ m <- mod$sample(data = d_list,
 post <- extract_post(m, d, multi_level = FALSE)
 
 # plot model
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
