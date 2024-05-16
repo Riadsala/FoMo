@@ -241,8 +241,10 @@ generated quantities {
 
           // compute spatial weights
           weights = weights .* compute_prox_weights(jj, n_targets,
-            rho_delta[k], 
-            delta_j);
+            rho_delta[k], delta_j);
+
+          weights = weights .* compute_reldir_weights(jj, n_targets,
+            rho_psi[k], psi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
