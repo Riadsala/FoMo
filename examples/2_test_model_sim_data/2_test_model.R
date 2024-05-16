@@ -40,7 +40,7 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   init_sel_lambda = init_sel_lambda)
 
 iter = 500
-mod <- cmdstan_model("../../models/simple/FoMo1.stan", 
+mod <- cmdstan_model("../../models/simple/fomo1_0.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
