@@ -71,7 +71,8 @@ model {
   // some counters and index variables, etc.
   vector[n_targets] weights;  // class weight for teach target
   vector[n_targets] m; // does this target match the previous target?
-  vector[n_targets] spatial_weights;
+  vector[n_targets] prox_weights;
+  vector[n_targets] reldir_weights;
 
   int trl = 0; // counter for trial number
   int kk; // condition (block) index
@@ -110,9 +111,10 @@ model {
     weights = b_a[kk] * to_vector(item_class[trl]);
 
     // apply spatial weighting
-    spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-                                 rho_delta[kk], rho_psi[kk], delta[ii], psi[ii], phi[ii],
-                                 item_x[trl], item_y[trl]);
+    prox_weights   = compute_prox_weights(found_order[ii], n_targets, 
+                                 rho_delta[kk], delta[ii]);
+    reldir_weights = compute_reldir_weights(found_order[ii], n_targets, 
+                                 rho_psi[kk], psi[ii]);
 
     if (found_order[ii] == 1) {
       weights = inv_logit(weights);
@@ -122,7 +124,7 @@ model {
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* spatial_weights;
+    weights = weights .* prox_weights .* reldir_weights;
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
@@ -181,10 +183,8 @@ generated quantities {
       // multiply weights by stick/switch preference
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
 
-      weights = weights .* compute_spatial_weights(found_order[ii], n_targets,
-         rho_delta[kk], rho_psi[kk], 
-         delta[ii], psi[ii], phi[ii],
-         item_x[t], item_y[t]);
+      weights = weights .* compute_prox_weights(found_order[ii], n_targets,
+         rho_delta[kk], delta[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
@@ -237,10 +237,9 @@ generated quantities {
           weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
 
           // compute spatial weights
-          weights = weights .* compute_spatial_weights(jj, n_targets,
-            rho_delta[k], rho_psi[k], 
-            delta_j, psi_j, phi_j,
-             item_x[t], item_y[t]);
+          weights = weights .* compute_prox_weights(jj, n_targets,
+            rho_delta[k], 
+            delta_j);
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
