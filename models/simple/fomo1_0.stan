@@ -185,6 +185,9 @@ generated quantities {
 
       weights = weights .* compute_prox_weights(found_order[ii], n_targets,
          rho_delta[kk], delta[ii]);
+
+      weights = weights .* compute_reldir_weights(found_order[ii], n_targets,
+         rho_psi[kk], psi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   

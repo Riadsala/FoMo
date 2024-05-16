@@ -75,7 +75,9 @@ model {
   // some counters and index variables, etc.
   vector[n_targets] weights;  // class weight for teach target
   vector[n_targets] m; // does this target match the previous target?
-  vector[n_targets] spatial_weights;
+  vector[n_targets] prox_weights;
+  vector[n_targets] reldir_weights;
+
 
   int trl = 0; // counter for trial number
   int kk; // condition (block) index
@@ -114,9 +116,10 @@ model {
     weights = b_a[kk] * to_vector(item_class[trl]);
 
     // apply spatial weighting
-    spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-                                 rho_delta[kk], rho_psi[kk], delta_n[ii], psi[ii], phi[ii],
-                                 item_x[trl], item_y[trl]);
+    prox_weights   = compute_prox_weights(found_order[ii], n_targets, 
+                                 rho_delta[kk], delta[ii]);
+    reldir_weights = compute_reldir_weights(found_order[ii], n_targets, 
+                                 rho_psi[kk], psi[ii]);
 
     if (found_order[ii] == 1) {
       weights = inv_logit(weights);
