@@ -36,8 +36,6 @@ TODO:
 
 - add init sel params
 
-
-
 # Simulating a Trial
 
 We first need to determine how many items types we have (`n_item_class`) and their labels (`item_labels`). For this example, we will have two target types (A and B) and two distractor types (d1 and d2), giving a total of 4 item classes. We also will define the number of items per class (`n_item_per_class`).
