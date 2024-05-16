@@ -32,8 +32,6 @@ The aim of this supp. mat is to:
 - test our code for simulating the visual foraging paramdigm in R. Do the parameters what we want them to do?
 - test our pre-processing code for calculating various features and statistics from foraging data. I.e., run length, inter-target distances and directions. 
 
-
-
 # Simulating a Trial
 
 ```{r}
