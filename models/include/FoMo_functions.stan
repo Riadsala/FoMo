@@ -99,11 +99,22 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
     return(w_s);
   }
 
-vector compute_absdir_weights(int n, int n_targets, vector phi, vector theta) {
+vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
+  vector phi, vector theta, real kappa) {
 
   vector[n_targets] w;
 
   w = rep_vector(1, n_targets); 
+
+  if (n > 1) {
+
+    w = w 
+          .* (theta[1]*exp(kappa * cos(A           ))./(2*pi()*modified_bessel_first_kind(0, kappa[1]))
+           +  theta[2]*exp(kappa * cos(A - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[2]))
+           +  theta[1]*exp(kappa * cos(A - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[1]))
+           +  theta[2]*exp(kappa * cos(A - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa[2]))
+           +  1);
+  }
   
   return(w);
 }
