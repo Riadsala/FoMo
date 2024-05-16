@@ -409,7 +409,7 @@ get_run_info_over_trials(d$found) %>%
 
 ## Compute inter-target directions
 
-We have some processing code `get_inter_targ_stats` which allows visualisation of target directions.. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.
+We have some processing code `get_inter_targ_stats` which allows visualisation of inter-target directions, by adding them into the plot. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.
 
 ```{r}
 
@@ -420,7 +420,7 @@ d_sacc <- pmap_df(d_trials, get_inter_targ_stats, d$found)
 
 ```
 
-```{r}
+```{r, warning = FALSE}
 
 d_sacc$theta_deg <- round(180*d_sacc$theta/pi)
 plot_a_trial(d$stim, d_sacc, trial = 1, segLabel = "theta_deg")

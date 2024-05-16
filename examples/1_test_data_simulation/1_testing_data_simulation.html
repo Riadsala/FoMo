@@ -457,23 +457,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -488,8 +488,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">5</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
+<td style="text-align: right;">7</td>
 <td style="text-align: right;">9</td>
-<td style="text-align: right;">4</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -512,8 +512,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">8</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">6</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
@@ -521,7 +521,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -585,6 +585,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(b_stick, median_n_runs, <span class="at">colour =</span> condition)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">shape =</span> <span class="dv">3</span>, <span class="at">size =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="1_testing_data_simulation_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="compute-inter-target-directions" class="level2">
+<h2 class="anchored" data-anchor-id="compute-inter-target-directions">Compute inter-target directions</h2>
+<p>We have some processing code <code>get_inter_targ_stats</code> which allows visualisation of inter-target directions, by adding them into the plot. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>d_trials <span class="ot">&lt;-</span> d<span class="sc">$</span>found <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(person, condition, trial_p) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.groups =</span> <span class="st">"drop"</span>) </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>d_sacc <span class="ot">&lt;-</span> <span class="fu">pmap_df</span>(d_trials, get_inter_targ_stats, d<span class="sc">$</span>found)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>d_sacc<span class="sc">$</span>theta_deg <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">180</span><span class="sc">*</span>d_sacc<span class="sc">$</span>theta<span class="sc">/</span>pi)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_a_trial</span>(d<span class="sc">$</span>stim, d_sacc, <span class="at">trial =</span> <span class="dv">1</span>, <span class="at">segLabel =</span> <span class="st">"theta_deg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="1_testing_data_simulation_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>

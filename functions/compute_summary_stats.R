@@ -69,7 +69,7 @@ get_inter_targ_stats <- function(person, condition, trial_p, d) {
            y0 = lag(y),
            d = sqrt((x-x0)^2 + (y-y0)^2),
            theta = atan2(y-y0, x-x0)) %>%
-    filter(found > 1) %>%
+    #filter(found > 1) %>%
     select(-x0, -y0)
   
   return(trl_dat)
