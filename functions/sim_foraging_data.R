@@ -171,15 +171,8 @@ sim_foraging_trial <- function(trl = 1,
   # b is based only on the item_class_weights
   
   d_remain <- d_stim %>%
-    mutate(
-      found = -1,
-      delta = 0,
-      phi = 0,
-      psi = 0,
-      prox = 0,
-      rel_dir = 0,
-      abs_dir_tuning = 0,
-      b = item_class_weights[d_stim$item_class])  %>%
+    mutate(found = -1, delta = 0,  phi = 0, psi = 0, 
+           prox = 0, rel_dir = 0, abs_dir_tuning = 0, b = item_class_weights[d_stim$item_class])  %>%
     mutate(W = b/sum(b),
            Wprev = 0,
            Wnew = 0)
@@ -194,7 +187,6 @@ sim_foraging_trial <- function(trl = 1,
   #   W = W * (init_sel_lambda * w1 + (init_sel_lambda - 1) * w2),
   #   W = W / sum(W)) -> d_remain
    
-  
   d_found <- sample_n(d_remain, 1, weight = W) %>%
     mutate(found = 1)
   
