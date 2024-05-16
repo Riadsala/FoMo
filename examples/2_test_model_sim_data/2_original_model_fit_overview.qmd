@@ -70,7 +70,7 @@ d$stim <- fix_person_and_trial(d$stim)
 
 ### Now fit our model
 
-We will fit model 1.2 (basically, the corrected original model)
+We will fit model 1.0 (basically, the corrected original model)
 
 ```{r prepsimdata1}
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
@@ -78,19 +78,25 @@ d_list <- add_priors_to_d_list(d_list)
 ```
 
 
-```{r fitmodelsimdata1, cache=TRUE}
-iter = 500
+```{r fitmodelsimdata1, eval = FALSE}
+iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
-# fit <- mod$sample(data = d_list, 
-#                   chains = 4, parallel_chains = 4, threads = 4,
-#                   refresh = 100, 
-#                   iter_warmup = iter, iter_sampling = iter,
-#                   sig_figs = 3)
+fit <- mod$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
 
-# fit$save_object("scratch/multi_level_tmp.rds")
+fit$save_object("scratch/multi_level_tmp.rds")
+
+```
+
+```{r}
+
 fit <- readRDS("scratch/multi_level_tmp.rds")
+
 ```
 
 ### Posterior Density Plots
@@ -112,68 +118,6 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
 
 ```{r plotsim1random, fig.cap="random effects"}
 plot_model_random(post)
-```
-
-### Individaul Differences
-
-```{r, fig.cap="individual differences"}
-# plot_model_individual(post$random)
-
-post$random %>%
-  select(-.draw) %>%
-  pivot_longer(-c(person, condition), names_to = "param", values_to = "value") %>%
-  group_by(person, condition, param) %>%
-  summarise(value = median(value), .groups = "drop") %>%
-  pivot_wider(names_from = "param", values_from = "value") %>%
-  mutate(uA = plogis(uA),
-         u_stick = plogis(u_stick)) -> pltdat
-
-pltvar <- function(var1, var2) {
-  ggplot(pltdat, aes(.data[[var1]], .data[[var2]], 
-                     colour = condition)) + geom_point()
-}
-
-(pltvar("uA", "u_stick") + pltvar("uA", "u_delta") + pltvar("uA", "u_psi")) /
-  (pltvar("u_stick", "u_delta") + pltvar("u_stick", "u_psi") + pltvar("u_delta", "u_psi")) +
-  plot_layout(guides="collect")
-```
-
-### A Sanity check 
-
-Let us sanity check the person with the v high u_psi value
-
-```{r}
-# filter(pltdat, u_psi > 2)
-# 
-# pp = 19
-# trl = 350
-# 
-# trl_stim <- filter(d$ds, person == pp, condition == 2, trial == trl)
-# trl_found <- filter(d$df, person == pp, condition == 2, trial == trl)
-# 
-# plot_a_trial(trl_stim, trl_found)
-
-```
-
-### Do individual param values tell us anything about run lengths?
-
-```{r}
-# rl <- get_run_info_over_trials(d$df) %>% 
-#   group_by(person, condition) %>%
-#   summarise(max_run_length = mean(max_run_length))
-# 
-# post$random %>%
-#   group_by(condition, person) %>%
-#   median_hdci(uA, u_stick) %>%
-#   full_join(rl, by = join_by(condition, person)) -> rl
-# 
-# ggplot(rl, aes(uA, xmin = uA.lower, xmax = uA.upper, y = max_run_length, colour = condition)) + 
-#   geom_errorbarh() -> plt_uA
-# 
-# ggplot(rl, aes(u_stick, xmin = u_stick.lower, xmax = u_stick.upper, y = max_run_length, colour = condition)) + 
-#   geom_errorbarh() -> plt_stick
-# 
-# plt_uA + plt_stick + plot_layout(guides = "collect")
 ```
 
 
