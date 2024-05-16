@@ -46,7 +46,6 @@ vector scale_prox(vector p, vector ri, int n_targets) {
 
 }
 
-
 vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
 
   vector[n_targets] psi = rep_vector(1, n_targets);
@@ -66,7 +65,6 @@ vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj
 
 }
 
-
 vector compute_matching(array [ ] int item_class, int n_targets, array [ ] int Q, int jj) {
 
   // S: which items match the previously selected item?
@@ -85,11 +83,11 @@ vector compute_matching(array [ ] int item_class, int n_targets, array [ ] int Q
   return(S);
 }
 
-  real mod(real a, real b) {
+real mod(real a, real b) {
 
-    return( a - floor(a/b));
+  return( a - floor(a/b));
 
-  }
+}
 
 vector standarise_weights(vector w, int n_targets, vector remaining_items) {
 
@@ -100,30 +98,30 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
     return(w_s);
   }
 
-  vector compute_spatial_weights(int n, int n_targets, 
+vector compute_spatial_weights(int n, int n_targets, 
                                  real rho_delta, real rho_psi,
                                  vector delta, vector psi, vector phi,
                                  vector item_x, vector item_y) {
 
-    vector[n_targets] w;
+  vector[n_targets] w;
 
-    w = rep_vector(1, n_targets); 
-     // now start computing the weights
-    if (n == 1) {
+  w = rep_vector(1, n_targets); 
+  // now start computing the weights
+  if (n == 1) {
 
-      // calculate inital selection weights based on spatial location
+    // calculate inital selection weights based on spatial location
 
+  } else {
+
+    if (n == 2) {
+      // for the second selected target, weight by distance from the first
+      w = w .* exp(-rho_delta * delta);
     } else {
-
-      if (n == 2) {
-        // for the second selected target, weight by distance from the first
-        w = w .* exp(-rho_delta * delta);
-      } else {
-        // for all later targets, also weight by direciton
-        w = w .* exp(-rho_delta * delta - rho_psi * psi);
-      }
+      // for all later targets, also weight by direciton
+      w = w .* exp(-rho_delta * delta - rho_psi * psi);
     }
-    return(w);
+  }
+  return(w);
 }
 
 array[ ] vector calc_remaining_items(int N, int n_targets, array[ ] int Y, array[ ] int found_order) {
