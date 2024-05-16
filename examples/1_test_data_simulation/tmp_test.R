@@ -25,7 +25,7 @@ item_class_weights = c(0.5, 0.5, 0, 0)
 b_stick  <- 0  # no stick or switching
 b_memory <- 0 # no memory of previous weights
 
-rho_delta <- 5# proximity tuning
+rho_delta <- 5 # proximity tuning
 rho_psi   <- 0  # rel. direction tuning
 abs_dir_tuning <- list(kappa = rep(10, 4), theta = c(3, 3, 3, 3))
 
