@@ -27,7 +27,8 @@ source("../../functions/import_data.R")
 class_lab  = c("feature", "conjunction")
 ```
 
-The aim of this supp. mat is to 
+The aim of this supp. mat is to: 
+
 - test our code for simulating the visual foraging paramdigm in R. Do the parameters what we want them to do?
 - test our pre-processing code for calculating various features and statistics from foraging data. I.e., run length, inter-target distances and directions. 
 
@@ -44,7 +45,7 @@ item_labels = c("A", "B", "d1", "d2")
 
 ## Proximity Bias Only
 
-Set targets to be equally attractive; stick bias to 0. Both relative and ab_stickolute direction components switched off. Memory switched off. Super strong proximity bias.
+Set targets to be equally attractive; stick bias to 0. Both relative and absolute direction components switched off. Memory switched off. Super strong proximity bias.
 
 ```{r prox_bias_only}
 item_class_weights = c(0.5, 0.5, 0, 0)
@@ -155,8 +156,10 @@ plot_a_trial(d$stim, d$found)
 
 ### Horizontal Bias
 
+Here, our simulation has a preference for moving horizontally (left and right).
+
 ```{r ab_stick_dir, fig.height=3}
-abs_dir_tuning = list(kappa = rep(2, 4), theta = c(1, 0, 1, 0))
+abs_dir_tuning = list(kappa = rep(2, 4), theta = c(2, 0, 2, 0))
 
 # plot absolute tuning curve
 d <- tibble(phi = seq(1, 360),
@@ -167,8 +170,8 @@ ggplot(d, aes(phi, z)) + geom_path()
 ```
 
 ```{r ab_stick_dir2}
-rho_delta = 5
-rho_psi = 1
+rho_delta = 0
+rho_psi = 0
 
 d <- sim_foraging_trial(trl = 1, 
                         n_item_class, n_item_per_class, 
@@ -186,6 +189,8 @@ plot_a_trial(d$stim, d$found)
 ```
 
 ### Vertical Bias
+
+Here, the preference is for moving vertically (up and down).
 
 ```{r vert_bias}
 abs_dir_tuning = list(kappa = rep(20, 4), theta = c(0, 1, 0, 1))
@@ -209,10 +214,12 @@ plot_a_trial(d$stim, d$found)
 
 ### Right Bias
 
+You can also set asymmetrical biases e.g. a rightwards bias (although note that this can lead to somewhat counterintuitive behaviour e.g. the simulation will pick the rightmost target early on, and then is forced to only move leftwards!)
+
 ```{r right_bias}
 abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0, 0, 0))
-rho_delta = 5
-rho_psi = 1
+rho_delta = 0
+rho_psi = 0
 
 d <- sim_foraging_trial(trl = 1, 
                         n_item_class, n_item_per_class, 
@@ -231,10 +238,12 @@ plot_a_trial(d$stim, d$found)
 
 ### Up Bias
 
+
+
 ```{r up_bias}
 abs_dir_tuning = list(kappa = rep(20, 4), theta = c(0, 2, 0, 0))
-rho_delta = 5
-rho_psi = 1
+rho_delta = 0
+rho_psi = 0
 
 d <- sim_foraging_trial(trl = 1, 
                         n_item_class, n_item_per_class, 
