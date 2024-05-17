@@ -15,7 +15,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-n_trials_per_cond <- 25
+n_trials_per_cond <- 50
 
 n_item_class <- 2
 n_item_per_class <- 20
@@ -74,8 +74,35 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]]),
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
 
-ggplot(post$absdir, aes(value, fill = factor(theta))) + geom_density(alpha = 0.4) +
-  geom_vline(data = tibble(theta = 1:4, x = abs_dir_tuning$theta), aes(xintercept=x, colour = factor(theta)))
+ggplot(post$absdir, aes(theta, fill = factor(comp))) + geom_density(alpha = 0.4) +
+  geom_vline(data = tibble(comp = 1:4, x = abs_dir_tuning$theta), aes(xintercept=x, colour = factor(comp)))
+
+
+compute_von_mises <- function(x, .draw, phi, theta, kappa, comp) {
+  
+  z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
+  
+  dout <- tibble(.draw = .draw,
+                 x = x, 
+                 z = z,
+                 comp = comp)
+  return(dout)
+  
+}
+
+post$absdir %>% mutate(kappa = 10) %>%
+  select(.draw, phi, theta, kappa, comp) %>%
+  pmap_df(compute_von_mises, x = seq(0, 2*pi, 0.01)) %>%
+  group_by(.draw, x) %>%
+  summarise(weight = sum(z) + 1) -> post_weights
+
+post_weights %>% 
+  group_by(x) %>%
+  median_hdci(weight, .width = c(0.53, 0.97)) %>%
+  ungroup() %>%
+  ggplot(aes(x, weight, ymin = .lower, ymax = .upper, group = .width)) + 
+  geom_ribbon(alpha = 0.5, fill = "purple")
+
 
 # check predictions
 pred <- summarise_postpred(m, d)
