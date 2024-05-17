@@ -11,6 +11,30 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
+  vector compute_spatial_weights(int n, int n_targets, 
+    real rho_delta, real rho_psi, vector theta, real kappa,
+    vector delta, vector psi, vector phi) {
+
+    // computes spatial weights
+    // for FoMo1.0, this includes proximity and relative direction
+    vector[n_targets] prox_weights;
+    vector[n_targets] reldir_weights;
+    vector[n_targets] absdir_weights;
+
+    // apply spatial weighting
+    prox_weights   = compute_prox_weights(n, n_targets, 
+                                 rho_delta, delta);
+
+    reldir_weights = compute_reldir_weights(n, n_targets, 
+                                 rho_psi, psi);
+
+    absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
+                                 theta, kappa, phi);
+
+    // return the dot product of the weights
+    return(prox_weights .* reldir_weights .* absdir_weights);
+
+  }
 }
 
 data {
@@ -80,8 +104,7 @@ model {
   vector[n_targets] weights;  // class weight for teach target
   vector[n_targets] m; // does this target match the previous target?
   vector[n_targets] prox_weights;
-  vector[n_targets] reldir_weights;
-  vector[n_targets] absdir_weights;
+  vector[n_targets] spatial_weights;
 
   int trl = 0; // counter for trial number
   int kk; // condition (block) index
@@ -122,15 +145,9 @@ model {
     weights = b_a[kk] * to_vector(item_class[trl]);
 
     // apply spatial weighting
-    prox_weights   = compute_prox_weights(found_order[ii], n_targets, 
-                                 rho_delta[kk], delta[ii]);
-    reldir_weights = compute_reldir_weights(found_order[ii], n_targets, 
-                                 rho_psi[kk], psi[ii]);
-
-    print(theta);
-    print(kappa);
-    absdir_weights = compute_absdir_weights_fixed_kappa(found_order[ii], n_targets, 
-                                 theta, kappa, phi[ii]);
+    spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
+      rho_delta[kk], rho_psi[kk], theta, kappa,
+      delta[ii], psi[ii], phi[ii]);   
 
     if (found_order[ii] == 1) {
       weights = inv_logit(weights);
@@ -140,7 +157,7 @@ model {
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* prox_weights .* absdir_weights;
+    weights = weights .* spatial_weights;
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
@@ -199,10 +216,10 @@ generated quantities {
       // multiply weights by stick/switch preference
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
 
-      weights = weights .* compute_prox_weights(found_order[ii], n_targets,
-         rho_delta[kk], delta_n[ii]);
-      weights = weights .* compute_reldir_weights(found_order[ii], n_targets,
-         rho_psi[kk], psi[ii]);
+      // compute spatial weights
+      weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
+        rho_delta[kk], rho_psi[kk], theta, kappa,
+        delta[ii], psi[ii], phi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
@@ -256,10 +273,9 @@ generated quantities {
           weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
 
           // compute spatial weights
-          weights = weights .* compute_prox_weights(jj, n_targets,
-            rho_delta[k], delta_j);
-          weights = weights .* compute_reldir_weights(jj, n_targets,
-            rho_psi[k], psi_j);
+          weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
+            rho_delta[k], rho_psi[k], theta, kappa,
+            delta_j, psi_j, phi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
