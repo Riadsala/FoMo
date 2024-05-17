@@ -4,6 +4,24 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
+  vector compute_spatial_weights(int n, int n_targets, 
+    real rho_delta, real rho_psi, vector delta, vector psi) {
+
+    // computes spatial weights
+    // for FoMo1.0, this includes proximity and relative direction
+    vector[n_targets] prox_weights;
+    vector[n_targets] reldir_weights;
+
+    // apply spatial weighting
+    prox_weights   = compute_prox_weights(n, n_targets, 
+                                 rho_delta, delta);
+    reldir_weights = compute_reldir_weights(n, n_targets, 
+                                 rho_psi, psi);
+
+    // return the dot product of the weights
+    return(prox_weights .* reldir_weights);
+
+  }
 }
 
 
@@ -130,6 +148,7 @@ model {
   // // step through data row by row and define LLH
   //////////////////////////////////////////////////  
   vector[n_targets] weights;
+  vector[n_targets] spatial_weights;
 
   // some counters and index variables, etc.
   int t; // trial counter
@@ -146,11 +165,10 @@ model {
     // multiply weights by stick/switch preference
     weights = inv_logit(weights) .* inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
 
-    weights = weights .* compute_prox_weights(found_order[ii], n_targets,
-       u_delta[X[t], Z[ii]], delta[ii]);
+    spatial_weights = compute_spatial_weights(found_order[ii], n_targets,
+       u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], delta[ii], psi[ii]);
 
-    weights = weights .* compute_reldir_weights(found_order[ii], n_targets,
-       u_psi[X[t], Z[ii]], psi[ii]);
+    weights = weights .* spatial_weights;
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
