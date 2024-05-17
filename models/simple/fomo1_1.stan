@@ -144,7 +144,7 @@ model {
       weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* prox_weights .* reldir_weights;
+    weights = weights .* spatial_weights;
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
