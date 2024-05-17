@@ -58,7 +58,7 @@ d_list$n_trials_to_sim <- 10
 
 # run model
 m <- mod$sample(data = d_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
+                  chains = 1, parallel_chains = 1, threads = 4,
                   refresh = 100, 
                   iter_warmup = iter, iter_sampling = iter,
                   sig_figs = 3)

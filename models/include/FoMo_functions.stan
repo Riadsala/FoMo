@@ -100,7 +100,7 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
   }
 
 vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
-  vector phi, vector theta, real kappa) {
+  vector theta, real kappa, vector phi) {
 
   vector[n_targets] w;
 
@@ -111,8 +111,8 @@ vector compute_absdir_weights_fixed_kappa(int n, int n_targets,
     w = w 
           .* (theta[1]*exp(kappa * cos(theta           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
            +  theta[2]*exp(kappa * cos(theta - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[1]*exp(kappa * cos(theta - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[2]*exp(kappa * cos(theta - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[3]*exp(kappa * cos(theta - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[4]*exp(kappa * cos(theta - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
            +  1);
   }
 
