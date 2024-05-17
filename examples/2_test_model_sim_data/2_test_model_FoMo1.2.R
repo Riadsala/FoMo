@@ -15,7 +15,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-n_trials_per_cond <- 10
+n_trials_per_cond <- 25
 
 n_item_class <- 2
 n_item_per_class <- 20
@@ -23,7 +23,7 @@ item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
 b_memory = 0
 
-abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 0, 0, 0))
 rho_delta = 10
 rho_psi = 5
 
@@ -40,7 +40,7 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   init_sel_lambda = init_sel_lambda)
 
 iter = 500
-mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
@@ -56,6 +56,8 @@ d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
 d_list$n_trials_to_sim <- 10
 
+d_list$kappa <- 10
+
 # run model
 m <- mod$sample(data = d_list, 
                   chains = 4, parallel_chains = 4, threads = 4,
@@ -64,13 +66,16 @@ m <- mod$sample(data = d_list,
                   sig_figs = 3)
 
 # extract post
-post <- extract_post(m, d, multi_level = FALSE)
+post <- extract_post(m, d, multi_level = FALSE, absdir = TRUE)
 
 # plot model
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
+
+ggplot(post$absdir, aes(value, fill = factor(theta))) + geom_density(alpha = 0.4) +
+  geom_vline(data = tibble(theta = 1:4, x = abs_dir_tuning$theta), aes(xintercept=x, colour = factor(theta)))
 
 # check predictions
 pred <- summarise_postpred(m, d)

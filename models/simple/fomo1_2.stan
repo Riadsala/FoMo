@@ -70,11 +70,13 @@ data {
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
+
+  // pass in kappa hyper-parameter
+  real<lower = 0> kappa;
 }
 
 transformed data{
 
-  real kappa = 10;
   array[N] vector[n_targets] remaining_items, delta_n;
 
   // compute remaining items
@@ -123,7 +125,7 @@ model {
     target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
   }
 
-  target += exponential_lpdf(theta | 0.2);
+  target += exponential_lpdf(theta | 1);
 
   //////////////////////////////////////////////////
   // // step through data row by row and define LLH
