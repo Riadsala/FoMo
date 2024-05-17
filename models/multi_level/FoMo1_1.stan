@@ -150,6 +150,7 @@ model {
   // // step through data row by row and define LLH
   //////////////////////////////////////////////////  
   vector[n_targets] weights;
+  vector[n_targets] spatial_weights;
 
   // some counters and index variables, etc.
   int t; // trial counter
