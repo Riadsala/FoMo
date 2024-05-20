@@ -125,7 +125,7 @@ model {
     target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
   }
 
-  target += exponential_lpdf(theta | 1);
+  target += exponential_lpdf(theta[K] | 1);
 
   //////////////////////////////////////////////////
   // // step through data row by row and define LLH
@@ -220,7 +220,7 @@ generated quantities {
 
       // compute spatial weights
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
-        rho_delta[kk], rho_psi[kk], theta, kappa,
+        rho_delta[kk], rho_psi[kk], theta[kk], kappa,
         delta[ii], psi[ii], phi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
@@ -276,7 +276,7 @@ generated quantities {
 
           // compute spatial weights
           weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
-            rho_delta[k], rho_psi[k], theta, kappa,
+            rho_delta[k], rho_psi[k], theta[k], kappa,
             delta_j, psi_j, phi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
