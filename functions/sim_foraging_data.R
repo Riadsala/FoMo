@@ -379,7 +379,8 @@ gen_stimulus <- function(n, n_item_class, n_item_per_class) {
 
 merge_two_simple_d <- function(d1, d2, lab) {
   
-  n_trial1 <- max(d1$stim)
+  d1_stim <- d1$stim
+  n_trial1 <- max(d1_stim$trial)
   
   d1$stim %>% mutate(condition = lab[1]) -> d1$stim
   d1$found %>% mutate(condition = lab[1]) -> d1$found
