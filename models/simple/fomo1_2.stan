@@ -9,7 +9,7 @@ This version of the model is single level (unclustered data)
 
 functions {
 
-  #include /../include/FoMo_functions.stan
+  #include ../../include/FoMo_functions.stan
 
   vector compute_spatial_weights(int n, int n_targets, 
     real rho_delta, real rho_psi, vector theta, real kappa,
@@ -67,6 +67,7 @@ data {
   real prior_sd_rho_delta;
   real prior_mu_rho_psi;
   real prior_sd_rho_psi;
+  real prior_theta_lambda;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
@@ -123,9 +124,10 @@ model {
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
+    target += exponential_lpdf(theta[ii]| prior_theta_lambda);
   }
 
-  target += exponential_lpdf(theta[K] | 1);
+ 
 
   //////////////////////////////////////////////////
   // // step through data row by row and define LLH
