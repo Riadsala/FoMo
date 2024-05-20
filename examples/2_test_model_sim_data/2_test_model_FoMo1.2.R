@@ -160,6 +160,7 @@ d_list$prior_mu_rho_delta <- 15
 d_list$prior_sd_rho_delta <- 5
 d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
+d_list$prior_theta_lambda <- 10
 d_list$n_trials_to_sim <- 10
 
 d_list$kappa <- 10

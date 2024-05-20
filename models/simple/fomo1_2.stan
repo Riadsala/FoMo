@@ -9,7 +9,7 @@ This version of the model is single level (unclustered data)
 
 functions {
 
-  #include ../../include/FoMo_functions.stan
+  #include ../include/FoMo_functions.stan
 
   vector compute_spatial_weights(int n, int n_targets, 
     real rho_delta, real rho_psi, vector theta, real kappa,
