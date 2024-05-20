@@ -25,9 +25,20 @@ theme_set(ggthemes::theme_tufte())
 
 # Fitting Model to Simulated Data
 
+- **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
+- **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
+- **Model 1.2**: here we add in (on top of 1.1? CHECK!) a component that allows for an absolute direction bias i.e. a bias for moving horizontally, or vertically.
+
+
 ## Example 1 - simple model with one participant
 
 ### First simulate some data
+
+Our first simple simulation will involve 2 target classes, each with 20 items on screen. We will simulate one of the targets to be preferred over the other (`item_class_weights`), a small stick bias (`b_stick`), moderate proximity bias (`rho_delta`) and a fairly strong fowards momentum (`rho_psi`). 
+
+Absolute direction tuning is only used from model 1.2 onwards: in this simulation, we are adding in a stronger bias for horizontal compared to vertical directions (is this true??)
+
+This simple simulation only considers one participant, doing 10 trials of one condition.
 
 ```{r}
 
@@ -60,6 +71,8 @@ d1 <- sim_foraging_multiple_trials(person = 1,
 
 ### Fitting model 1.0
 
+Here, we fit model version 1.0.
+
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
 iter = 100
@@ -90,6 +103,8 @@ m <- mod$sample(data = d1_list,
 
 ### Extract posterior
 
+We can then extract posterior samples.
+
 ```{r}
 
 # extract post
@@ -98,6 +113,8 @@ post <- extract_post(m, d1, multi_level = FALSE)
 ```
 
 ### Plot model
+
+We plot the fixed effects of the model (and can confirm that we are able to recover the parameters we put into the simulation).
 
 ```{r}
 
@@ -111,6 +128,8 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
 
 ### Check predictions
 
+We can assess model accuracy i.e. how well can it predict the next target chosen?
+
 ```{r}
 
 pred <- summarise_postpred(m, d1)
@@ -120,6 +139,8 @@ plot_model_accuracy(pred)
 ```
 
 ### Plot comparison between a real and a simulated trial
+
+And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.
 
 ```{r}
 
@@ -136,6 +157,8 @@ pltreal + pltsim
 ## Example 2 - multilevel model
 
 ### First simulate some data
+
+We can build up our model to include multiple participants (5 in this case). Here, we again only consider one condition, but multiple conditions could be included (e.g. feature/conjunction). 
 
 ```{r simdata1, cache=TRUE}
 item_class_weights = list(c(0.7, 0.3, 0, 0))
@@ -178,7 +201,7 @@ d2$stim <- fix_person_and_trial(d2$stim)
 
 ### Now fit our model
 
-We will fit model 1.0 (basically, the corrected original model)
+We can use very similar code to fit model 1.0.
 
 ```{r prepsimdata1}
 d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))
@@ -209,6 +232,8 @@ fit <- readRDS("scratch/multi_level_1_0_tmp.rds")
 
 ### Posterior Density Plots
 
+We can plot both fixed and random effects from the model.
+
 ```{r extractsim1post, cache=TRUE}
 post <- extract_post(fit, d2)
 ```
@@ -230,6 +255,8 @@ plot_model_random(post)
 
 
 ## Example 3 - fitting FoMo 1.1
+
+The examples below use the same simple and multilevel simulations as in the previous example, but instead fit model version 1.1.
 
 ### The simple version
 
@@ -272,7 +299,6 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
 
 
 ### The multilevel variant
-
 
 ```{r fitmodelsimdata1_1, eval = FALSE}
 iter = 100

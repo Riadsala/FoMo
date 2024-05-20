@@ -120,10 +120,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="fitting-model-to-simulated-data" class="level1">
 <h1>Fitting Model to Simulated Data</h1>
+<ul>
+<li><strong>Model 1.0</strong>: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).</li>
+<li><strong>Model 1.1</strong>: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model’s proximity weighting to cope better towards the end of a trial when the items are sparser.</li>
+<li><strong>Model 1.2</strong>: here we add in (on top of 1.1? CHECK!) a component that allows for an absolute direction bias i.e.&nbsp;a bias for moving horizontally, or vertically.</li>
+</ul>
 <section id="example-1---simple-model-with-one-participant" class="level2">
 <h2 class="anchored" data-anchor-id="example-1---simple-model-with-one-participant">Example 1 - simple model with one participant</h2>
 <section id="first-simulate-some-data" class="level3">
 <h3 class="anchored" data-anchor-id="first-simulate-some-data">First simulate some data</h3>
+<p>Our first simple simulation will involve 2 target classes, each with 20 items on screen. We will simulate one of the targets to be preferred over the other (<code>item_class_weights</code>), a small stick bias (<code>b_stick</code>), moderate proximity bias (<code>rho_delta</code>) and a fairly strong fowards momentum (<code>rho_psi</code>).</p>
+<p>Absolute direction tuning is only used from model 1.2 onwards: in this simulation, we are adding in a stronger bias for horizontal compared to vertical directions (is this true??)</p>
+<p>This simple simulation only considers one participant, doing 10 trials of one condition.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>n_trials_per_cond <span class="ot">&lt;-</span> <span class="dv">10</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -152,6 +160,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="fitting-model-1.0" class="level3">
 <h3 class="anchored" data-anchor-id="fitting-model-1.0">Fitting model 1.0</h3>
+<p>Here, we fit model version 1.0.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>iter <span class="ot">=</span> <span class="dv">100</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>mod <span class="ot">&lt;-</span> <span class="fu">cmdstan_model</span>(<span class="st">"../../models/simple/FoMo1_0.stan"</span>, </span>
@@ -180,6 +189,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="extract-posterior" class="level3">
 <h3 class="anchored" data-anchor-id="extract-posterior">Extract posterior</h3>
+<p>We can then extract posterior samples.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># extract post</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(m, d1, <span class="at">multi_level =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -187,6 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="plot-model" class="level3">
 <h3 class="anchored" data-anchor-id="plot-model">Plot model</h3>
+<p>We plot the fixed effects of the model (and can confirm that we are able to recover the parameters we put into the simulation).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot model</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_model_fixed</span>(post, <span class="at">gt =</span> <span class="fu">list</span>(<span class="at">b_a =</span> <span class="fu">plogis</span>(item_class_weights[<span class="dv">1</span>]),</span>
@@ -200,6 +211,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="check-predictions" class="level3">
 <h3 class="anchored" data-anchor-id="check-predictions">Check predictions</h3>
+<p>We can assess model accuracy i.e.&nbsp;how well can it predict the next target chosen?</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">summarise_postpred</span>(m, d1)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -215,6 +227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="plot-comparison-between-a-real-and-a-simulated-trial" class="level3">
 <h3 class="anchored" data-anchor-id="plot-comparison-between-a-real-and-a-simulated-trial">Plot comparison between a real and a simulated trial</h3>
+<p>And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot comparison between a real and simulated trial</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -232,6 +245,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="example-2---multilevel-model">Example 2 - multilevel model</h2>
 <section id="first-simulate-some-data-1" class="level3">
 <h3 class="anchored" data-anchor-id="first-simulate-some-data-1">First simulate some data</h3>
+<p>We can build up our model to include multiple participants (5 in this case). Here, we again only consider one condition, but multiple conditions could be included (e.g.&nbsp;feature/conjunction).</p>
 <div class="cell" data-hash="2_original_model_fit_overview_cache/html/simdata1_6c0ab8ed234a0da3fff3c6bbc66d0c50">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>item_class_weights <span class="ot">=</span> <span class="fu">list</span>(<span class="fu">c</span>(<span class="fl">0.7</span>, <span class="fl">0.3</span>, <span class="dv">0</span>, <span class="dv">0</span>))</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -278,7 +292,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="now-fit-our-model" class="level3">
 <h3 class="anchored" data-anchor-id="now-fit-our-model">Now fit our model</h3>
-<p>We will fit model 1.0 (basically, the corrected original model)</p>
+<p>We can use very similar code to fit model 1.0.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>d2_list <span class="ot">&lt;-</span> <span class="fu">prep_data_for_stan</span>(d2<span class="sc">$</span>found, d2<span class="sc">$</span>stim, <span class="fu">c</span>(<span class="st">"spatial"</span>, <span class="st">"item_class"</span>))</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>d2_list <span class="ot">&lt;-</span> <span class="fu">add_priors_to_d_list</span>(d2_list)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -302,6 +316,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="posterior-density-plots" class="level3">
 <h3 class="anchored" data-anchor-id="posterior-density-plots">Posterior Density Plots</h3>
+<p>We can plot both fixed and random effects from the model.</p>
 <div class="cell" data-hash="2_original_model_fit_overview_cache/html/extractsim1post_aab9ac977a82c4736f2b616215e52b83">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(fit, d2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -340,6 +355,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="example-3---fitting-fomo-1.1" class="level2">
 <h2 class="anchored" data-anchor-id="example-3---fitting-fomo-1.1">Example 3 - fitting FoMo 1.1</h2>
+<p>The examples below use the same simple and multilevel simulations as in the previous example, but instead fit model version 1.1.</p>
 <section id="the-simple-version" class="level3">
 <h3 class="anchored" data-anchor-id="the-simple-version">The simple version</h3>
 <div class="cell">

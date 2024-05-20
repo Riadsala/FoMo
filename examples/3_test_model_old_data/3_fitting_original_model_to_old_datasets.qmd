@@ -3,20 +3,75 @@ title: "3_fitting_original_model_to_old_datasets"
 format: html
 editor: visual
 ---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 4)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+```
+
+
 # Fitting Model to Previously Collected Datasets
 
- some text...
+some text...
 
 these are fit by scripts xxx.R and run on our cluster.
-
 
 ## Clarke2022qjep
 
 ## Tagu2022cog
 
+```{r}
+
+d <- import_data('tagu2022cog')
+d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
+d_list <- add_priors_to_d_list(d_list)
+
+```
+
+```{r}
+
+iter = 100
+mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
+                     cpp_options = list(stan_threads = TRUE))
+
+fit <- mod$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
+
+```
+
+
+```{r}
+
+mod1_1 <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
+                     cpp_options = list(stan_threads = TRUE))
+
+fit1_1 <- mod1_1$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
+
+```
+
 ### Traceplots
 
-Show traceplots for key params and/or any with large Rhat? 
+Show traceplots for key params and/or any with large Rhat?
 
 ### Which model fits best?
 
@@ -47,7 +102,6 @@ rm(pp1.1, pp1.2, pp1.3)
 pp <- filter(pp, found != 1)
 ```
 
-
 ```{r fig.cap="comparision of model variants. Very litte uncertainty over multiple draws."}
 n_targ = 54
 
@@ -57,7 +111,6 @@ ggplot(pp, aes(found, W)) +
   theme_bw() +
   facet_wrap(~condition, nrow = 1)
 ```
-
 
 ```{r}
 pp %>% select(-acc) %>% 
@@ -81,7 +134,7 @@ After comparisons, select the best model
 
 First, import our fitted model
 
-```{r} 
+```{r}
 m <- readRDS("../../scratch/tagu2022cog/models/fit_model1.3.RDS")
 
 m_summary <- m$summary()
@@ -89,7 +142,7 @@ m_summary <- m$summary()
 
 #### Rhat Statistics
 
-What is current best practise around this? Reporting standards? Worry thresholds? 
+What is current best practise around this? Reporting standards? Worry thresholds?
 
 Are there guidelines here: https://discourse.mc-stan.org/t/summarising-rhat-values-over-multiple-variables-fits/23957/5
 
@@ -97,7 +150,7 @@ Are there guidelines here: https://discourse.mc-stan.org/t/summarising-rhat-valu
 ggplot(m_summary, aes(rhat)) + geom_histogram()
 ```
 
-Extract parameters that have Rhat > 1.01
+Extract parameters that have Rhat \> 1.01
 
 ```{r}
 filter(m_summary, rhat > 1.01) %>%
@@ -155,7 +208,7 @@ pltvar <- function(var1, var2) {
   plot_layout(guides="collect")
 ```
 
-### A Sanity check 
+### A Sanity check
 
 Let us sanity check the person with the v high u_psi value
 
@@ -173,7 +226,6 @@ plot_a_trial(trl_stim, trl_found)
 ```
 
 ### Do individual param values tell us anything about run lengths?
-
 
 ```{r}
 rl <- get_run_info_over_trials(d$found) %>% 
@@ -196,7 +248,7 @@ plt_uA + plt_stick + plot_layout(guides = "collect")
 
 ### Posterior Predictions
 
-plot predicated v empirical run stats, inter-targ distances, directions. 
+plot predicated v empirical run stats, inter-targ distances, directions.
 
 For these, we need the trial-level posterior predictions
 
