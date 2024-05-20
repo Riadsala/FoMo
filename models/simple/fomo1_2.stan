@@ -92,8 +92,8 @@ parameters {
   array[K] real rho_delta; // distance tuning
   array[K] real rho_psi; // direction tuning 
 
-
-  vector<lower = 0> [4] theta; // mixing proportions for abs directions
+  // theta is a 4D vector containing the mixture weights for our direction model
+  array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
 }
 
 transformed parameters {
@@ -148,7 +148,7 @@ model {
 
     // apply spatial weighting
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-      rho_delta[kk], rho_psi[kk], theta, kappa,
+      rho_delta[kk], rho_psi[kk], theta[kk], kappa,
       delta[ii], psi[ii], phi[ii]);   
 
     if (found_order[ii] == 1) {
