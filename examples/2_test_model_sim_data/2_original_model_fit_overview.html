@@ -123,7 +123,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>Model 1.0</strong>: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).</li>
 <li><strong>Model 1.1</strong>: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model’s proximity weighting to cope better towards the end of a trial when the items are sparser.</li>
-<li><strong>Model 1.2</strong>: here we add in (on top of 1.1? CHECK!) a component that allows for an absolute direction bias i.e.&nbsp;a bias for moving horizontally, or vertically.</li>
+<li><strong>Model 1.2</strong>: here we add in a component that allows for an absolute direction bias i.e.&nbsp;a bias for moving horizontally, or vertically. In this version, kappa is a hyperparameter.</li>
 </ul>
 <section id="example-1---simple-model-with-one-participant" class="level2">
 <h2 class="anchored" data-anchor-id="example-1---simple-model-with-one-participant">Example 1 - simple model with one participant</h2>

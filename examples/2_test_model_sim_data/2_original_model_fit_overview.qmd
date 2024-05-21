@@ -27,7 +27,7 @@ theme_set(ggthemes::theme_tufte())
 
 - **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
 - **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
-- **Model 1.2**: here we add in (on top of 1.1? CHECK!) a component that allows for an absolute direction bias i.e. a bias for moving horizontally, or vertically.
+- **Model 1.2**: here we add in a component that allows for an absolute direction bias i.e. a bias for moving horizontally, or vertically. In this version, kappa is a hyperparameter.
 
 
 ## Example 1 - simple model with one participant
