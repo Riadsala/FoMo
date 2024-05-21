@@ -60,6 +60,9 @@ data {
   real prior_sd_rho_delta;
   real prior_mu_rho_psi;
   real prior_sd_rho_psi;
+
+  // parameters for simulation (generated quantities)
+  int<lower = 0> n_trials_to_sim;
 }
 
 transformed data{
@@ -190,4 +193,51 @@ generated quantities {
   real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
   real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
+
+
+  array[N] int P;
+  array[N] real W;
+
+  // for trial level predictions, we have to remember that we do not have a stopping rule yet
+  // so we will simply collect all of the targets
+  // 
+  // For now, only sim 1 trial per condition per person
+  array[K, n_trials_to_sim, n_targets] int Q; 
+ 
+  //////////////////////////////////////////////////////////////////////////////
+  // first, step through data and compare model selections to human participants
+  {
+    // some counters and index variables, etc.
+    vector[n_targets] weights;  // class weight for teach target
+    int t = 0; // counter for trial number
+    int kk; // which condition are we in?
+
+    //////////////////////////////////////////////////
+    // // step through data row by row and define LLH
+    //////////////////////////////////////////////////  
+   for (ii in 1:N) {
+
+      t = trial[ii];
+      kk = X[t];
+   
+      // set the weight of each target to be its class weight
+      weights = (u_a[kk, Z[ii]]) * to_vector(item_class[t]);
+
+      // multiply weights by stick/switch preference
+      weights = inv_logit(weights) .* inv_logit(u_stick[kk, Z[ii]] * S[ii]); 
+
+      // compute spatial weights
+      weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
+        u_delta[kk, Z[ii]], u_psi[kk, Z[ii]],
+        delta[ii], psi[ii]);
+          
+      // remove already-selected items, and standarise to sum = 1 
+      weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
+
+      P[ii] = categorical_rng(weights);
+      W[ii] = weights[Y[ii]];
+       
+    }
+  }
+  
 }
