@@ -2,7 +2,7 @@
 
 # cl contains the condition labels
 
-extract_post <- function(m, d, multi_level = TRUE) {
+extract_post <- function(m, d, multi_level = TRUE, absdir = FALSE) {
   
   # extract ALL parameters and collect into a list
   # to ensure that we have the same draws for each part,
@@ -39,9 +39,28 @@ extract_post <- function(m, d, multi_level = TRUE) {
                                    post_random, variances = post_var))
   }
   
+  if (absdir) {
+    
+    post_theta <- extrat_post_absdir(m)
+    post_list <- append(post_list, list(absdir = post_theta))
+    
+    
+  }
+  
   return(post_list)
 }
 
+extrat_post_absdir <- function(m) {
+  
+  post_absdir <- m$draws("theta", format = "df") %>%
+    as_tibble() %>%
+    pivot_longer(starts_with("theta"), names_to = "comp", values_to = "theta") %>%
+    mutate(comp = parse_number(comp),
+           phi = (comp-1) * pi/2)
+  
+  return(post_absdir)
+  
+}
 extract_var <- function(m, cl, param_names) {
   
   post_sig <- m$draws("sigma_u", format = "df")
