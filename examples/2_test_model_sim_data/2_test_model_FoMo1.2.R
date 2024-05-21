@@ -117,9 +117,10 @@ pltsim <- plot_a_trial(d$stim, pred$sim %>% filter(.draw == 1), trial = 1)
 pltreal + pltsim
 
 
-## Let's add another condition - all we're going to change is the item class weights
+## Let's add another condition - all we're going to change is the item class weights & abs dir
 
 item_class_weights = c(0.7, 0.3, 0, 0)
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 0, 0, 0))
 
 d1 <- sim_foraging_multiple_trials(person = 1, 
                                   n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
@@ -134,6 +135,7 @@ d1 <- sim_foraging_multiple_trials(person = 1,
 
 
 item_class_weights = c(0.5, 0.5, 0, 0)
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 10, 0, 10))
 
 d2 <- sim_foraging_multiple_trials(person = 1, 
                                   n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
@@ -173,10 +175,18 @@ m <- mod$sample(data = d_list,
                 sig_figs = 3)
 
 # extract post
-post <- extract_post(m, d, multi_level = FALSE, absdir = TRUE)
+post <- extract_post(m, dall, multi_level = FALSE, absdir = TRUE)
 
 # plot model
 plot_model_fixed(post, gt = list(b_a = qlogis(0.7),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
+
+# something not quite right here
+pred <- summarise_postpred(m, dall)
+
+pltreal <- plot_a_trial(dall$stim, dall$found, 1)
+pltsim <- plot_a_trial(dall$stim, pred$sim %>% filter(.draw == 1, trial == 1, condition.x == 1), 1)
+
+pltreal + pltsim
