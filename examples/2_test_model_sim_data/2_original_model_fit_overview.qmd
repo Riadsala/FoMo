@@ -17,7 +17,7 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 4)
+options(mc.cores = 1)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
@@ -75,9 +75,7 @@ Here, we fit model version 1.0.
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
-iter = 100
-mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+
 
 d1_list <- prep_data_for_stan(d1$found, d1$stim, c("spatial", "item_class"))
 
@@ -91,6 +89,14 @@ d1_list$prior_sd_rho_delta <- 5
 d1_list$prior_mu_rho_psi <- 0
 d1_list$prior_sd_rho_psi <- 1
 d1_list$n_trials_to_sim <- 10
+
+```
+
+```{r, message = FALSE, warning = FALSE, results = "hide", eval = TRUE}
+
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 # run model
 m_simple_1_0 <- mod$sample(data = d1_list, 
@@ -216,10 +222,10 @@ d2_list$n_trials_to_sim <- 10
 ```
 
 
-```{r fitmodelsimdata1, eval = FALSE}
+```{r fitmodelsimdata1, warning = FALSE, results = "hide", eval = FALSE}
 iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 fit <- mod$sample(data = d2_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
@@ -275,8 +281,12 @@ b_stick = 2
 rho_delta = 10
 rho_psi = 5
 
+```
+
+```{r, eval = FALSE}
+
 mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 # run model
 m_simple_1_1 <- mod$sample(data = d1_list, 
                   chains = 4, parallel_chains = 4, threads = 4,
@@ -317,10 +327,10 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
 
 ### The multilevel variant
 
-```{r fitmodelsimdata1_1, eval = FALSE}
+```{r fitmodelsimdata1_1, warning = FALSE, results = "hide", eval = FALSE}
 iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 fit <- mod$sample(data = d2_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
@@ -369,20 +379,28 @@ plot_model_random(post)
 
 ### Simple model
 
-This seems to suggest that model 1.1 does a better job than model 1.0 (NOTE: there is a problem with high pareto K values, that needs further investigation - `moment_match = TRUE` is not currently working).
+Note that loo does not play very nicely with RMarkdown and needs to be pre-computed.
 
-```{r}
+```{r, warning = FALSE}
 
-m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
-m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+#m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+#m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
 
-loo_1_1 <- m_simple_1_1$loo("W")
-loo_1_0 <- m_simple_1_0$loo("W")
+#loo_1_1 <- m_simple_1_1$loo()
+#loo_1_0 <- m_simple_1_0$loo()
 
+#loo_1_1_mm <- m_simple_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_simple_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_mm.rds")
+
+loo_1_0_mm <- readRDS("scratch/loo_1_0_mm.rds")
+loo_1_1_mm <- readRDS("scratch/loo_1_1_mm.rds")
 
 loo::loo_model_weights(list(
-  "model 1.1" = loo_1_1,
-  "model 1.0" = loo_1_0))
+  "model 1.1" = loo_1_1_mm,
+  "model 1.0" = loo_1_0_mm))
 
 ```
 
@@ -392,15 +410,24 @@ As above - problems with high pareto K values.
 
 ```{r}
 
-m_ml_1_0 <- readRDS("scratch/multi_level_1_0_tmp.rds")
-m_ml_1_1 <- readRDS("scratch/multi_level_1_1_tmp.rds")
+#m_ml_1_0 <- readRDS("scratch/multi_level_1_0_tmp.rds")
+#m_ml_1_1 <- readRDS("scratch/multi_level_1_1_tmp.rds")
 
-loo_1_1 <- m_ml_1_1$loo("W")
-loo_1_0 <- m_ml_1_0$loo("W")
+#loo_1_1 <- m_ml_1_1$loo()
+#loo_1_0 <- m_ml_1_0$loo()
+
+#loo_1_1_mm <- m_ml_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_ml_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_ml_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_ml_mm.rds")
+
+loo_1_0_ml_mm <- readRDS("scratch/loo_1_0_ml_mm.rds")
+loo_1_1_ml_mm <- readRDS("scratch/loo_1_1_ml_mm.rds")
 
 loo::loo_model_weights(list(
-  "model 1.1" = loo_1_1,
-  "model 1.0" = loo_1_0))
+  "model 1.1" = loo_1_1_ml_mm,
+  "model 1.0" = loo_1_0_ml_mm))
 
 ```
 
