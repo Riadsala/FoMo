@@ -171,7 +171,7 @@ model {
     weights = inv_logit(weights) .* inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
 
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets,
-       u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], delta[ii], psi[ii]);
+       u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], delta_n[ii], psi[ii]);
 
     weights = weights .* spatial_weights;
         
@@ -229,7 +229,7 @@ generated quantities {
       // compute spatial weights
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
         u_delta[kk, Z[ii]], u_psi[kk, Z[ii]],
-        delta[ii], psi[ii]);
+        delta_n[ii], psi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
