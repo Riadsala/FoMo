@@ -89,7 +89,8 @@ d <- sim_foraging_trial(trl = 1,
                         b_memory,
                         inital_sel_params = inital_sel_params,
                         init_sel_lambda = init_sel_lambda,
-                        dev_output = FALSE)
+                        dev_output = FALSE,
+                        rel_proximity = TRUE)
 
 plot_a_trial(d$stim, d$found, "delta")
 

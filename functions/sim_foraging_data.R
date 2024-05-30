@@ -13,7 +13,8 @@ sim_foraging_people <- function(n_people = 4,
                                 rho_delta = 10, sd_rho_delta = 2,
                                 rho_psi = 0, sd_rho_psi = 5,
                                 abs_dir_tuning = abs_dir_tuning,
-                                inital_sel_params) {
+                                inital_sel_params,
+                                rel_proximity = FALSE) {
   
   ## if some params have been specified as a constant, replicate over conditions.
   # b_stick <- check_and_rep_param(b_stick, n_conditions)
@@ -41,6 +42,7 @@ sim_foraging_people <- function(n_people = 4,
             abs_dir_tuning = abs_dir_tuning,
             inital_sel_params = inital_sel_params,
             item_labels = item_labels, b_memory = 0,
+            rel_proximity = rel_proximity,
             .progress = TRUE)
   
   # rearrange list structure
@@ -95,7 +97,8 @@ sim_foraging_multiple_trials <- function(person = 1,
                                          abs_dir_tuning = abs_tuning,
                                          b_memory,
                                          inital_sel_params,
-                                         init_sel_lambda = 0.25) 
+                                         init_sel_lambda = 0.25,
+                                         rel_proximity = FALSE) 
 {
   
   # Generate a number of trials with identical sim params. 
@@ -113,7 +116,8 @@ sim_foraging_multiple_trials <- function(person = 1,
            abs_dir_tuning = abs_dir_tuning,
            b_memory = b_memory,
            inital_sel_params = inital_sel_params,
-           init_sel_lambda = init_sel_lambda) 
+           init_sel_lambda = init_sel_lambda,
+           rel_proximity = rel_proximity) 
   
   # rearrange the list structure
   df <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$found) %>%
@@ -145,7 +149,8 @@ sim_foraging_trial <- function(trl = 1,
                                inital_sel_params,
                                init_sel_lambda,
                                items = NULL,
-                               dev_output = FALSE)  
+                               dev_output = FALSE,
+                               rel_proximity = FALSE)  
 {
   
   # n_class is the number of different target classes
@@ -211,7 +216,8 @@ sim_foraging_trial <- function(trl = 1,
     # calculate distances from each item to the previously select item
     # then compute the prox and direction weights for each item
     d_remain <- compute_delta_and_phi(d_remain, d_found, t,
-                                      rho_delta, abs_dir_tuning, rho_psi)
+                                      rho_delta, abs_dir_tuning, rho_psi,
+                                      rel_proximity)
     
     d_remain %>% 
       mutate(
@@ -271,7 +277,7 @@ check_and_rep_param <- function(p, r) {
   return(p)
 }
 
-compute_delta_and_phi <- function(dr, df, t, pt, adt, rdt) {
+compute_delta_and_phi <- function(dr, df, t, pt, adt, rdt, rel_proximity) {
   
   
   # for each item, compute - 
@@ -298,6 +304,13 @@ compute_delta_and_phi <- function(dr, df, t, pt, adt, rdt) {
                 phi = pmin(abs((phi %% 360)), abs((-phi %% 360))),
                 psi = pmin(abs((psi %% 360)), abs((-psi %% 360))),
                 psi = psi/180) -> dr
+  
+  # convert to rel_proximity if toggle is on
+  if (rel_proximity) {
+    
+    min_delta <- min(dr$delta)
+    dr$delta <- dr$delta / min_delta
+  }
   
   # compute proximity of remaining targets from current target
   dr %>% mutate(
