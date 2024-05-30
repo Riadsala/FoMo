@@ -172,7 +172,7 @@ pltreal + pltsim
 
 We can build up our model to include multiple participants (5 in this case). Here, we again only consider one condition, but multiple conditions could be included (e.g. feature/conjunction). 
 
-```{r simdata1, cache=TRUE}
+```{r simdata1}
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 
 b_stick = 1
@@ -247,7 +247,7 @@ fit <- readRDS("scratch/multi_level_1_0_tmp.rds")
 
 We can plot both fixed and random effects from the model.
 
-```{r extractsim1post, cache=TRUE}
+```{r extractsim1post}
 post <- extract_post(fit, d2)
 ```
 
@@ -319,7 +319,6 @@ rho_psi = 5
 # plot model
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
                                  b_stick = b_stick,
-                                 rho_delta = rho_delta,
                                  rho_psi = rho_psi))
 
 ```
@@ -351,7 +350,7 @@ fit <- readRDS("scratch/multi_level_1_1_tmp.rds")
 
 ### Posterior Density Plots
 
-```{r extractsim1_1post, cache=TRUE}
+```{r extractsim1_1post}
 post <- extract_post(fit, d2)
 ```
 
@@ -365,7 +364,6 @@ rho_psi = -1
 
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
                                  b_stick = b_stick,
-                                 rho_delta = rho_delta,
                                  rho_psi = rho_psi))
 ```
 

@@ -1,8 +1,7 @@
 library(tidyverse)
 library(cmdstanr)
 
-mod <- cmdstan_model("test_stan_code.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+mod <- cmdstan_model("test_stan_code.stan", force_recompile = TRUE, cpp_options = list(stan_threads = TRUE))
 
 iter = 100
 
