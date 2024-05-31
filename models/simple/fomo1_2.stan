@@ -151,7 +151,7 @@ model {
     // apply spatial weighting
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
       rho_delta[kk], rho_psi[kk], theta[kk], kappa,
-      delta[ii], psi[ii], phi[ii]);   
+      delta_n[ii], psi[ii], phi[ii]);   
 
     if (found_order[ii] == 1) {
       weights = inv_logit(weights);
