@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.3.353">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -161,9 +161,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>                        b_memory,</span>
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>                        <span class="at">inital_sel_params =</span> inital_sel_params,</span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>                        <span class="at">init_sel_lambda =</span> init_sel_lambda,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                        <span class="at">dev_output =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_a_trial</span>(d<span class="sc">$</span>stim, d<span class="sc">$</span>found, <span class="st">"delta"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                        <span class="at">dev_output =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>                        <span class="at">rel_proximity =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_a_trial</span>(d<span class="sc">$</span>stim, d<span class="sc">$</span>found, <span class="st">"delta"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="1_testing_data_simulation_files/figure-html/prox_bias_only-1.png" class="img-fluid" width="672"></p>
 </div>
@@ -457,23 +458,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">6</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -488,8 +489,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">5</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">7</td>
 <td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -504,8 +505,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">7</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -528,8 +529,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">10</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 </tbody>
 </table>
