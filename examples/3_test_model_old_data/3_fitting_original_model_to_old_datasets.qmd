@@ -16,12 +16,11 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 4)
+options(mc.cores = 1)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
 ```
-
 
 # Fitting Model to Previously Collected Datasets
 
@@ -36,36 +35,56 @@ these are fit by scripts xxx.R and run on our cluster.
 ```{r}
 
 d <- import_data('tagu2022cog')
+
+```
+
+```{r, eval = FALSE}
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list)
 
 ```
 
-```{r}
+```{r, eval = FALSE}
 
 iter = 100
+d_list$n_trials_to_sim <- 1
+
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 fit <- mod$sample(data = d_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
                  refresh = 10, 
+                 init = 1,
                  iter_warmup = iter, iter_sampling = iter,
                  sig_figs = 3)
 
+fit$save_object("scratch/tagu_1_0_tmp.rds")
+
+# pre save moment match loo
+fit1_0_loo <- fit$loo(moment_match = TRUE)
+saveRDS(fit1_0_loo, "scratch/tagu_1_0_loo.rds")
+
+
 ```
 
-
-```{r}
+```{r, eval = FALSE}
 
 mod1_1 <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 fit1_1 <- mod1_1$sample(data = d_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
                  refresh = 10, 
+                 init = 1,
                  iter_warmup = iter, iter_sampling = iter,
                  sig_figs = 3)
+
+fit1_1$save_object("scratch/tagu_1_1_tmp.rds")
+
+# pre save moment match loo
+fit1_1_loo <- fit1_1$loo(moment_match = TRUE)
+saveRDS(fit1_1_loo, "scratch/tagu_1_1_loo.rds")
 
 ```
 
@@ -73,9 +92,22 @@ fit1_1 <- mod1_1$sample(data = d_list,
 
 Show traceplots for key params and/or any with large Rhat?
 
+
 ### Which model fits best?
 
-Maybe better described as: how well do the models fit the training dataset? (When we collect new data later on, we will split the data and do a training and a test dataset).
+```{r}
+
+fit1_0_loo <- readRDS("scratch/tagu_1_0_loo.rds")
+fit1_1_loo <- readRDS("scratch/tagu_1_1_loo.rds")
+
+knitr::kable(loo::loo_model_weights(list(
+  "model 1.1" = fit1_1_loo,
+  "model 1.0" = fit1_0_loo)))
+
+
+```
+
+
 
 ```{r}
 dataset <- "tagu2022cog"
