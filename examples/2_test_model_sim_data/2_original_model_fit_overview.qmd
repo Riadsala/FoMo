@@ -213,7 +213,7 @@ d2$stim <- fix_person_and_trial(d2$stim)
 
 ### Now fit our model
 
-We can use very similar code to fit model 1.0.
+We can use very similar code to fit the multi-level version of the model.
 
 ```{r prepsimdata1}
 d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))
@@ -522,5 +522,60 @@ dr_1_1_loo <- readRDS("scratch/dr_1_1_loo.rds")
 loo::loo_model_weights(list(
   "model 1.1" = dr_1_1_loo,
   "model 1.0" = dr_1_0_loo))
+
+```
+
+## Model 1.2
+
+Start with a simple model.
+
+```{r}
+
+iter = 100
+
+d1_list$prior_theta_lambda <- 10
+d1_list$kappa <- 10
+
+mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+# run model
+m_simple_1_2 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_2$save_object("scratch/simple_1_2_tmp.rds")
+
+```
+
+The data was simulated with absolute direction biases - does this mean that 1.2 is a better model for the data? According to this, yes.
+
+```{r, warning = FALSE}
+
+#m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+#m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+#m_simple_1_2 <- readRDS("scratch/simple_1_2_tmp.rds")
+
+#loo_1_2 <- m_simple_1_2$loo()
+#loo_1_1 <- m_simple_1_1$loo()
+#loo_1_0 <- m_simple_1_0$loo()
+
+#loo_1_2_mm <- m_simple_1_2$loo(moment_match = TRUE)
+#loo_1_1_mm <- m_simple_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_simple_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_2_mm, "scratch/loo_1_2_mm.rds")
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_mm.rds")
+
+loo_1_0_mm <- readRDS("scratch/loo_1_0_mm.rds")
+loo_1_1_mm <- readRDS("scratch/loo_1_1_mm.rds")
+loo_1_2_mm <- readRDS("scratch/loo_1_2_mm.rds")
+
+loo::loo_model_weights(list(
+  "model 1.2" = loo_1_2_mm,
+  "model 1.1" = loo_1_1_mm,
+  "model 1.0" = loo_1_0_mm))
 
 ```
