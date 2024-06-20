@@ -88,10 +88,25 @@ saveRDS(fit1_1_loo, "scratch/tagu_1_1_loo.rds")
 
 ```
 
-### Traceplots
+### Model checking
 
-Show traceplots for key params and/or any with large Rhat?
+```{r}
 
+fit1_0 <- readRDS("scratch/tagu_1_0_tmp.rds")
+fit1_1 <- readRDS("scratch/tagu_1_1_tmp.rds")
+
+# diagnostic checks
+fit1_0$diagnostic_summary()
+fit1_1$diagnostic_summary()
+
+# traceplots
+bayesplot::mcmc_trace(fit1_0$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+                                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"))
+
+bayesplot::mcmc_trace(fit1_1$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+                                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"))
+
+```
 
 ### Which model fits best?
 
@@ -107,15 +122,39 @@ knitr::kable(loo::loo_model_weights(list(
 
 ```
 
+This suggests that model 1.1 fits best.
+
+### Plotting the model
+
+```{r}
+
+# extract post
+post <- extract_post(fit1_1, d)
+
+# plot model
+# things to think about - rho delta here is squished because the scale is changed. I think this is because the prior is a bit wrong.
+plot_model_fixed(post)
+plot_model_random(post)
+
+```
+
 ### A slightly simpler model to test 1.2 with the Tagu data
 
 ```{r}
 
 d_found_small <- d$found %>%
-  filter(person == 1)
+  filter(person == 3) %>%
+  mutate(person = 1) %>%
+  group_by(trial) %>%
+  mutate(trial = cur_group_id()) %>%
+  ungroup()
 
 d_stim_small <- d$stim %>%
-  filter(person == 1)
+  filter(person == 3) %>%
+  mutate(person = 1)  %>%
+  group_by(trial) %>%
+  mutate(trial = cur_group_id()) %>%
+  ungroup()
 
 d_list <- prep_data_for_stan(d_found_small, d_stim_small, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list)
@@ -177,6 +216,70 @@ knitr::kable(loo::loo_model_weights(list(
   "model 1.0" = fit1_0_loo)))
 
 ```
+
+Model 1.2 MAY be the best, at least for some participants. Let's plot their direction data.
+
+```{r}
+
+post <- extract_post(fit, d, multi_level = FALSE, absdir = TRUE)
+
+post$absdir %>% mutate(kappa = 10) %>%
+  select(.draw, phi, theta, kappa, comp) %>%
+  pmap_df(compute_von_mises, x = seq(0, 2*pi, 0.01)) %>%
+  group_by(.draw, x) %>%
+  summarise(weight = sum(z) + 1) -> post_weights
+
+post_weights %>% 
+  group_by(x) %>%
+  median_hdci(weight, .width = c(0.53, 0.97)) %>%
+  ungroup() %>%
+  ggplot(aes(x, weight, ymin = .lower, ymax = .upper, group = .width)) + 
+  geom_ribbon(alpha = 0.5, fill = "purple")
+
+# How about a rose style plot?
+d_sel <- get_inter_sel_info_over_trials(d_found_small)
+plot_rose(d_sel)
+
+# Can we do something with more of a line plot?
+
+d_sel_for_lines <- d_sel %>%
+  mutate(angle = 180*theta/pi)
+         
+
+EqualWidthBinMidpoint <- function(x, k) {
+  # Returns midpoints of equal-width bins.
+  #
+  # Args:
+  #   x: Vector to bin.
+  #   k: Number of bins.
+  #
+  # Returns:
+  #   Numeric vector with midpoint of each element of x's bin.
+  ci <- as.character(ggplot2::cut_interval(x, k))
+  ci2 <- substr(as.character(ci), 2, nchar(as.character(ci)) - 1)
+  lb <- sapply(ci2, function(x) strsplit(x, ",")[[1]][1])
+  ub <- sapply(ci2, function(x) strsplit(x, ",")[[1]][2])
+  return((as.numeric(lb) + as.numeric(ub)) / 2)
+}
+
+d_sel_for_lines$bin_midpoint <- EqualWidthBinMidpoint(d_sel_for_lines$angle, 17)
+
+d_sel_for_lines_grouped <- d_sel_for_lines %>%
+  group_by(bin_midpoint) %>%
+  summarise(count = n()) %>%
+  drop_na()
+
+ggplot(d_sel_for_lines_grouped, aes(x = bin_midpoint, xend = bin_midpoint, y = count, yend = 0)) +
+  geom_segment(linetype= 1, colour = "#919191", linewidth = 1.5) +
+  coord_polar(start = pi/2, direction = -1) +
+  theme_bw() + 
+    theme(axis.title = element_blank(),
+          axis.text.x = element_blank())
+  
+
+```
+
+# OLD STUFF BELOW HERE
 
 
 ```{r}
