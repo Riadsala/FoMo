@@ -267,9 +267,10 @@ d_sel_for_lines$bin_midpoint <- EqualWidthBinMidpoint(d_sel_for_lines$angle, 17)
 d_sel_for_lines_grouped <- d_sel_for_lines %>%
   group_by(bin_midpoint) %>%
   summarise(count = n()) %>%
+  mutate(freq = count / sum(count)) %>%
   drop_na()
 
-ggplot(d_sel_for_lines_grouped, aes(x = bin_midpoint, xend = bin_midpoint, y = count, yend = 0)) +
+ggplot(d_sel_for_lines_grouped, aes(x = bin_midpoint, xend = bin_midpoint, y = freq, yend = 0)) +
   geom_segment(linetype= 1, colour = "#919191", linewidth = 1.5) +
   coord_polar(start = pi/2, direction = -1) +
   theme_bw() + 
