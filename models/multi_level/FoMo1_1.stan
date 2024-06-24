@@ -196,13 +196,13 @@ generated quantities {
 
 
   array[N] int P;
-  array[N] real W;
+  array[N] real log_lik;
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
   // 
   // For now, only sim 1 trial per condition per person
-  array[K, n_trials_to_sim, n_targets] int Q; 
+  //array[K, n_trials_to_sim, n_targets] int Q; 
  
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -235,7 +235,7 @@ generated quantities {
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
-      W[ii] = weights[Y[ii]];
+      log_lik[ii] = weights[Y[ii]];
        
     }
   }

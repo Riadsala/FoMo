@@ -1,11 +1,11 @@
 ---
-title: "2) fitting the NEW  old foraging model"
+title: "2) fitting the NEW  old foraging model - to simulated data"
 author: "A D F Clarke & A Excellent Hughes"
 format: html
 editor: source
 ---
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning = FALSE}
 library(tidyverse)
 library(cmdstanr)
 
@@ -17,7 +17,7 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 4)
+options(mc.cores = 1)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
@@ -25,11 +25,154 @@ theme_set(ggthemes::theme_tufte())
 
 # Fitting Model to Simulated Data
 
-## Example 1
+- **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
+- **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
+- **Model 1.2**: here we add in a component that allows for an absolute direction bias i.e. a bias for moving horizontally, or vertically. In this version, kappa is a hyperparameter.
+
+
+## Example 1 - simple model with one participant
 
 ### First simulate some data
 
-```{r simdata1, cache=TRUE}
+Our first simple simulation will involve 2 target classes, each with 20 items on screen. We will simulate one of the targets to be preferred over the other (`item_class_weights`), a small stick bias (`b_stick`), moderate proximity bias (`rho_delta`) and a fairly strong fowards momentum (`rho_psi`). 
+
+Absolute direction tuning is only used from model 1.2 onwards: in this simulation, we are adding in a stronger bias for horizontal compared to vertical directions (is this true??)
+
+This simple simulation only considers one participant, doing 10 trials of one condition.
+
+```{r}
+
+n_trials_per_cond <- 10
+
+n_item_class <- 2
+n_item_per_class <- 20
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 10
+rho_psi = 5
+
+d1 <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda)
+
+
+```
+
+### Fitting model 1.0
+
+Here, we fit model version 1.0.
+
+```{r, message = FALSE, warning = FALSE, results = "hide"}
+
+
+
+d1_list <- prep_data_for_stan(d1$found, d1$stim, c("spatial", "item_class"))
+
+# add priors to list
+d1_list$prior_mu_b_a <- 0
+d1_list$prior_sd_b_a <- 0.5
+d1_list$prior_mu_b_stick <- 0
+d1_list$prior_sd_b_stick <- 1
+d1_list$prior_mu_rho_delta <- 15
+d1_list$prior_sd_rho_delta <- 5
+d1_list$prior_mu_rho_psi <- 0
+d1_list$prior_sd_rho_psi <- 1
+d1_list$n_trials_to_sim <- 10
+
+```
+
+```{r, message = FALSE, warning = FALSE, results = "hide", eval = TRUE}
+
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
+# run model
+m_simple_1_0 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_0$save_object("scratch/simple_1_0_tmp.rds")
+
+```
+
+### Extract posterior
+
+We can then extract posterior samples.
+
+```{r}
+
+# read in model
+m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+
+# extract post
+post <- extract_post(m_simple_1_0, d1, multi_level = FALSE)
+
+```
+
+### Plot model
+
+We plot the fixed effects of the model (and can confirm that we are able to recover the parameters we put into the simulation).
+
+```{r, warning = FALSE}
+
+# plot model
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+
+```
+
+### Check predictions
+
+We can assess model accuracy i.e. how well can it predict the next target chosen?
+
+```{r}
+
+pred <- summarise_postpred(m_simple_1_0, d1)
+
+plot_model_accuracy(pred)
+
+
+```
+
+### Plot comparison between a real and a simulated trial
+
+And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.
+
+```{r}
+
+# plot comparison between a real and simulated trial
+
+pltreal <- plot_a_trial(d1$stim, d1$found, 1)
+pltsim <- plot_a_trial(d1$stim, pred$sim %>% filter(.draw == 1), trial = 1)
+
+pltreal + pltsim
+
+
+```
+
+## Example 2 - multilevel model
+
+### First simulate some data
+
+We can build up our model to include multiple participants (5 in this case). Here, we again only consider one condition, but multiple conditions could be included (e.g. feature/conjunction). 
+
+```{r simdata1}
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 
 b_stick = 1
@@ -52,7 +195,7 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d <- sim_foraging_people(n_people = 5,
+d2 <- sim_foraging_people(n_people = 5,
                     n_conditions = 1,
                     cond_lab = c("simple test"),
                     n_trials_per_cond = 4,
@@ -64,44 +207,53 @@ d <- sim_foraging_people(n_people = 5,
                     abs_dir_tuning = abs_dir_tuning,
                     inital_sel_params = inital_sel_params) 
 
-d$found <- fix_person_and_trial(d$found)
-d$stim <- fix_person_and_trial(d$stim)
+d2$found <- fix_person_and_trial(d2$found)
+d2$stim <- fix_person_and_trial(d2$stim)
 ```
 
 ### Now fit our model
 
-We will fit model 1.2 (basically, the corrected original model)
+We can use very similar code to fit the multi-level version of the model.
 
 ```{r prepsimdata1}
-d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
-d_list <- add_priors_to_d_list(d_list)
+d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))
+d2_list <- add_priors_to_d_list(d2_list)
+d2_list$n_trials_to_sim <- 10
 ```
 
 
-```{r fitmodelsimdata1, cache=TRUE}
-iter = 500
+```{r fitmodelsimdata1, warning = FALSE, results = "hide", eval = FALSE}
+iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE))
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
-# fit <- mod$sample(data = d_list, 
-#                   chains = 4, parallel_chains = 4, threads = 4,
-#                   refresh = 100, 
-#                   iter_warmup = iter, iter_sampling = iter,
-#                   sig_figs = 3)
+fit <- mod$sample(data = d2_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
 
-# fit$save_object("scratch/multi_level_tmp.rds")
-fit <- readRDS("scratch/multi_level_tmp.rds")
+fit$save_object("scratch/multi_level_1_0_tmp.rds")
+
+```
+
+```{r}
+
+fit <- readRDS("scratch/multi_level_1_0_tmp.rds")
+
 ```
 
 ### Posterior Density Plots
 
-```{r extractsim1post, cache=TRUE}
-post <- extract_post(fit, d)
+We can plot both fixed and random effects from the model.
+
+```{r extractsim1post}
+post <- extract_post(fit, d2)
 ```
 
 #### Fixed Effects
 
-```{r plotsim1fixed, fig.cap="fixed effects"}
+```{r plotsim1fixed, fig.cap="fixed effects", warning = FALSE}
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
@@ -114,273 +266,316 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
 plot_model_random(post)
 ```
 
-### Individaul Differences
 
-```{r, fig.cap="individual differences"}
-# plot_model_individual(post$random)
+## Example 3 - fitting FoMo 1.1
 
-post$random %>%
-  select(-.draw) %>%
-  pivot_longer(-c(person, condition), names_to = "param", values_to = "value") %>%
-  group_by(person, condition, param) %>%
-  summarise(value = median(value), .groups = "drop") %>%
-  pivot_wider(names_from = "param", values_from = "value") %>%
-  mutate(uA = plogis(uA),
-         u_stick = plogis(u_stick)) -> pltdat
+The examples below use the same simple and multilevel simulations as in the previous example, but instead fit model version 1.1.
 
-pltvar <- function(var1, var2) {
-  ggplot(pltdat, aes(.data[[var1]], .data[[var2]], 
-                     colour = condition)) + geom_point()
-}
+### The simple version
 
-(pltvar("uA", "u_stick") + pltvar("uA", "u_delta") + pltvar("uA", "u_psi")) /
-  (pltvar("u_stick", "u_delta") + pltvar("u_stick", "u_psi") + pltvar("u_delta", "u_psi")) +
-  plot_layout(guides="collect")
+```{r, message = FALSE, warning = FALSE, results = "hide"}
+
+iter = 100
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+rho_delta = 10
+rho_psi = 5
+
 ```
 
-### A Sanity check 
+```{r, eval = FALSE}
 
-Let us sanity check the person with the v high u_psi value
+mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+# run model
+m_simple_1_1 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_1$save_object("scratch/simple_1_1_tmp.rds")
+
+```
 
 ```{r}
-# filter(pltdat, u_psi > 2)
-# 
-# pp = 19
-# trl = 350
-# 
-# trl_stim <- filter(d$ds, person == pp, condition == 2, trial == trl)
-# trl_found <- filter(d$df, person == pp, condition == 2, trial == trl)
-# 
-# plot_a_trial(trl_stim, trl_found)
+
+# read in model
+m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+
+# extract post
+post <- extract_post(m_simple_1_1, d1, multi_level = FALSE)
 
 ```
 
-### Do individual param values tell us anything about run lengths?
 
-```{r}
-# rl <- get_run_info_over_trials(d$df) %>% 
-#   group_by(person, condition) %>%
-#   summarise(max_run_length = mean(max_run_length))
-# 
-# post$random %>%
-#   group_by(condition, person) %>%
-#   median_hdci(uA, u_stick) %>%
-#   full_join(rl, by = join_by(condition, person)) -> rl
-# 
-# ggplot(rl, aes(uA, xmin = uA.lower, xmax = uA.upper, y = max_run_length, colour = condition)) + 
-#   geom_errorbarh() -> plt_uA
-# 
-# ggplot(rl, aes(u_stick, xmin = u_stick.lower, xmax = u_stick.upper, y = max_run_length, colour = condition)) + 
-#   geom_errorbarh() -> plt_stick
-# 
-# plt_uA + plt_stick + plot_layout(guides = "collect")
+```{r, warning = FALSE}
+
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+rho_delta = 10
+rho_psi = 5
+
+# plot model
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_psi = rho_psi))
+
 ```
 
 
-## Example 2
+### The multilevel variant
 
-## Discussion
+```{r fitmodelsimdata1_1, warning = FALSE, results = "hide", eval = FALSE}
+iter = 100
+mod <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
-Hopefully we agree that the model fits well
+fit <- mod$sample(data = d2_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
 
-# Fitting Model to Previously Collected Datasets
+fit$save_object("scratch/multi_level_1_1_tmp.rds")
 
- some text...
-
-these are fit by scripts xxx.R and run on our cluster.
-
-
-## Clarke2022qjep
-
-## Tagu2022cog
-
-### Traceplots
-
-Show traceplots for key params and/or any with large Rhat? 
-
-### Which model fits best?
-
-Maybe better described as: how well do the models fit the training dataset? (When we collect new data later on, we will split the data and do a training and a test dataset).
-
-```{r}
-dataset <- "tagu2022cog"
-
-d <- import_data(dataset)  
-
-pp_folder <- paste0("../../scratch/", dataset, "/postpred/")
-
-pp1.1 <- read_csv(paste0(pp_folder, "post_pred_item_summary_1.1.csv"))
-pp1.2 <- read_csv(paste0(pp_folder, "post_pred_item_summary_1.2.csv"))
-pp1.3 <- read_csv(paste0(pp_folder, "post_pred_item_summary_1.3.csv"))
-  
-# join prediction dataframes together
-full_join(
-  pp1.1 %>% mutate(model = "1.1"),
-  pp1.2 %>% mutate(model = "1.2"))  %>%
-  full_join(pp1.3 %>% mutate(model = "1.3")) -> pp
-
-# remove uneeded dataframs
-rm(pp1.1, pp1.2, pp1.3)
-
-# we're not modelling the first selection, so remove found == 1
-
-pp <- filter(pp, found != 1)
-```
-
-
-```{r fig.cap="comparision of model variants. Very litte uncertainty over multiple draws."}
-n_targ = 54
-
-ggplot(pp, aes(found, W)) + 
-  geom_line(aes(colour = model,  group = interaction(draw, model)), alpha = 0.1) + 
-  geom_line(data = tibble(x = 1:n_targ, y = 1/(n_targ-x+1)), aes(x, y)) + 
-  theme_bw() +
-  facet_wrap(~condition, nrow = 1)
 ```
 
 
 ```{r}
-pp %>% select(-acc) %>% 
-  filter(found %in% 2:39) %>%
-  group_by(model) %>%
-  mean_hdci(W) %>%
-  knitr::kable()
 
-pp %>% select(-W) %>% 
-  filter(found %in% 2:39) %>%
-  group_by(model) %>%
-  mean_hdci(acc) %>%
-  knitr::kable()
+fit <- readRDS("scratch/multi_level_1_1_tmp.rds")
 
-rm(pp)
-```
-
-After comparisons, select the best model
-
-### Model Diagnostics
-
-First, import our fitted model
-
-```{r} 
-m <- readRDS("../../scratch/tagu2022cog/models/fit_model1.3.RDS")
-
-m_summary <- m$summary()
-```
-
-#### Rhat Statistics
-
-What is current best practise around this? Reporting standards? Worry thresholds? 
-
-Are there guidelines here: https://discourse.mc-stan.org/t/summarising-rhat-values-over-multiple-variables-fits/23957/5
-
-```{r}
-ggplot(m_summary, aes(rhat)) + geom_histogram()
-```
-
-Extract parameters that have Rhat > 1.01
-
-```{r}
-filter(m_summary, rhat > 1.01) %>%
-  knitr::kable(digits = 3)
-```
-
-### Pairs Plot
-
-```{r}
-bayesplot::mcmc_pairs(m$draws(format = "df"), 
-                      pars = c("bA[1]", "bA[2]", "b_stick[1]", "b_stick[2]",
-                               filter(m_summary, rhat>1.009)$variable))
 ```
 
 ### Posterior Density Plots
 
-```{r}
-cl <-  levels(d$stim$condition)
-post <- extract_post(m, d$stim, cl, 8000)
+```{r extractsim1_1post}
+post <- extract_post(fit, d2)
 ```
 
 #### Fixed Effects
 
-```{r, fig.cap="fixed effects"}
-plot_model_fixed(post, m, d$stim, cl)
+```{r plotsim1_1fixed, fig.cap="fixed effects", warning = FALSE}
+
+b_stick = 1
+rho_delta = 15
+rho_psi = -1
+
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
+                                 b_stick = b_stick,
+                                 rho_psi = rho_psi))
 ```
 
 #### Random Effects
 
-```{r, fig.cap="random effects"}
-plot_model_random(post$var)
+```{r plotsim1_1random, fig.cap="random effects"}
+plot_model_random(post)
 ```
 
-### Individaul Differences
+## Comparing 1.1 and 1.0
 
-```{r, fig.cap="individual differences"}
-# plot_model_individual(post$random)
+### Simple model
 
-post$random %>%
-  select(-.draw) %>%
-  pivot_longer(-c(person, condition), names_to = "param", values_to = "value") %>%
-  group_by(person, condition, param) %>%
-  summarise(value = median(value)) %>%
-  pivot_wider(names_from = "param", values_from = "value") %>%
-  mutate(uA = plogis(uA),
-         u_stick = plogis(u_stick)) -> pltdat
+Note that loo does not play very nicely with RMarkdown and needs to be pre-computed.
 
-pltvar <- function(var1, var2) {
-  ggplot(pltdat, aes(.data[[var1]], .data[[var2]], 
-                     colour = condition)) + geom_point()
-}
+```{r, warning = FALSE}
 
-(pltvar("uA", "u_stick") + pltvar("uA", "u_delta") + pltvar("uA", "u_psi")) /
-  (pltvar("u_stick", "u_delta") + pltvar("u_stick", "u_psi") + pltvar("u_delta", "u_psi")) +
-  plot_layout(guides="collect")
+#m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+#m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+
+#loo_1_1 <- m_simple_1_1$loo()
+#loo_1_0 <- m_simple_1_0$loo()
+
+#loo_1_1_mm <- m_simple_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_simple_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_mm.rds")
+
+loo_1_0_mm <- readRDS("scratch/loo_1_0_mm.rds")
+loo_1_1_mm <- readRDS("scratch/loo_1_1_mm.rds")
+
+loo::loo_model_weights(list(
+  "model 1.1" = loo_1_1_mm,
+  "model 1.0" = loo_1_0_mm))
+
 ```
 
-### A Sanity check 
-
-Let us sanity check the person with the v high u_psi value
+### Multi-level model
 
 ```{r}
-filter(pltdat, u_psi > 2)
 
-pp = 19
-trl = 350
+#m_ml_1_0 <- readRDS("scratch/multi_level_1_0_tmp.rds")
+#m_ml_1_1 <- readRDS("scratch/multi_level_1_1_tmp.rds")
 
-trl_stim <- filter(d$stim, person == pp, condition == 2, trial == trl)
-trl_found <- filter(d$found, person == pp, condition == 2, trial == trl)
+#loo_1_1 <- m_ml_1_1$loo()
+#loo_1_0 <- m_ml_1_0$loo()
 
-plot_a_trial(trl_stim, trl_found)
+#loo_1_1_mm <- m_ml_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_ml_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_ml_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_ml_mm.rds")
+
+loo_1_0_ml_mm <- readRDS("scratch/loo_1_0_ml_mm.rds")
+loo_1_1_ml_mm <- readRDS("scratch/loo_1_1_ml_mm.rds")
+
+loo::loo_model_weights(list(
+  "model 1.1" = loo_1_1_ml_mm,
+  "model 1.0" = loo_1_0_ml_mm))
 
 ```
 
-### Do individual param values tell us anything about run lengths?
+In both cases, we see that the model weights prefer model 1.0 over 1.1 - this probably reflects the fact that the simulation methods here use the 1.0 methods to generate the data.
 
+# Simulating data with relative proximity set up
+
+We can test that model 1.1 is doing what we think it is by simulating data using relative proximity. Here, we would expect model 1.1 to be a better fit for the data compared to model 1.0, and this is what we see below.
+
+```{r, warning = FALSE}
+
+
+n_trials_per_cond <- 10
+
+n_item_class <- 2
+n_item_per_class <- 20
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 10
+rho_psi = 5
+
+dr <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda,
+                                  rel_proximity = TRUE)
+
+
+```
 
 ```{r}
-rl <- get_run_info_over_trials(d$found) %>% 
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length))
 
-post$random %>%
-  group_by(condition, person) %>%
-  median_hdci(uA, u_stick) %>%
-  full_join(rl, by = join_by(condition, person)) -> rl
+dr_list <- prep_data_for_stan(dr$found, dr$stim, c("spatial", "item_class"))
 
-ggplot(rl, aes(uA, xmin = uA.lower, xmax = uA.upper, y = max_run_length, colour = condition)) + 
-  geom_errorbarh() -> plt_uA
+# add priors to list
+dr_list$prior_mu_b_a <- 0
+dr_list$prior_sd_b_a <- 0.5
+dr_list$prior_mu_b_stick <- 0
+dr_list$prior_sd_b_stick <- 1
+dr_list$prior_mu_rho_delta <- 15
+dr_list$prior_sd_rho_delta <- 5
+dr_list$prior_mu_rho_psi <- 0
+dr_list$prior_sd_rho_psi <- 1
+dr_list$n_trials_to_sim <- 10
 
-ggplot(rl, aes(u_stick, xmin = u_stick.lower, xmax = u_stick.upper, y = max_run_length, colour = condition)) + 
-  geom_errorbarh() -> plt_stick
-
-plt_uA + plt_stick + plot_layout(guides = "collect")
 ```
 
-### Posterior Predictions
+```{r, warning = FALSE, results = "hide", eval = FALSE}
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
-plot predicated v empirical run stats, inter-targ distances, directions. 
+dr_1_0 <- mod$sample(data = dr_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
 
-For these, we need the trial-level posterior predictions
+```
 
-## Disussion
+```{r, warning = FALSE, results = "hide", eval = FALSE}
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
+dr_1_1 <- mod$sample(data = dr_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
 
+```
 
+```{r}
+
+# pre-computed to save time
+#dr_1_0_loo <- dr_1_0$loo(moment_match = TRUE)
+#dr_1_1_loo <- dr_1_1$loo(moment_match = TRUE)
+
+#saveRDS(dr_1_0_loo, "scratch/dr_1_0_loo.rds")
+#saveRDS(dr_1_1_loo, "scratch/dr_1_1_loo.rds")
+
+dr_1_0_loo <- readRDS("scratch/dr_1_0_loo.rds")
+dr_1_1_loo <- readRDS("scratch/dr_1_1_loo.rds")
+
+loo::loo_model_weights(list(
+  "model 1.1" = dr_1_1_loo,
+  "model 1.0" = dr_1_0_loo))
+
+```
+
+## Model 1.2
+
+Start with a simple model.
+
+```{r}
+
+iter = 100
+
+d1_list$prior_theta_lambda <- 10
+d1_list$kappa <- 10
+
+mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+# run model
+m_simple_1_2 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_2$save_object("scratch/simple_1_2_tmp.rds")
+
+```
+
+The data was simulated with absolute direction biases - does this mean that 1.2 is a better model for the data? According to this, yes.
+
+```{r, warning = FALSE}
+
+#m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+#m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+#m_simple_1_2 <- readRDS("scratch/simple_1_2_tmp.rds")
+
+#loo_1_2 <- m_simple_1_2$loo()
+#loo_1_1 <- m_simple_1_1$loo()
+#loo_1_0 <- m_simple_1_0$loo()
+
+#loo_1_2_mm <- m_simple_1_2$loo(moment_match = TRUE)
+#loo_1_1_mm <- m_simple_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_simple_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_2_mm, "scratch/loo_1_2_mm.rds")
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_mm.rds")
+
+loo_1_0_mm <- readRDS("scratch/loo_1_0_mm.rds")
+loo_1_1_mm <- readRDS("scratch/loo_1_1_mm.rds")
+loo_1_2_mm <- readRDS("scratch/loo_1_2_mm.rds")
+
+loo::loo_model_weights(list(
+  "model 1.2" = loo_1_2_mm,
+  "model 1.1" = loo_1_1_mm,
+  "model 1.0" = loo_1_0_mm))
+
+```

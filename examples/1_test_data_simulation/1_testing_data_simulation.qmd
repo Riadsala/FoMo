@@ -51,6 +51,8 @@ item_labels = c("A", "B", "d1", "d2")
 
 There are a number of parameters that can be included in the model. The first one we will demonstrate is a proximity bias: `rho_delta`. Setting this to a large value (e.g. 50) means that there will be a strong bias towards choosing a nearby target.
 
+Note that data can be simulated for version 1.0 of the model (`rel_proximity = FALSE`) or version 1.1 of the model (`rel_proximity = TRUE`).
+
 In the below demonstration, we have a strong proximity bias, with other parameters either neutral (different target types are equally attractive) or turned off (relative and absolute proximity biases, memory).
 
 
@@ -110,7 +112,7 @@ d <- sim_foraging_trial(trl = 1,
                         rho_psi,
                         abs_dir_tuning,
                         inital_sel_params = inital_sel_params,
-                        init_sel_lambda = init_sel_lambda,)
+                        init_sel_lambda = init_sel_lambda)
 
 plot_a_trial(d$stim, d$found)
 ```
