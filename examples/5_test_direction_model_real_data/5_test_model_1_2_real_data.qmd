@@ -1,0 +1,170 @@
+---
+title: "5. Testing direction model with real data"
+format: html
+---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 1)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+```
+
+```{r}
+
+d <- import_data('tagu2022cog')
+
+```
+
+### A slightly simpler model to test 1.2 with the Tagu data
+
+```{r}
+
+d_found_small <- d$found %>%
+  filter(person == 3) %>%
+  mutate(person = 1) %>%
+  group_by(trial) %>%
+  mutate(trial = cur_group_id()) %>%
+  ungroup()
+
+d_stim_small <- d$stim %>%
+  filter(person == 3) %>%
+  mutate(person = 1)  %>%
+  group_by(trial) %>%
+  mutate(trial = cur_group_id()) %>%
+  ungroup()
+
+d_list <- prep_data_for_stan(d_found_small, d_stim_small, c("spatial", "item_class"))
+d_list <- add_priors_to_d_list(d_list)
+
+# model 1.0
+
+iter = 100
+d_list$n_trials_to_sim <- 1
+
+mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
+fit <- mod$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 init = 1,
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
+
+fit1_0_loo <- fit$loo(moment_match = TRUE)
+
+# model 1.1
+
+mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
+fit <- mod$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 init = 1,
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
+
+fit1_1_loo <- fit$loo(moment_match = TRUE)
+
+# model 1.2
+
+d_list$prior_theta_lambda <- 10
+d_list$kappa <- 10
+
+
+mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
+fit <- mod$sample(data = d_list, 
+                 chains = 4, parallel_chains = 4, threads = 4,
+                 refresh = 10, 
+                 init = 1,
+                 iter_warmup = iter, iter_sampling = iter,
+                 sig_figs = 3)
+
+fit1_2_loo <- fit$loo(moment_match = TRUE)
+
+# which model fit best?
+
+knitr::kable(loo::loo_model_weights(list(
+  "model 1.2" = fit1_2_loo,
+  "model 1.1" = fit1_1_loo,
+  "model 1.0" = fit1_0_loo)))
+
+```
+
+Model 1.2 MAY be the best, at least for some participants. Let's plot their direction data.
+
+```{r}
+
+post <- extract_post(fit, d, multi_level = FALSE, absdir = TRUE)
+
+post$absdir %>% mutate(kappa = 10) %>%
+  select(.draw, phi, theta, kappa, comp) %>%
+  pmap_df(compute_von_mises, x = seq(0, 2*pi, 0.01)) %>%
+  group_by(.draw, x) %>%
+  summarise(weight = sum(z) + 1) -> post_weights
+
+post_weights %>% 
+  group_by(x) %>%
+  median_hdci(weight, .width = c(0.53, 0.97)) %>%
+  ungroup() %>%
+  ggplot(aes(x, weight, ymin = .lower, ymax = .upper, group = .width)) + 
+  geom_ribbon(alpha = 0.5, fill = "purple")
+
+# How about a rose style plot?
+d_sel <- get_inter_sel_info_over_trials(d_found_small)
+plot_rose(d_sel)
+
+# Can we do something with more of a line plot?
+
+d_sel_for_lines <- d_sel %>%
+  mutate(angle = 180*theta/pi)
+         
+
+EqualWidthBinMidpoint <- function(x, k) {
+  # Returns midpoints of equal-width bins.
+  #
+  # Args:
+  #   x: Vector to bin.
+  #   k: Number of bins.
+  #
+  # Returns:
+  #   Numeric vector with midpoint of each element of x's bin.
+  ci <- as.character(ggplot2::cut_interval(x, k))
+  ci2 <- substr(as.character(ci), 2, nchar(as.character(ci)) - 1)
+  lb <- sapply(ci2, function(x) strsplit(x, ",")[[1]][1])
+  ub <- sapply(ci2, function(x) strsplit(x, ",")[[1]][2])
+  return((as.numeric(lb) + as.numeric(ub)) / 2)
+}
+
+d_sel_for_lines$bin_midpoint <- EqualWidthBinMidpoint(d_sel_for_lines$angle, 17)
+
+d_sel_for_lines_grouped <- d_sel_for_lines %>%
+  group_by(bin_midpoint) %>%
+  summarise(count = n()) %>%
+  mutate(freq = count / sum(count)) %>%
+  drop_na()
+
+ggplot(d_sel_for_lines_grouped, aes(x = bin_midpoint, xend = bin_midpoint, y = freq, yend = 0)) +
+  geom_segment(linetype= 1, colour = "#919191", linewidth = 1.5) +
+  coord_polar(start = pi/2, direction = -1) +
+  theme_bw() + 
+    theme(axis.title = element_blank(),
+          axis.text.x = element_blank())
+  
+
+```
