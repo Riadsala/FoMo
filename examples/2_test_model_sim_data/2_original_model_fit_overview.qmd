@@ -266,6 +266,14 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
 plot_model_random(post)
 ```
 
+### Model Accuracy
+
+```{r}
+
+pred <- summarise_postpred(fit, d2)
+
+plot_model_accuracy(pred)
+```
 
 ## Example 3 - fitting FoMo 1.1
 
