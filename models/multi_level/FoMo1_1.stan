@@ -200,9 +200,7 @@ generated quantities {
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
-  // 
-  // For now, only sim 1 trial per condition per person
-  //array[K, n_trials_to_sim, n_targets] int Q; 
+  array[L, K, n_trials_to_sim, n_targets] int Q; 
  
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -237,7 +235,67 @@ generated quantities {
       P[ii] = categorical_rng(weights);
       log_lik[ii] = weights[Y[ii]];
        
+//////////////////////////////////////////////////////////////////////////////
+  // now allow the model to do a whole trial on its own
+  {
+    vector[n_targets] remaining_items2;
+    vector[n_targets] Sj;
+    // some counters and index variables, etc.
+    vector[n_targets] weights;  // class weight for teach target
+
+    vector[n_targets] psi_j, phi_j, delta_j;
+
+    // for each particicpant
+    for (l in 1:L) {
+  
+      // for each condition
+      for (k in 1:K) {
+
+        //for each trial
+        for (t in 1:n_trials_to_sim) {
+
+          // first, set things up!
+          remaining_items2 = rep_vector(1, n_targets);
+
+          // simulate a trial!
+          for (jj in 1:n_targets) {
+
+            // set the weight of each target to be its class weight
+            weights = (u_a[k, l]) * to_vector(item_class[t]);
+             
+            // delta_j: distance to previously selected item
+            Sj = rep_vector(0, n_targets);
+            delta_j = rep_vector(1, n_targets);
+            phi_j = rep_vector(1, n_targets);
+             
+            if (jj > 1) {
+
+              Sj      = compute_matching(item_class[t], n_targets, Q[l, k, t, ], jj);
+              delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj);
+              delta_j = scale_prox(delta_j, remaining_items2, n_targets);
+              psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj); 
+                
+            }
+
+            // multiply weights by stick/switch preference
+            weights = inv_logit(weights) .* inv_logit(u_stick[k, l] * Sj); 
+
+            // compute spatial weights
+            weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
+              u_delta[k, l], u_psi[k, l],
+              delta_j, psi_j);
+                  
+            // remove already-selected items, and standarise to sum = 1 
+            weights = standarise_weights(weights, n_targets, remaining_items2);   
+       
+            Q[l, k, t, jj] = categorical_rng(weights);
+
+            // update remaining_items2
+            remaining_items2[Q[l, k, t, jj]] = 0;
+
+          }
+        }
+      }
     }
   }
-  
 }

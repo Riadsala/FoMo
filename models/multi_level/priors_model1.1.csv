@@ -1,0 +1,10 @@
+﻿param,mu,sd
+b_a,0,1.5
+b_stick,0,1.5
+rho_delta,1,1
+rho_psi,0,1
+uA,0,0.5
+u_stick,0,0.5
+u_delta,0,0.5
+u_psi,0,0.5
+
