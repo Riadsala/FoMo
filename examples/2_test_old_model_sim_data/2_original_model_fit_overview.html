@@ -218,7 +218,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="check-predictions">Check predictions</h3>
 <p>We can assess model accuracy i.e.&nbsp;how well can it predict the next target chosen?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">summarise_postpred</span>(m_simple_1_0, d1)</span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">summarise_postpred</span>(m_simple_1_0, d1, <span class="at">multi_level =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_model_accuracy</span>(pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -286,16 +286,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>                    <span class="at">abs_dir_tuning =</span> abs_dir_tuning,</span>
 <span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>                    <span class="at">inital_sel_params =</span> inital_sel_params) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code> ■■■■■■■                           20% |  ETA: 15s</code></pre>
+<pre><code> ■■■■■■■                           20% |  ETA: 12s</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code> ■■■■■■■■■■■■■                     40% |  ETA: 14s</code></pre>
+<pre><code> ■■■■■■■■■■■■■                     40% |  ETA:  9s</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code> ■■■■■■■■■■■■■■■■■■■               60% |  ETA: 10s</code></pre>
+<pre><code> ■■■■■■■■■■■■■■■■■■■               60% |  ETA:  6s</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code> ■■■■■■■■■■■■■■■■■■■■■■■■■         80% |  ETA:  5s</code></pre>
+<pre><code> ■■■■■■■■■■■■■■■■■■■■■■■■■         80% |  ETA:  3s</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>d2<span class="sc">$</span>found <span class="ot">&lt;-</span> <span class="fu">fix_person_and_trial</span>(d2<span class="sc">$</span>found)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>d2<span class="sc">$</span>stim <span class="ot">&lt;-</span> <span class="fu">fix_person_and_trial</span>(d2<span class="sc">$</span>stim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

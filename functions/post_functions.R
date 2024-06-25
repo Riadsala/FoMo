@@ -173,7 +173,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.1)
       
   }
   
-  sim %>%
+  sim <- sim %>%
     mutate(condition = parse_number(condition),
            trial = parse_number(trial),
            found = parse_number(found)) %>%
