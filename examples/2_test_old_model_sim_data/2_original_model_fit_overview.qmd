@@ -266,7 +266,7 @@ plot_model_random(post)
 
 ### Model Accuracy
 
-```{r}
+```{r, warning = FALSE}
 
 pred <- summarise_postpred(fit, d2)
 
@@ -284,7 +284,7 @@ The examples below use the same simple and multilevel simulations as in the prev
 iter = 100
 item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
-rho_delta = 10
+rho_delta = 1
 rho_psi = 5
 
 ```
@@ -324,12 +324,13 @@ post <- extract_post(m_simple_1_1, d1, multi_level = FALSE)
 
 item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
-rho_delta = 10
+rho_delta = 1
 rho_psi = 5
 
 # plot model
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
                                  b_stick = b_stick,
+                                 rho_delta = rho_delta,
                                  rho_psi = rho_psi))
 
 ```
