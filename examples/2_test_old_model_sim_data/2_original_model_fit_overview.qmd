@@ -277,6 +277,8 @@ plot_model_accuracy(pred)
 
 The examples below use the same simple and multilevel simulations as in the previous example, but instead fit model version 1.1.
 
+Note that the data is simulated without using relative proximity, so `rho_delta` looks odd for model 1.1.
+
 ### The simple version
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
@@ -284,7 +286,7 @@ The examples below use the same simple and multilevel simulations as in the prev
 iter = 100
 item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
-rho_delta = 1
+rho_delta = 10
 rho_psi = 5
 
 ```
@@ -324,17 +326,15 @@ post <- extract_post(m_simple_1_1, d1, multi_level = FALSE)
 
 item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
-rho_delta = 1
+rho_delta = 10
 rho_psi = 5
 
 # plot model
 plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
                                  b_stick = b_stick,
-                                 rho_delta = rho_delta,
                                  rho_psi = rho_psi))
 
 ```
-
 
 ### The multilevel variant
 
@@ -446,7 +446,7 @@ In both cases, we see that the model weights prefer model 1.0 over 1.1 - this pr
 
 # Simulating data with relative proximity set up
 
-We can test that model 1.1 is doing what we think it is by simulating data using relative proximity. Here, we would expect model 1.1 to be a better fit for the data compared to model 1.0, and this is what we see below.
+We can test that model 1.1 is doing what we think it is by simulating data using relative proximity. Here, we would expect model 1.1 to be a better fit for the data compared to model 1.0, and this is what we see below. (We can also see here that model 1.1 does a good job of recovering the `rho_delta` parameter value, as now we are simulating relative proximity).
 
 ```{r, warning = FALSE}
 
@@ -509,16 +509,27 @@ dr_1_0 <- mod$sample(data = dr_list,
 
 ```
 
-```{r, warning = FALSE, results = "hide", eval = FALSE}
+```{r, message = FALSE, warning = FALSE, results = "hide", eval = TRUE}
 iter = 100
 mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
 dr_1_1 <- mod$sample(data = dr_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
+                 refresh = 0, 
                  iter_warmup = iter, iter_sampling = iter,
                  sig_figs = 3)
+
+```
+
+```{r, warning = FALSE}
+
+post <- extract_post(dr_1_1, d1, multi_level = FALSE)
+
+plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
 
 ```
 
