@@ -143,10 +143,9 @@ We can assess model accuracy i.e. how well can it predict the next target chosen
 
 ```{r}
 
-pred <- summarise_postpred(m_simple_1_0, d1)
+pred <- summarise_postpred(m_simple_1_0, d1, multi_level = FALSE)
 
 plot_model_accuracy(pred)
-
 
 ```
 

@@ -137,7 +137,7 @@ extract_post_random <- function(m, cl) {
   
 }
 
-summarise_postpred <- function(m, d, draw_sample_frac = 0.1) {
+summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.1) {
   
   # first, get list of variables in the model:
   vars <- m$metadata()$stan_variables
@@ -161,8 +161,19 @@ summarise_postpred <- function(m, d, draw_sample_frac = 0.1) {
   sim <- m$draws("Q", format = "df")  %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
-    pivot_longer(-.draw, values_to = "id") %>%
-    separate(name, c("condition", "trial", "found"), sep = ",") %>%
+    pivot_longer(-.draw, values_to = "id") 
+  
+  if (multi_level) {
+    sim %>%
+      separate(name, 
+               c("person", "condition", "trial", "found"), sep = ",") -> sim
+  } else {
+    sim %>%
+      separate(name, c("condition", "trial", "found"), sep = ",") -> sim
+      
+  }
+  
+  sim %>%
     mutate(condition = parse_number(condition),
            trial = parse_number(trial),
            found = parse_number(found)) %>%
