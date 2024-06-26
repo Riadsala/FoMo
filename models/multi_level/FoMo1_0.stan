@@ -236,7 +236,7 @@ generated quantities {
     }
   }
 
-   //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
     vector[n_targets] remaining_items2;
@@ -297,6 +297,5 @@ generated quantities {
         }
       }
     }
-  }
-   
+  } 
 }
