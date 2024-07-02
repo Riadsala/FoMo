@@ -2,3 +2,6 @@
 *.exe
 *.exe
 *.RDS
+*.rds
+*.exe
+models/multi_level/FoMo1_0.exe
