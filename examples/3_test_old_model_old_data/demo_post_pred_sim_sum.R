@@ -37,10 +37,10 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d2 <- sim_foraging_people(n_people = 5,
+d2 <- sim_foraging_people(n_people = 15,
                           n_conditions = 1,
                           cond_lab = c("simple test"),
-                          n_trials_per_cond = 3,
+                          n_trials_per_cond = 5,
                           n_item_class = 2, n_item_per_class = 20,
                           item_class_weights, sd_bA = 0.2,
                           b_stick = b_stick, sd_b_stick = 1,
@@ -68,18 +68,8 @@ fit <- mod$sample(data = d2_list_p,
 
 post <- summarise_postpred(fit, d2)
 
-d <- get_inter_sel_info_over_trials(post$sim)
-
 ############## compute against human
 
-e <- get_inter_sel_info_over_trials(d2$found) %>%
-  group_by(person, found) %>% 
-  summarise(empirical = mean(d2))
 
-d %>% group_by(person, found) %>% 
-  summarise(simulated = mean(d2)) %>%
-  full_join(e) %>%
-  filter(found != 1) %>%
-  pivot_longer(c(simulated, empirical), values_to = "d2") %>%
-  ggplot(aes(found, d2, colour = name)) + geom_path() +
-  facet_wrap(~person)
+plot_model_human_comparison(pred, d2) 
+  

@@ -18,6 +18,66 @@ theme_set(theme_minimal())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
+
+plot_model_human_comparison <- function(pred, df) {
+  
+  # Create a plot to compare our model to human/training data
+  # in terms of run statistics, inter-target length etc.
+  
+  d <- get_inter_sel_info_over_trials(post$sim)
+  
+  e <- get_inter_sel_info_over_trials(df$found) %>%
+    group_by(person, found) %>% 
+    summarise(empirical = mean(d2),
+              .groups = "drop")
+  
+  d %>% group_by(person, found) %>% 
+    summarise(simulated = mean(d2)) %>%
+    full_join(e, by = join_by(person, found)) %>%
+    filter(found != 1) %>%
+    pivot_longer(c(simulated, empirical), values_to = "d2") %>%
+    ggplot(aes(found, sqrt(d2), colour = name, group = interaction(name, person))) + 
+    geom_path(alpha = 0.5) +
+    geom_smooth(aes(group = name), se=FALSE, linetype = 2) + 
+    scale_x_continuous("nth item found") + 
+    scale_y_continuous("inter-target distance") +
+    theme(legend.title = element_blank()) -> plt_amp
+  
+  ############## now do run statistics
+  
+  d <- get_run_info_over_trials(post$sim)
+  
+  e <- get_run_info_over_trials(df$found) %>%
+    group_by(person, condition) %>% 
+    summarise(n_runs = median(n_runs),
+              max_run_length = median(max_run_length),
+              .groups = "drop") %>%
+    mutate(type = "empirical") 
+  
+  d %>% group_by(person, condition) %>% 
+    summarise(n_runs = median(n_runs),
+              max_run_length = median(max_run_length),
+              .groups = "drop") %>%
+    mutate(type = "simulated") %>%
+    full_join(e, by = join_by(person, n_runs, max_run_length, type, condition)) %>%
+    pivot_longer(c(max_run_length, n_runs), names_to = "stat") %>%
+    pivot_wider(names_from = "type", values_from ="value") %>%
+    ggplot(aes(empirical, simulated, 
+               colour = condition, shape = condition)) + 
+    geom_abline(linetype = 2) + 
+    geom_point(size = 2) +
+    facet_wrap(~stat, scales = "free") -> plt_runs
+  
+  
+  plt <- plt_amp / plt_runs
+  
+  return(plt)
+}
+
+
+
+
+
 plot_model_accuracy <- function(pred) {
   
   n_targets <- max((pred$acc$found))
