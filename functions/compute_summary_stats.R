@@ -13,6 +13,12 @@
 
 get_run_info_over_trials <- function(df) {
   
+  if (".draw" %in% c(names(df))) {
+    
+    df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
+    
+  }
+  
   df %>%
     group_by(person, condition, trial_p) %>% 
     summarise(.groups = "drop") %>%
@@ -33,9 +39,7 @@ get_inter_sel_info_over_trials <- function(df) {
     
     d_trials <- df %>% group_by(person, condition, trial_p) %>% 
       summarise(.groups = "drop") 
-    
 
-  
   
   d_out <- pmap_df(d_trials, get_inter_targ_stats, df,
                    .progress = TRUE) 
