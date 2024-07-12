@@ -15,6 +15,7 @@ import_data <- function(dataset, small_test=FALSE) {
   d <- switch(dataset,
               "clarke2022qjep" = import_clarke2022qjep(small_test),
               "tagu2022cog"    = import_tagu2022cog(small_test),
+              "kristjansson2014plos" = import_kristjansson2014plos(small_test),
               "unknown dataset")
 }
 
@@ -205,3 +206,50 @@ check_col_name_and_type <- function(d, n, t) {
     print(paste("can't find column", n))
   }
 }
+
+
+import_kristjansson2014plos <- function(small_test) {
+  
+  my_spec <- cols(
+    condition = col_double(),
+    trial = col_double(),
+    observer = col_double(),
+    targ_type = col_double(),
+    id = col_double(),
+    x = col_double(),
+    y = col_double(),
+    found = col_double())
+  
+  d <- read_csv("../../data/kristjansson2014/human_data_2014_prox.csv", col_types = my_spec) 
+  
+  d %>% 
+    select(person = "observer", condition, trial = "trial",  
+           id = "id", found = "found", item_class = "targ_type",
+           x = "x", y = "y") %>%
+    mutate(item_class = item_class + 1,
+           condition = as.factor(condition)) -> d
+  
+  if (small_test) {
+    
+    d <- filter(d, person < 10, trial < 10)
+  }
+  
+  d <- fix_person_and_trial(d)
+  
+  # extract stimulus data
+  d_stim <- d %>% select(person, condition, trial, id, x, y, item_class, trial_p) %>%
+    arrange(person, condition, trial) 
+  
+  # extract behavioral data
+  d_found <- d %>% filter(found > 0) %>% 
+    arrange(person, condition, trial, found) 
+  
+  if (small_test) {
+    d_found <- filter(d_found, found == 1)
+  }
+  
+  return(list(stim = d_stim,
+              found = d_found))
+  
+}
+
