@@ -108,7 +108,29 @@ bayesplot::mcmc_trace(fit1_1$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]",
 
 ```
 
-### Which model fits best?
+### Which model fits best - training set acc
+
+
+```{r}
+chance_acc <- mean(1/(seq(53, 1)))
+
+
+pred <- summarise_postpred(fit1_0, d, get_sim = FALSE, draw_sample_frac=1)
+acc10 <- compute_training_acc(pred$acc) %>% mutate(model = "FoMo 1.0")
+
+
+pred <- summarise_postpred(fit1_1, d, get_sim = FALSE, draw_sample_frac=1)
+acc11 <- compute_training_acc(pred$acc) %>% mutate(model = "FoMo 1.1")
+  
+
+bind_rows(acc10, acc11) %>%
+  ggplot(aes(y = condition, x = accuracy, xmin = .lower, xmax = .upper, colour = model )) +
+  geom_pointinterval(position = position_dodge(width = 0.25))
+```
+
+### Which model fits best - LOO?
+
+
 
 ```{r}
 

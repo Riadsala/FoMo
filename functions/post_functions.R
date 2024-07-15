@@ -137,7 +137,7 @@ extract_post_random <- function(m, cl) {
   
 }
 
-summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.1) {
+summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01, get_sim = TRUE) {
   
   # first, get list of variables in the model:
   vars <- m$metadata()$stan_variables
@@ -146,6 +146,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.1)
   
   # now get prior distributions from model object
   pred <- m$draws(pvars, format = "df") %>%
+    sample_frac(draw_sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw) %>%
@@ -158,27 +159,72 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.1)
     select(-n, -item_class, -x, -y) %>%
     mutate(model_correct = (P == id))
   
-  sim <- m$draws("Q", format = "df")  %>%
-    as_tibble() %>%
-    select(-.chain, -.iteration) %>%
-    pivot_longer(-.draw, values_to = "id") 
+  if (get_sim) {
   
-  if (multi_level) {
-    sim %>%
-      separate(name, 
-               c("person", "condition", "trial", "found"), sep = ",") -> sim
-  } else {
-    sim %>%
-      separate(name, c("condition", "trial", "found"), sep = ",") -> sim
+    sim <- m$draws("Q", format = "df")  %>%
+      sample_frac(draw_sample_frac) %>%
+      as_tibble() %>%
+      select(-.chain, -.iteration) %>%
+      pivot_longer(-.draw, values_to = "id") 
+    
+    if (multi_level) {
       
+      sim %>%
+        separate(name, 
+                 c("person", "condition", "trial", "found"), 
+                 sep = ",", convert = TRUE) %>%
+        mutate(person = parse_number(person),
+               found = parse_number(found),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+      
+      sim %>%
+        left_join(d$stim %>% select(-person), by = join_by(trial, id, condition)) -> sim
+      
+    } else {
+      
+      sim %>%
+        separate(name, c("condition", "trial", "found"), 
+                 sep = ",", convert = TRUE) %>%
+        mutate(found = parse_number(found),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+      
+      sim %>%
+        full_join(d$stim, by = join_by(trial, id)) -> sim
+        
+    }
+    
+    list_out <- list(acc = pred, sim = sim)
+    
+  } else {
+    
+    list_out <- list(acc = pred)
   }
   
-  sim <- sim %>%
-    mutate(condition = parse_number(condition),
-           trial = parse_number(trial),
-           found = parse_number(found)) %>%
-    full_join(d$stim, by = join_by(trial, id))
+  #sim <- sim %>%
+ #   mutate(condition = parse_number(condition),
+ #          trial = parse_number(trial),
+  #         found = parse_number(found)) %>%
+ #   full_join(d$stim, by = join_by(trial, id))
+
   
-  return(list(acc = pred, sim = sim))
+  return(list_out)
+  
+}
+
+
+compute_training_acc <- function(acc) {
+  
+  acc %>% 
+    filter(found != 1) %>%
+    group_by(.draw, condition, person, trial) %>%
+    summarise(trial_acc = mean(model_correct)) %>%
+    summarise(person_acc = mean(trial_acc)) %>%
+    summarise(accuracy = mean(person_acc)) %>%
+    group_by(condition) %>%
+    median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
+    select(-.interval, -.point) -> acc
+  
+  return(acc)
+  
   
 }
