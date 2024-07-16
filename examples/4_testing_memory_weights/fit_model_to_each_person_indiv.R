@@ -27,10 +27,10 @@ iter = 500
 
 for (pp in 1:24) {
 
-  d_one_person <- filter_one_person(d, pp) 
+  d_one_person <- take_one_person(d, pp) 
   
   d_list <- prep_data_for_stan(d_one_person$found, d_one_person$stim, c("spatial", "item_class"))
-  d_list <- add_priors_to_d_list(d_list)
+  d_list <- add_priors_to_d_list(d_list, modelver = "1.1")
   d_list$n_trials_to_sim <- 1
   
   filename <- paste0("scratch/person", pp)
@@ -46,8 +46,6 @@ for (pp in 1:24) {
  fit$save_object(paste0(filename, "_11.rds"))
   
   # model 1.2
-  d_list$prior_theta_lambda <- 10
-  d_list$kappa <- 10
   
   fit <- mod12$sample(data = d_list, 
                     chains = 4, parallel_chains = 4, threads = 4,
@@ -59,6 +57,8 @@ for (pp in 1:24) {
   fit$save_object(paste0(filename, "_12.rds"))
   
 }
+
+rm(fit)
 
 for (pp in 1:24) {
   

@@ -16,9 +16,8 @@ functions {
     // for FoMo1.0, this includes proximity and relative direction
     vector[n_targets] prox_weights;
 
-
     // apply spatial weighting
-    prox_weights   = compute_prox_weights(n, n_targets, 
+    prox_weights  = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
 
     // return the dot product of the weights
@@ -105,7 +104,7 @@ model {
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(b_m[ii]   | -2, 1);
+    target += normal_lpdf(b_m[ii]       | -2, 1);
   }
 
   //////////////////////////////////////////////////
@@ -119,6 +118,8 @@ model {
 
       trl = trl + 1; // update trial counter           
       kk = X[trl]; // get conditions of current target/trial 
+
+      prev_weights = rep_vector(1, n_targets);
 
     }
 
@@ -141,7 +142,9 @@ model {
 
     weights = weights .* spatial_weights;
 
-    weights = weights + exp(b_m[kk]) * prev_weights;
+    if (found_order[ii] > 1) {
+      weights = weights + exp(b_m[kk]) * prev_weights;
+    }
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
@@ -195,6 +198,12 @@ generated quantities {
 
       t = trial[ii];
       kk = X[t];
+
+      if (found_order[ii] == 1) {
+
+        prev_weights = rep_vector(1, n_targets);
+
+      }
    
       // set the weight of each target to be its class weight
       weights = b_a[kk] * to_vector(item_class[t]);
@@ -206,7 +215,9 @@ generated quantities {
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], delta_n[ii]);
 
-      weights = weights + exp(b_m[kk]) * prev_weights;
+      if (found_order[ii] > 1) {
+        weights = weights + exp(b_m[kk]) * prev_weights;
+      }
 
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
@@ -219,6 +230,7 @@ generated quantities {
     }
   }
   
+  /*
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
@@ -230,7 +242,7 @@ generated quantities {
     vector[n_targets] phi_j, delta_j;
   
     // for each condition
-    for (k in 1:1) {
+    for (k in 1:K) {
 
       //for each trial
       for (t in 1:n_trials_to_sim) {
@@ -240,6 +252,10 @@ generated quantities {
 
         // simulate a trial!
         for (jj in 1:n_targets) {
+
+          if (jj == 1) {
+            prev_weights = rep_vector(0, n_targets);
+          }
 
           // set the weight of each target to be its class weight
           weights = (b_a[k]) * to_vector(item_class[t]);
@@ -279,4 +295,5 @@ generated quantities {
       }
     }
   }
+  */
 }
