@@ -19,6 +19,26 @@ import_data <- function(dataset, small_test=FALSE) {
               "unknown dataset")
 }
 
+take_one_person <- function(d, pp) {
+  
+  d_found_small <- d$found %>%
+    filter(person == pp) %>%
+    mutate(person = 1) %>%
+    group_by(trial) %>%
+    mutate(trial = cur_group_id()) %>%
+    ungroup()
+  
+  d_stim_small <- d$stim %>%
+    filter(person == pp) %>%
+    mutate(person = 1)  %>%
+    group_by(trial) %>%
+    mutate(trial = cur_group_id()) %>%
+    ungroup()
+  
+  return(list(found = d_found_small, stim = d_stim_small))
+  
+}
+
 fix_person_and_trial <- function(d) {
   
   # first arrange data so it has all of person 1, then person 2, etc

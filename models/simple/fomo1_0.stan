@@ -89,7 +89,6 @@ model {
 
   // some counters and index variables, etc.
   vector[n_targets] weights;  // class weight for teach target
-  vector[n_targets] m; // does this target match the previous target?
   vector[n_targets] spatial_weights;
 
   int trl = 0; // counter for trial number

@@ -13,6 +13,12 @@
 
 get_run_info_over_trials <- function(df) {
   
+  if (".draw" %in% c(names(df))) {
+    
+    df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
+    
+  }
+  
   df %>%
     group_by(person, condition, trial_p) %>% 
     summarise(.groups = "drop") %>%
@@ -24,9 +30,16 @@ get_run_info_over_trials <- function(df) {
 }
 
 get_inter_sel_info_over_trials <- function(df) {
-  
-  d_trials <- d$found %>% group_by(person, condition, trial_p) %>% 
-    summarise(.groups = "drop") 
+
+  if (".draw" %in% c(names(df))) {
+    
+   df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
+    
+  }
+    
+    d_trials <- df %>% group_by(person, condition, trial_p) %>% 
+      summarise(.groups = "drop") 
+
   
   d_out <- pmap_df(d_trials, get_inter_targ_stats, df,
                    .progress = TRUE) 
@@ -67,7 +80,7 @@ get_inter_targ_stats <- function(person, condition, trial_p, d) {
     select(-item_class) %>%
     mutate(x0 = lag(x), 
            y0 = lag(y),
-           d = sqrt((x-x0)^2 + (y-y0)^2),
+           d2 = (x-x0)^2 + (y-y0)^2,
            theta = atan2(y-y0, x-x0)) %>%
     #filter(found > 1) %>%
     select(-x0, -y0)
