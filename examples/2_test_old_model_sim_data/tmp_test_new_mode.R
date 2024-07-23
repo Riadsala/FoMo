@@ -23,10 +23,6 @@ mod_old <- cmdstan_model("../../models/simple/FoMo1_0.stan",
 mod_new <- cmdstan_model("../../models/simple/FoMo1_0_2.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
-
-
-
-
 n_trials_per_cond <- 10
 
 n_item_class <- 2
@@ -51,8 +47,6 @@ d1 <- sim_foraging_multiple_trials(person = 1,
                                    inital_sel_params = inital_sel_params,
                                    init_sel_lambda = init_sel_lambda)
 
-
-
 d1_list <- prep_data_for_stan(d1$found, d1$stim, c("spatial", "item_class"))
 
 # add priors to list
@@ -65,8 +59,6 @@ d1_list$prior_sd_rho_delta <- 5
 d1_list$prior_mu_rho_psi <- 0
 d1_list$prior_sd_rho_psi <- 1
 d1_list$n_trials_to_sim <- 10
-
-
 
 iter = 1000
 # run model
@@ -82,21 +74,20 @@ m_simple_1_new <- mod_new$sample(data = d1_list,
                                  iter_warmup = iter, iter_sampling = iter,
                                  sig_figs = 3)
 
-
 post_old <- extract_post(m_simple_1_old, d1, multi_level = FALSE)
 post_new <- extract_post(m_simple_1_new, d1, multi_level = FALSE)
-
-
 
 # plot model
 plot_model_fixed(post_old, gt = list(b_a = plogis(item_class_weights[1]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
+                                 rho_psi = rho_psi)) -> plt_old
 
 
 # plot model
 plot_model_fixed(post_new, gt = list(b_a = plogis(item_class_weights[1]),
                                      b_stick = b_stick,
                                      rho_delta = rho_delta,
-                                     rho_psi = rho_psi))
+                                     rho_psi = rho_psi)) -> plt_new
+
+plt_old / plt_new

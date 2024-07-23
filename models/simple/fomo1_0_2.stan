@@ -25,7 +25,7 @@ functions {
                                  rho_psi, psi);
 
     // return the dot product of the weights
-    return(exp(prox_weights + reldir_weights));
+    return(prox_weights + reldir_weights);
 
   }
 
@@ -137,16 +137,18 @@ model {
       } else {
       // check which targets match the previously selected target
       // this is precomputed in S[ii]
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log(inv_logit(weights)) + log(inv_logit(b_stick[kk] * S[ii])); 
     }
 
-    weights = weights .* spatial_weights;
+    weights = exp(weights + spatial_weights);
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
 
     // likelihood! 
-    target += categorical_lpmf(Y[ii] | weights);
+    //print(weights);
+    //print(sum(weights)==1);
+    target += log(weights[Y[ii]]); //categorical_lpmf(Y[ii] | weights);
     
   }
 }
@@ -197,12 +199,12 @@ generated quantities {
       weights = b_a[kk] * to_vector(item_class[t]);
 
       // multiply weights by stick/switch preference
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log(inv_logit(weights)) .* log(inv_logit(b_stick[kk] * S[ii])); 
 
       // compute spatial weights
-      weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
+      weights = exp(weights +  compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], rho_psi[kk],
-        delta[ii], psi[ii]);
+        delta[ii], psi[ii]));
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
@@ -252,12 +254,12 @@ generated quantities {
           }
 
           // multiply weights by stick/switch preference
-          weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
+          weights = log(inv_logit(weights)) + log(inv_logit(b_stick[k] * Sj)); 
 
           // compute spatial weights
-          weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
+          weights = exp(weights + compute_spatial_weights(found_order[jj], n_targets, 
             rho_delta[k], rho_psi[k],
-            delta_j, psi_j);
+            delta_j, psi_j));
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
