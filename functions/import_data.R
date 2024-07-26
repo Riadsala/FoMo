@@ -18,30 +18,30 @@ import_data <- function(dataset, small_test=FALSE) {
               "kristjansson2014plos" = import_kristjansson2014plos(small_test),
               "unknown dataset")
 }
-
-<<<<<<< Updated upstream
-take_one_person <- function(d, pp) {
-=======
-filter_one_person <- function(d, pp) {
->>>>>>> Stashed changes
-  
-  d_found_small <- d$found %>%
-    filter(person == pp) %>%
-    mutate(person = 1) %>%
-    group_by(trial) %>%
-    mutate(trial = cur_group_id()) %>%
-    ungroup()
-  
-  d_stim_small <- d$stim %>%
-    filter(person == pp) %>%
-    mutate(person = 1)  %>%
-    group_by(trial) %>%
-    mutate(trial = cur_group_id()) %>%
-    ungroup()
-  
-  return(list(found = d_found_small, stim = d_stim_small))
-  
-}
+# 
+# <<<<<<< Updated upstream
+# take_one_person <- function(d, pp) {
+# =======
+# filter_one_person <- function(d, pp) {
+# >>>>>>> Stashed changes
+#   
+#   d_found_small <- d$found %>%
+#     filter(person == pp) %>%
+#     mutate(person = 1) %>%
+#     group_by(trial) %>%
+#     mutate(trial = cur_group_id()) %>%
+#     ungroup()
+#   
+#   d_stim_small <- d$stim %>%
+#     filter(person == pp) %>%
+#     mutate(person = 1)  %>%
+#     group_by(trial) %>%
+#     mutate(trial = cur_group_id()) %>%
+#     ungroup()
+#   
+#   return(list(found = d_found_small, stim = d_stim_small))
+#   
+# }
 
 fix_person_and_trial <- function(d) {
   
