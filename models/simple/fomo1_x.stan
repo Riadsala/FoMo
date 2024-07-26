@@ -151,7 +151,7 @@ model {
     weights = weights + spatial_weights ;
 
     // remove already-selected items, and standarise to sum = 1
-    weights = standarise_weights(exp(weights)+ exp(b_m[kk] * prev_weights), n_targets, remaining_items[ii]);
+    weights = standarise_weights(exp(weights) + exp(b_m[kk] * prev_weights), n_targets, remaining_items[ii]);
 
     // likelihood! 
     target += log(weights[Y[ii]]);

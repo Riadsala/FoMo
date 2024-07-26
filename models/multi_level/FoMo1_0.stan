@@ -125,7 +125,6 @@ transformed parameters {
     u_delta[kk] = to_vector(rho_delta[kk] + u[4*(kk-1)+3]);
     u_psi[kk]   = to_vector(rho_psi[kk]   + u[4*(kk-1)+4]);
   }
-  
 }
 
 model {

@@ -203,7 +203,7 @@ generated quantities {
       weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
 
       // compute spatial weights
-      weights = exp(weights +  compute_spatial_weights(found_order[ii], n_targets, 
+      weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], rho_psi[kk],
         delta[ii], psi[ii]));
           
