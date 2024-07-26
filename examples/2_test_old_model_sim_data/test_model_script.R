@@ -10,12 +10,11 @@ source("../../functions/import_data.R")
 ################################################
 # First test single level model
 
-
 n_trials_per_cond <- 20
 
 n_item_class <- 2
 n_item_per_class <- 20
-item_class_weights = c(0.7, 0.3, 0, 0)
+item_class_weights = c(0.5, 0.5, 0, 0)
 b_stick = 2
 b_memory = 0
 
@@ -52,7 +51,7 @@ fit <- mod$sample(data = d_list,
 
 post <- extract_post(fit, d, multi_level = FALSE)
 
-plot_model_fixed(post,  gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post,  gt = list(b_a = qlogis(item_class_weights[1]),
                                   b_stick = b_stick,
                                   rho_delta = rho_delta,
                                   rho_psi = rho_psi))
@@ -105,7 +104,7 @@ fit <- mod$sample(data = d_list,
 
 
 post <- extract_post(fit, d, multi_level = TRUE)
-plot_model_fixed(post,   gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post,   gt = list(b_a = qlogis(item_class_weights[1]),
                                    b_stick = b_stick,
                                    rho_delta = rho_delta,
                                    rho_psi = rho_psi))

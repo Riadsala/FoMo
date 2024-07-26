@@ -127,7 +127,7 @@ We plot the fixed effects of the model (and can confirm that we are able to reco
 ```{r, warning = FALSE}
 
 # plot model
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
@@ -250,7 +250,7 @@ post <- extract_post(fit, d2)
 #### Fixed Effects
 
 ```{r plotsim1fixed, fig.cap="fixed effects", warning = FALSE}
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
@@ -328,7 +328,7 @@ rho_delta = 10
 rho_psi = 5
 
 # plot model
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
                                  b_stick = b_stick,
                                  rho_psi = rho_psi))
 
@@ -375,7 +375,7 @@ b_stick = 1
 rho_delta = 15
 rho_psi = -1
 
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]][1]),
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
                                  b_stick = b_stick,
                                  rho_psi = rho_psi))
 ```
@@ -524,7 +524,7 @@ dr_1_1 <- mod$sample(data = dr_list,
 
 post <- extract_post(dr_1_1, d1, multi_level = FALSE)
 
-plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
