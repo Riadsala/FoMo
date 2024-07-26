@@ -56,10 +56,9 @@ for (rho_psi in seq(-3, 2, 0.5)) {
   d1_list$prior_sd_rho_psi <- 1
   d1_list$n_trials_to_sim <- 10
   
-  
   iter = 500
   mod <- cmdstan_model("../../models/simple/FoMo1_x.stan", 
-                       cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+                       cpp_options = list(stan_threads = TRUE))
   
   # run model
   m <- mod$sample(data = d1_list, 
@@ -93,13 +92,13 @@ dbm %>% group_by(rho_psi) %>%
 d <- import_data('tagu2022cog')
 
 mod11 <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
-                       cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+                       cpp_options = list(stan_threads = TRUE))
 
 
 iter = 500
 
 
-pp = 6
+pp = 1
 
 
   d_one_person <- filter_one_person(d, pp) 
@@ -122,7 +121,7 @@ pp = 6
  
 
  
-  # model 1.1
+  # model 1.X
   fitX <- mod$sample(data = d_list, 
                       chains = 4, parallel_chains = 4, threads = 4,
                       refresh = 100, 

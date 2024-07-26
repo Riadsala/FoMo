@@ -70,15 +70,15 @@ pred$acc %>% group_by(found, .draw) %>%
 ################################################
 # Now test multi-level model
 
-d <- sim_foraging_people(n_people = 10,
-                          n_conditions = 1,
-                          cond_lab = c("simple test"),
+d <- sim_foraging_people(n_people = 5,
+                          n_conditions = 2,
+                          cond_lab = c("anna", "banana"),
                           n_trials_per_cond = 10,
-                          n_item_class = 2, n_item_per_class = 20,
-                          list(item_class_weights), sd_bA = 0.1,
-                          b_stick = b_stick, sd_b_stick = 0.1,
-                          rho_delta = rho_delta, sd_rho_delta = 1,
-                          rho_psi = rho_psi, sd_rho_psi = 0.1,
+                          n_item_class = 2, n_item_per_class = 10,
+                          list(item_class_weights, item_class_weights), sd_bA = 0.1,
+                          b_stick = c(0, 1), sd_b_stick = 0.1,
+                          rho_delta = c(15, 15), sd_rho_delta = 1,
+                          rho_psi = c(0, 0), sd_rho_psi = 0.1,
                           abs_dir_tuning = abs_dir_tuning,
                           inital_sel_params = inital_sel_params) 
 
@@ -99,7 +99,6 @@ fit <- mod$sample(data = d_list,
                   iter_warmup = iter, iter_sampling = iter,
                   sig_figs = 3)
 
-
 post <- extract_post(fit, d, multi_level = TRUE)
 plot_model_fixed(post,   gt = list(b_a = qlogis(item_class_weights[1]),
                                    b_stick = b_stick,
@@ -107,7 +106,7 @@ plot_model_fixed(post,   gt = list(b_a = qlogis(item_class_weights[1]),
                                    rho_psi = rho_psi))
 
 
-pred <- summarise_postpred(fit, d, multi_level = TRUE, get_sim = FALSE)
+pred <- summarise_postpred(fit, d, multi_level = TRUE, get_sim = TRUE)
 
 pred$acc %>% group_by(found, .draw) %>%
   summarise(model_correct = mean(model_correct)) %>%
