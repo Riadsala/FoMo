@@ -15,7 +15,7 @@ n_trials_per_cond <- 20
 n_item_class <- 2
 n_item_per_class <- 20
 item_class_weights = c(0.5, 0.5, 0, 0)
-b_stick = 2
+b_stick = 1
 b_memory = 0
 
 abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
@@ -40,7 +40,7 @@ d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
 d_list$n_trials_to_sim <- 10
 
 iter = 500
-mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
+mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
 fit <- mod$sample(data = d_list, 
