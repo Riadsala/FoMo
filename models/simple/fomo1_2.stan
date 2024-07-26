@@ -17,8 +17,7 @@ functions {
     vector[n_targets] prox_weights;
 
     // apply spatial weighting
-    prox_weights  = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta);
+    prox_weights  = compute_prox_weights(n, n_targets, rho_delta, delta);
 
     // return the dot product of the weights
     return(prox_weights);
@@ -104,7 +103,7 @@ model {
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(b_m[ii]       | -2, 1);
+    target += normal_lpdf(b_m[ii]       | -3, 2);
   }
 
   //////////////////////////////////////////////////
@@ -162,7 +161,7 @@ generated quantities {
   real prior_b_a = normal_rng(0, prior_sd_b_a);
   real prior_b_stick = normal_rng(0, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
-  real prior_b_m = normal_rng(-2, 1);
+  real prior_b_m = normal_rng(-1, 1);
 
   /* This code steps through the data item selection by item selection and
   computes

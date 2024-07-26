@@ -25,7 +25,7 @@ functions {
                                  rho_psi, psi);
 
     // return the dot product of the weights
-    return(prox_weights .* reldir_weights);
+    return(prox_weights + reldir_weights);
 
   }
 
@@ -102,10 +102,10 @@ model {
 
   // priors for fixed effects
   for (ii in 1:K) {
-    target += normal_lpdf(b_a[ii]      | 0, prior_sd_b_a);
-    target += normal_lpdf(b_stick[ii]      | 0, prior_sd_b_stick);
+    target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
+    target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(rho_psi[ii] | prior_mu_rho_psi, prior_sd_rho_psi);
+    target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
   }
 
   //////////////////////////////////////////////////
@@ -133,20 +133,20 @@ model {
       delta[ii], psi[ii]);
 
     if (found_order[ii] == 1) {
-      weights = inv_logit(weights);
+      weights = log_inv_logit(weights);
       } else {
       // check which targets match the previously selected target
       // this is precomputed in S[ii]
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* spatial_weights;
+    weights = exp(weights + spatial_weights);
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
 
     // likelihood! 
-    target += categorical_lpmf(Y[ii] | weights);
+    target += log(weights[Y[ii]]); //categorical_lpmf(Y[ii] | weights);
     
   }
 }
@@ -197,18 +197,18 @@ generated quantities {
       weights = b_a[kk] * to_vector(item_class[t]);
 
       // multiply weights by stick/switch preference
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
 
       // compute spatial weights
-      weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
+      weights = exp(weights +  compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], rho_psi[kk],
-        delta[ii], psi[ii]);
+        delta[ii], psi[ii]));
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
-      log_lik[ii] = weights[Y[ii]];
+      log_lik[ii] = log(weights[Y[ii]]);
        
     }
   }
@@ -252,12 +252,12 @@ generated quantities {
           }
 
           // multiply weights by stick/switch preference
-          weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
+          weights = log_inv_logit(weights) + log_inv_logit(b_stick[k] * Sj); 
 
           // compute spatial weights
-          weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
+          weights = exp(weights + compute_spatial_weights(found_order[jj], n_targets, 
             rho_delta[k], rho_psi[k],
-            delta_j, psi_j);
+            delta_j, psi_j));
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
