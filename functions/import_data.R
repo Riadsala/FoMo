@@ -19,7 +19,11 @@ import_data <- function(dataset, small_test=FALSE) {
               "unknown dataset")
 }
 
+<<<<<<< Updated upstream
 take_one_person <- function(d, pp) {
+=======
+filter_one_person <- function(d, pp) {
+>>>>>>> Stashed changes
   
   d_found_small <- d$found %>%
     filter(person == pp) %>%
