@@ -29,7 +29,6 @@ theme_set(ggthemes::theme_tufte())
 - **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
 
 
-
 ## Example 1 - simple model with one participant
 
 ### First simulate some data
@@ -219,7 +218,7 @@ d2_list_p$n_trials_to_sim <- 10
 ```
 
 
-```{r fitmodelsimdata1, warning = FALSE, results = "hide", eval = FALSE}
+```{r fitmodelsimdata1, warning = FALSE, results = "hide", eval = TRUE}
 iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
@@ -290,7 +289,7 @@ rho_psi = 5
 
 ```
 
-```{r, eval = FALSE}
+```{r, eval = TRUE}
 
 mod <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
@@ -337,7 +336,7 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[1]),
 
 ### The multilevel variant
 
-```{r fitmodelsimdata1_1, warning = FALSE, results = "hide", eval = FALSE}
+```{r fitmodelsimdata1_1, warning = FALSE, results = "hide", eval = TRUE}
 iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
@@ -495,7 +494,7 @@ dr_list$n_trials_to_sim <- 10
 
 ```
 
-```{r, warning = FALSE, results = "hide", eval = FALSE}
+```{r, warning = FALSE, results = "hide", eval = TRUE}
 iter = 100
 mod <- cmdstan_model("../../models/simple/FoMo1_0.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)

@@ -128,7 +128,7 @@ vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) 
   // now start computing the weights
   if (n > 1) {
     // for the second selected target, weight by distance from the first
-    w = w .* exp(-rho_delta * delta);
+    w = -rho_delta * delta;
     
   }
 
@@ -145,7 +145,7 @@ vector compute_reldir_weights(int n, int n_targets, real rho_psi, vector psi) {
   if (n > 2) {
 
       // for all later targets, also weight by direciton
-      w = w .* exp(- rho_psi * psi);
+      w = - rho_psi * psi;
   }
   return(w);
 }
