@@ -24,7 +24,7 @@ rho_psi = 5
 
 d <- sim_foraging_multiple_trials(person = 1, 
                                    condition = "test",
-                                   n_trials_per_cond =  n_trials_per_cond,
+                                   n_trials_per_cond = n_trials_per_cond,
                                    n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
                                    item_class_weights = item_class_weights, item_labels = item_labels,
                                    b_stick = b_stick, 
@@ -70,7 +70,6 @@ pred$acc %>% group_by(found, .draw) %>%
 ################################################
 # Now test multi-level model
 
-
 d <- sim_foraging_people(n_people = 10,
                           n_conditions = 1,
                           cond_lab = c("simple test"),
@@ -86,11 +85,9 @@ d <- sim_foraging_people(n_people = 10,
 d$found <- fix_person_and_trial(d$found)
 d$stim <- fix_person_and_trial(d$stim)
 
-
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
 d_list$n_trials_to_sim <- 10
-
 
 iter = 500
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
