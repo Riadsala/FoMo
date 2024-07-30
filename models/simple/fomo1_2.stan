@@ -1,6 +1,6 @@
 /* ####### FoMo (Foraging Model 1.1)  #######
 
-Replace rho_psi with memory weights
+Remove rho_psi
 
 This version of the model is single level (unclustered data)
 */
@@ -53,8 +53,6 @@ data {
   real prior_sd_b_stick; // prior for sd for b_stick
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
-  real prior_mu_rho_psi;
-  real prior_sd_rho_psi;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
@@ -75,7 +73,6 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real rho_delta; // distance tuning
-  array[K] real b_m; // weight memory
 }
 
 transformed parameters {
@@ -87,7 +84,7 @@ model {
   // some counters and index variables, etc.
   vector[n_targets] weights;  // class weight for teach target
   vector[n_targets] m; // does this target match the previous target?
-  vector[n_targets] spatial_weights, prev_weights;
+  vector[n_targets] spatial_weights;
 
   int trl = 0; // counter for trial number
   int kk; // condition (block) index
@@ -118,8 +115,6 @@ model {
       trl = trl + 1; // update trial counter           
       kk = X[trl]; // get conditions of current target/trial 
 
-      prev_weights = rep_vector(1, n_targets);
-
     }
 
     // new trial, so update the class weights to take random effects into account
@@ -141,17 +136,11 @@ model {
 
     weights = weights .* spatial_weights;
 
-    if (found_order[ii] > 1) {
-      weights = weights + exp(b_m[kk]) * prev_weights;
-    }
-
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
 
     // likelihood! 
     target += categorical_lpmf(Y[ii] | weights);
-
-    prev_weights = weights;
     
   }
 }
@@ -161,7 +150,6 @@ generated quantities {
   real prior_b_a = normal_rng(0, prior_sd_b_a);
   real prior_b_stick = normal_rng(0, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
-  real prior_b_m = normal_rng(-1, 1);
 
   /* This code steps through the data item selection by item selection and
   computes
@@ -186,7 +174,7 @@ generated quantities {
   // first, step through data and compare model selections to human participants
   {
     // some counters and index variables, etc.
-    vector[n_targets] weights, prev_weights;  // class weight for teach target
+    vector[n_targets] weights;  // class weight for teach target
     int t = 0; // counter for trial number
     int kk; // which condition are we in?
 
@@ -197,13 +185,7 @@ generated quantities {
 
       t = trial[ii];
       kk = X[t];
-
-      if (found_order[ii] == 1) {
-
-        prev_weights = rep_vector(1, n_targets);
-
-      }
-   
+ 
       // set the weight of each target to be its class weight
       weights = b_a[kk] * to_vector(item_class[t]);
 
@@ -214,18 +196,12 @@ generated quantities {
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], delta_n[ii]);
 
-      if (found_order[ii] > 1) {
-        weights = weights + exp(b_m[kk]) * prev_weights;
-      }
-
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = weights[Y[ii]];
 
-      prev_weights = weights; 
-       
     }
   }
   

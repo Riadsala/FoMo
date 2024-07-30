@@ -110,7 +110,6 @@ bayesplot::mcmc_trace(fit1_1$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]",
 
 ### Which model fits best - training set acc
 
-
 ```{r}
 chance_acc <- mean(1/(seq(53, 1)))
 
@@ -129,8 +128,6 @@ bind_rows(acc10, acc11) %>%
 ```
 
 ### Which model fits best - LOO?
-
-
 
 ```{r}
 
@@ -167,7 +164,6 @@ plot_model_random(post)
 d2 <- import_data('kristjansson2014plos')
 
 ```
-
 
 ```{r, eval = FALSE}
 d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))

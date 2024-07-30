@@ -1,8 +1,9 @@
 /* ####### FoMo (Foraging Model 1.2)  #######
 
 This model makes a giant leap forward and incorperates
-weighting by up/down/left/right For now, kappa is set to 
-a constant
+weighting by up/down/left/right. 
+
+a global kappa (per condition) is fit to the data
 
 This version of the model is single level (unclustered data)
 */
@@ -68,12 +69,10 @@ data {
   real prior_mu_rho_psi;
   real prior_sd_rho_psi;
   real prior_theta_lambda;
-
+  real prior_kappa_lambda;
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
 
-  // pass in kappa hyper-parameter
-  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -95,6 +94,7 @@ parameters {
 
   // theta is a 4D vector containing the mixture weights for our direction model
   array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
+  array[K] real<lower = 0> kappa;
 }
 
 transformed parameters {
@@ -125,6 +125,7 @@ model {
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
     target += exponential_lpdf(theta[ii]| prior_theta_lambda);
+    target += exponential_lpdf(kappa[ii]| prior_kappa_lambda); 
   }
 
  
@@ -150,8 +151,8 @@ model {
 
     // apply spatial weighting
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-      rho_delta[kk], rho_psi[kk], theta[kk], kappa,
-      delta_n[ii], psi[ii], phi[ii]);   
+      rho_delta[kk], rho_psi[kk], theta[kk], kappa[kk],
+      delta[ii], psi[ii], phi[ii]);   
 
     if (found_order[ii] == 1) {
       weights = inv_logit(weights);
@@ -190,7 +191,7 @@ generated quantities {
   */
         
   array[N] int P;
-  array[N] real log_lik;
+  array[N] real W;
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
@@ -222,14 +223,14 @@ generated quantities {
 
       // compute spatial weights
       weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
-        rho_delta[kk], rho_psi[kk], theta[kk], kappa,
-        delta_n[ii], psi[ii], phi[ii]);
+        rho_delta[kk], rho_psi[kk], theta[kk], kappa[kk],
+        delta[ii], psi[ii], phi[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
-      log_lik[ii] = weights[Y[ii]];
+      W[ii] = weights[Y[ii]];
        
     }
   }
@@ -278,7 +279,7 @@ generated quantities {
 
           // compute spatial weights
           weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
-            rho_delta[k], rho_psi[k], theta[k], kappa,
+            rho_delta[k], rho_psi[k], theta[k], kappa[k],
             delta_j, psi_j, phi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
