@@ -29,7 +29,8 @@ for (pp in 1:24) {
 
   d_one_person <- filter_one_person(d, pp) 
   
-  d_list <- prep_data_for_stan(d_one_person$found, d_one_person$stim, c("spatial", "item_class"))
+  d_list <- prep_data_for_stan(d_one_person$found, d_one_person$stim, c("spatial", "item_class"), 
+                               remove_last_found = TRUE)
   d_list <- add_priors_to_d_list(d_list)
   d_list$n_trials_to_sim <- 1
   

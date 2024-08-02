@@ -15,10 +15,10 @@ add_priors_to_d_list <- function(dl, modelver=1.1) {
   
 }
 
-prep_data_for_stan <- function(df, ds, model_components = "spatial") {
+prep_data_for_stan <- function(df, ds, model_components = "spatial", remove_last_found = FALSE) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
-  # model_components tells us whihc model_components to include
+  # model_components tells us which model_components to include
   
 
   ###################################################
@@ -28,6 +28,14 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial") {
   # remove distracters, as current model ignores them
   ds %>% 
      filter(item_class %in% c(1, 2)) -> ds
+  
+  if (remove_last_found) {
+    
+    df %>% 
+      filter(found != max(found)) -> df
+    
+  
+  }
   # 
   # extract stimulus parameters
   n_people <- length(unique(df$person))
