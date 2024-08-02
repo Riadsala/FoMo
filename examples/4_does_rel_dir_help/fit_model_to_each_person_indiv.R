@@ -22,12 +22,17 @@ mod11 <- cmdstan_model("../../models/simple/FoMo1_1.stan",
 mod12 <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
+mod13 <- cmdstan_model("../../models/simple/FoMo1_3.stan", 
+                       cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+
 
 iter = 500
 
-for (pp in 1:24) {
+#for (pp in 1:24) {
+  
+  pp = 1
 
-  d_one_person <- take_one_person(d, pp)
+  d_one_person <- filter_one_person(d, pp)
 
   d_list <- prep_data_for_stan(d_one_person$found, d_one_person$stim, c("spatial", "item_class"))
   d_list <- add_priors_to_d_list(d_list, modelver = "1.1")
@@ -55,13 +60,22 @@ for (pp in 1:24) {
                     sig_figs = 3)
 
   fit$save_object(paste0(filename, "_12.rds"))
+  
+  fit <- mod13$sample(data = d_list,
+                      chains = 4, parallel_chains = 4, threads = 4,
+                      refresh = 100,
+                      init = 1,
+                      iter_warmup = iter, iter_sampling = iter,
+                      sig_figs = 3)
+  
+  fit$save_object(paste0(filename, "_13.rds"))
 
 
-}
+#}
 
 rm(fit)
 
-for (pp in 1:24) {
+#for (pp in 1:24) {
 
   filename <- paste0("scratch/person", pp)
 
@@ -74,7 +88,7 @@ for (pp in 1:24) {
   saveRDS(loo11, paste0(filename, "loo11.rds"))
   saveRDS(loo12, paste0(filename, "loo12.rds"))
 
-}
+#}
 
 w <- tibble()
 
