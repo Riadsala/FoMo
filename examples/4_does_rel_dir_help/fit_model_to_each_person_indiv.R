@@ -19,9 +19,11 @@ d <- import_data('tagu2022cog')
 mod11 <- cmdstan_model("../../models/simple/FoMo1_1.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
+# doesn't work
 mod12 <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
                      cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
+# this is giving a lot of warning messages
 mod13 <- cmdstan_model("../../models/simple/FoMo1_3.stan", 
                        cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
 
@@ -51,24 +53,24 @@ iter = 500
  fit$save_object(paste0(filename, "_11.rds"))
 
   # model 1.2
+  #fit <- mod12$sample(data = d_list,
+  #                  chains = 4, parallel_chains = 4, threads = 4,
+  #                  refresh = 100,
+  #                  init = 1,
+  #                  iter_warmup = iter, iter_sampling = iter,
+  #                  sig_figs = 3)
 
-  fit <- mod12$sample(data = d_list,
-                    chains = 4, parallel_chains = 4, threads = 4,
-                    refresh = 100,
-                    init = 1,
-                    iter_warmup = iter, iter_sampling = iter,
-                    sig_figs = 3)
-
-  fit$save_object(paste0(filename, "_12.rds"))
+  #fit$save_object(paste0(filename, "_12.rds"))
   
-  fit <- mod13$sample(data = d_list,
-                      chains = 4, parallel_chains = 4, threads = 4,
-                      refresh = 100,
-                      init = 1,
-                      iter_warmup = iter, iter_sampling = iter,
-                      sig_figs = 3)
+  # model 1.3
+  #fit <- mod13$sample(data = d_list,
+  #                    chains = 4, parallel_chains = 4, threads = 4,
+  #                    refresh = 100,
+  #                    init = 1,
+  #                    iter_warmup = iter, iter_sampling = iter,
+  #                    sig_figs = 3)
   
-  fit$save_object(paste0(filename, "_13.rds"))
+  #fit$save_object(paste0(filename, "_13.rds"))
 
 
 #}
@@ -80,35 +82,44 @@ rm(fit)
   filename <- paste0("scratch/person", pp)
 
   m11 <- readRDS(paste0(filename, "_11.rds"))
-  m12 <- readRDS(paste0(filename, "_12.rds"))
+  #m12 <- readRDS(paste0(filename, "_12.rds"))
 
-  loo11 <- m11$loo(moment_match = TRUE)
-  loo12 <- m12$loo(moment_match = TRUE)
+  loo11 <- m11$loo()
+  #loo12 <- m12$loo()
 
   saveRDS(loo11, paste0(filename, "loo11.rds"))
-  saveRDS(loo12, paste0(filename, "loo12.rds"))
+  #saveRDS(loo12, paste0(filename, "loo12.rds"))
 
 #}
+  
+  
+d_one_person$found$pareto_k <- loo11$diagnostics$pareto_k 
+d_one_person$found %>% filter(pareto_k > 1)
 
-w <- tibble()
+d_one_person$found %>%mutate(pareto_k = if_else(pareto_k > 1, "bad", "good")) %>%
+  group_by(found) %>%
+  summarise(pareto_mess = sum(pareto_k == "bad")) %>%
+  ggplot(aes(found, pareto_mess)) + geom_col() 
 
-for (pp in 1:24) {
+#w <- tibble()
+
+#for (pp in 1:24) {
   
-  filename <- paste0("scratch/person", pp)
+#  filename <- paste0("scratch/person", pp)
   
-  loo11 <- readRDS(paste0(filename, "loo11.rds"))
-  loo12 <- readRDS(paste0(filename, "loo12.rds"))
+#  loo11 <- readRDS(paste0(filename, "loo11.rds"))
+#  loo12 <- readRDS(paste0(filename, "loo12.rds"))
   
-  t <- loo::loo_model_weights(list("FoMo 1.1" = loo11, "FoMo 1.2" = loo12))
+#  t <- loo::loo_model_weights(list("FoMo 1.1" = loo11, "FoMo 1.2" = loo12))
   
-  w <- bind_rows(w, tibble(
-    person = pp, FoMo1_1 = t[1], FoMo1_2 = t[2]))
+#  w <- bind_rows(w, tibble(
+#    person = pp, FoMo1_1 = t[1], FoMo1_2 = t[2]))
   
-}
+#}
 
 
-w %>% pivot_longer(-person, names_to = "model", values_to = "weight") %>%
-  ggplot(aes(model, weight, fill = factor(person))) +
-  geom_col()
+#w %>% pivot_longer(-person, names_to = "model", values_to = "weight") %>%
+#  ggplot(aes(model, weight, fill = factor(person))) +
+#  geom_col()
 
 
