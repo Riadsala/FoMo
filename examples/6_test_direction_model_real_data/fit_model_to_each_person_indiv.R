@@ -25,7 +25,6 @@ mod12 <- cmdstan_model("../../models/simple/FoMo1_2.stan",
 
 iter = 500
 
-
 for (pp in 1:24) {
 
   d_one_person <- filter_one_person(d, pp) 

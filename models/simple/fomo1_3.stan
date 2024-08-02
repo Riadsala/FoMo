@@ -1,4 +1,4 @@
-/* ####### FoMo (Foraging Model 1.1)  #######
+/* ####### FoMo (Foraging Model 1.3)  #######
 
 Replace rho_psi with memory weights
 
