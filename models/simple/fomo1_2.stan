@@ -15,9 +15,11 @@ functions {
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
     vector[n_targets] prox_weights;
+    vector[n_targets] reldir_weights;
 
     // apply spatial weighting
-    prox_weights  = compute_prox_weights(n, n_targets, rho_delta, delta);
+    prox_weights   = compute_prox_weights(n, n_targets, 
+                                 rho_delta, delta);
 
     // return the dot product of the weights
     return(prox_weights);
@@ -53,6 +55,8 @@ data {
   real prior_sd_b_stick; // prior for sd for b_stick
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
+  real prior_mu_rho_psi;
+  real prior_sd_rho_psi;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
@@ -73,6 +77,7 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real rho_delta; // distance tuning
+  array[K] real rho_psi; // direction tuning 
 }
 
 transformed parameters {
@@ -83,7 +88,6 @@ model {
 
   // some counters and index variables, etc.
   vector[n_targets] weights;  // class weight for teach target
-  vector[n_targets] m; // does this target match the previous target?
   vector[n_targets] spatial_weights;
 
   int trl = 0; // counter for trial number
@@ -123,23 +127,24 @@ model {
 
     // apply spatial weighting
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets, 
-      rho_delta[kk], delta_n[ii]);
+      rho_delta[kk], 
+      delta_n[ii]);
 
     if (found_order[ii] == 1) {
-      weights = inv_logit(weights);
+      weights = log_inv_logit(weights);
       } else {
       // check which targets match the previously selected target
       // this is precomputed in S[ii]
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
     }
 
-    weights = weights .* spatial_weights;
+    weights = exp(weights + spatial_weights);
 
     // remove already-selected items, and standarise to sum = 1
     weights = standarise_weights(weights, n_targets, remaining_items[ii]);
 
     // likelihood! 
-    target += categorical_lpmf(Y[ii] | weights);
+    target += log(weights[Y[ii]]); //categorical_lpmf(Y[ii] | weights);
     
   }
 }
@@ -149,6 +154,7 @@ generated quantities {
   real prior_b_a = normal_rng(0, prior_sd_b_a);
   real prior_b_stick = normal_rng(0, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+
 
   /* This code steps through the data item selection by item selection and
   computes
@@ -184,39 +190,39 @@ generated quantities {
 
       t = trial[ii];
       kk = X[t];
- 
+   
       // set the weight of each target to be its class weight
       weights = b_a[kk] * to_vector(item_class[t]);
 
       // multiply weights by stick/switch preference
-      weights = inv_logit(weights) .* inv_logit(b_stick[kk] * S[ii]); 
+      weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
 
       // compute spatial weights
-      weights = weights .* compute_spatial_weights(found_order[ii], n_targets, 
-        rho_delta[kk], delta_n[ii]);
-
+      weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets, 
+        rho_delta[kk],
+        delta[ii]));
+          
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
-      log_lik[ii] = weights[Y[ii]];
-
+      log_lik[ii] = log(weights[Y[ii]]);
+       
     }
   }
   
-  /*
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
     vector[n_targets] remaining_items2;
     vector[n_targets] Sj;
     // some counters and index variables, etc.
-    vector[n_targets] weights, prev_weights;  // class weight for teach target
+    vector[n_targets] weights;  // class weight for teach target
 
-    vector[n_targets] phi_j, delta_j;
+    vector[n_targets] psi_j, phi_j, delta_j;
   
     // for each condition
-    for (k in 1:K) {
+    for (k in 1:1) {
 
       //for each trial
       for (t in 1:n_trials_to_sim) {
@@ -227,33 +233,30 @@ generated quantities {
         // simulate a trial!
         for (jj in 1:n_targets) {
 
-          if (jj == 1) {
-            prev_weights = rep_vector(0, n_targets);
-          }
-
           // set the weight of each target to be its class weight
           weights = (b_a[k]) * to_vector(item_class[t]);
            
           // delta_j: distance to previously selected item
           Sj = rep_vector(0, n_targets);
           delta_j = rep_vector(1, n_targets);
+          phi_j = rep_vector(1, n_targets);
            
           if (jj > 1) {
 
             Sj      = compute_matching(item_class[t], n_targets, Q[k, t, ], jj);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[k, t, ], jj);
             delta_j = scale_prox(delta_j, remaining_items2, n_targets);
-             
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[k, t, ], jj); 
+              
           }
 
           // multiply weights by stick/switch preference
-          weights = inv_logit(weights) .* inv_logit(b_stick[k] * Sj); 
+          weights = log_inv_logit(weights) + log_inv_logit(b_stick[k] * Sj); 
 
           // compute spatial weights
-          weights = weights .* compute_spatial_weights(found_order[jj], n_targets, 
-            rho_delta[k], delta_j);
-
-          weights = weights + exp(b_m[k]) * prev_weights;
+          weights = exp(weights + compute_spatial_weights(found_order[jj], n_targets, 
+            rho_delta[k], 
+            delta_j));
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(weights, n_targets, remaining_items2);   
@@ -263,11 +266,8 @@ generated quantities {
           // update remaining_items2
           remaining_items2[Q[k, t, jj]] = 0;
 
-          prev_weights = weights;
-
         }
       }
     }
   }
-  */
 }
