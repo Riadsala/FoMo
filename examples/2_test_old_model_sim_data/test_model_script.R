@@ -12,7 +12,7 @@ item_class_weights = list(c(0.7, 0.3, 0, 0))
 b_stick = 1
 
 rho_delta = 1
-sd_rho_delta = 5
+sd_rho_delta = 0.1
 
 rho_psi = -1
 
@@ -29,7 +29,7 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d2 <- sim_foraging_people(n_people = 4,
+d2 <- sim_foraging_people(n_people = 10,
                           n_conditions = 1,
                           cond_lab = c("simple test"),
                           n_trials_per_cond = 3,

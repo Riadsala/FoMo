@@ -170,10 +170,10 @@ model {
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets,
        u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], delta[ii], psi[ii]);
 
-    weights = exp(weights + spatial_weights);
+    weights = weights + spatial_weights;
         
     // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
+    weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);   
     //print("Y ", Y[ii]);
     //print("item y ", item_y[t]);
     //print(weights);
@@ -222,12 +222,12 @@ generated quantities {
       weights = log_inv_logit(weights) + log_inv_logit(u_stick[kk, Z[ii]] * S[ii]);
 
       // compute spatial weights
-      weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets,
+      weights = weights + compute_spatial_weights(found_order[ii], n_targets,
         u_delta[kk, Z[ii]], u_psi[kk, Z[ii]],
-        delta[ii], psi[ii]));
+        delta[ii], psi[ii]);
 
       // remove already-selected items, and standarise to sum = 1
-      weights = standarise_weights(weights, n_targets, remaining_items[ii]);
+      weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);
@@ -280,12 +280,12 @@ generated quantities {
             weights = log_inv_logit(weights) + log_inv_logit(u_stick[k, l] * Sj); 
 
             // compute spatial weights
-            weights = exp(weights + compute_spatial_weights(found_order[jj], n_targets, 
+            weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
               u_delta[k, l], u_psi[k, l],
-              delta_j, psi_j));
+              delta_j, psi_j);
                   
             // remove already-selected items, and standarise to sum = 1 
-            weights = standarise_weights(weights, n_targets, remaining_items2);   
+            weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
        
             Q[l, k, t, jj] = categorical_rng(weights);
 
