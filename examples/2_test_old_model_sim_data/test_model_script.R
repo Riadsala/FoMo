@@ -39,7 +39,8 @@ d2 <- sim_foraging_people(n_people = 5,
                           rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
                           rho_psi = rho_psi, sd_rho_psi = 0.5,
                           abs_dir_tuning = abs_dir_tuning,
-                          inital_sel_params = inital_sel_params) 
+                          inital_sel_params = inital_sel_params,
+                          rel_proximity = TRUE) 
 
 d2$found <- fix_person_and_trial(d2$found)
 d2$stim <- fix_person_and_trial(d2$stim)

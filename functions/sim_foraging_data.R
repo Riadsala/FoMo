@@ -306,7 +306,7 @@ compute_delta_and_phi <- function(dr, df, t, pt, adt, rdt, rel_proximity) {
                 psi = psi/180) -> dr
   
   # convert to rel_proximity if toggle is on
-  if (rel_proximity) {
+  if (rel_proximity & nrow(dr)>0 ) {
     
     min_delta <- min(dr$delta)
     dr$delta <- dr$delta / min_delta
