@@ -11,7 +11,7 @@ item_class_weights = list(c(0.7, 0.3, 0, 0))
 
 b_stick = 1
 
-rho_delta = 15
+rho_delta = 1
 sd_rho_delta = 5
 
 rho_psi = -1
@@ -29,11 +29,11 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d2 <- sim_foraging_people(n_people = 5,
+d2 <- sim_foraging_people(n_people = 4,
                           n_conditions = 1,
                           cond_lab = c("simple test"),
-                          n_trials_per_cond = 4,
-                          n_item_class = 2, n_item_per_class = 20,
+                          n_trials_per_cond = 3,
+                          n_item_class = 2, n_item_per_class = 10,
                           item_class_weights, sd_bA = 0.2,
                           b_stick = b_stick, sd_b_stick = 1,
                           rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
@@ -45,7 +45,7 @@ d2 <- sim_foraging_people(n_people = 5,
 d2$found <- fix_person_and_trial(d2$found)
 d2$stim <- fix_person_and_trial(d2$stim)
 
-iter = 100
+iter = 200
 mod <- cmdstan_model("../../models/multi_level/FoMo1_1.stan")
 
 d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))
