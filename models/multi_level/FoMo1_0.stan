@@ -230,7 +230,7 @@ generated quantities {
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);
 
       P[ii] = categorical_rng(weights);
-      log_lik[ii] = weights[Y[ii]];
+      log_lik[ii] = log(weights[Y[ii]]);
 
     }
   }
