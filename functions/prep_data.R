@@ -3,6 +3,9 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   
   filename <- paste0("priors_model", modelver, ".csv")
   
+  # first, remove any priors that have already been added
+  dl <- dl[!str_detect(names(dl), "pr_") ]
+  
   # add in priors
   priors <- read_csv(paste0("../../models/multi_level/", filename), show_col_types = FALSE) %>%
     pivot_longer(-param, names_to = "stat", values_to = "value") %>%
