@@ -141,6 +141,8 @@ plot_model_accuracy(pred)
 
 And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.
 
+[Plotting simulated trial not currently working - need to check Q].
+
 ```{r}
 
 # plot comparison between a real and simulated trial

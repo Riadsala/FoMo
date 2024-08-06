@@ -205,7 +205,7 @@ generated quantities {
       // compute spatial weights
       weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk], rho_psi[kk],
-        delta[ii], psi[ii]));
+        delta_n[ii], psi[ii]));
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
