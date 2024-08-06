@@ -1,0 +1,241 @@
+---
+title: "2) fitting the NEW  old foraging model - to simulated data"
+author: "A D F Clarke & A Excellent Hughes"
+format: html
+editor: source
+---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 4)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+```
+
+# Fitting Model to Simulated Data
+
+- **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
+- **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
+
+
+## Simple model with one participant
+
+### First simulate some data
+
+Our first simple simulation will involve 2 target classes, each with 20 items on screen. We will simulate one of the targets to be preferred over the other (`item_class_weights`), a small stick bias (`b_stick`), moderate proximity bias (`rho_delta`) and a fairly strong fowards momentum (`rho_psi`). 
+
+Absolute direction tuning is only used from model XX onwards: in this simulation, we are adding in a stronger bias for horizontal compared to vertical directions (is this true??)
+
+This simple simulation only considers one participant, doing 10 trials of one condition.
+
+```{r}
+
+n_trials_per_cond <- 10
+
+n_item_class <- 2
+n_item_per_class <- 20
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 10
+rho_psi = 5
+
+d1 <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda)
+
+
+```
+
+### Fitting model 1.0
+
+Here, we fit model version 1.0.
+
+```{r, message = FALSE, warning = FALSE, results = "hide"}
+
+d1_list <- prep_data_for_stan(d1$found, d1$stim, c("spatial", "item_class"))
+d1_list <- add_priors_to_d_list(d1_list, modelver = "1.0")
+d1_list$n_trials_to_sim <- 1
+
+
+```
+
+```{r, message = FALSE, warning = FALSE, results = "hide"}
+
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_0.stan")
+
+# run model
+m_simple_1_0 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_0$save_object("scratch/simple_1_0_tmp.rds")
+
+```
+
+### Extract posterior
+
+We can then extract posterior samples.
+
+```{r}
+
+# read in model
+m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+
+# extract post
+post <- extract_post(m_simple_1_0, d1, multi_level = FALSE)
+
+```
+
+### Plot model
+
+We plot the fixed effects of the model (and can confirm that we are able to recover the parameters we put into the simulation).
+
+```{r, warning = FALSE}
+
+# plot model
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+
+```
+
+### Check predictions
+
+We can assess model accuracy i.e. how well can it predict the next target chosen?
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(m_simple_1_0, d1, multi_level = FALSE)
+
+plot_model_accuracy(pred)
+
+```
+
+### Plot comparison between a real and a simulated trial
+
+And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.
+
+```{r}
+
+# plot comparison between a real and simulated trial
+
+pltreal <- plot_a_trial(d1$stim, d1$found, 1)
+pltsim <- plot_a_trial(d1$stim, pred$sim , trial = 2)
+
+pltreal + pltsim
+
+
+```
+
+## Fitting FoMo 1.1
+
+### Simulating data with relative proximity set up
+
+```{r, warning = FALSE}
+
+
+n_trials_per_cond <- 10
+
+n_item_class <- 2
+n_item_per_class <- 20
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 1
+rho_psi = 1
+
+dr <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda,
+                                  rel_proximity = TRUE)
+
+
+```
+
+
+```{r, message = FALSE, warning = FALSE, results = "hide"}
+
+iter = 100
+mod <- cmdstan_model("../../models/simple/FoMo1_1.stan")
+
+dr_list <- prep_data_for_stan(dr$found, dr$stim, c("spatial", "item_class"))
+dr_list <- add_priors_to_d_list(dr_list, modelver = "1.1")
+dr_list$n_trials_to_sim <- 1
+
+# run model
+m_simple_1_1 <- mod$sample(data = dr_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+m_simple_1_1$save_object("scratch/simple_1_1_tmp.rds")
+
+```
+
+```{r}
+
+# read in model
+m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+
+# extract post
+post <- extract_post(m_simple_1_1, dr, multi_level = FALSE)
+
+```
+
+
+```{r, warning = FALSE}
+
+# plot model
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+
+```
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(m_simple_1_1, dr, multi_level = FALSE, get_sim = TRUE)
+
+plot_model_accuracy(pred)
+
+
+
+```
