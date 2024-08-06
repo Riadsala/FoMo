@@ -1,5 +1,5 @@
 
-add_priors_to_d_list <- function(dl, modelver=1.1) {
+add_priors_to_d_list <- function(dl, modelver="1.1") {
   
   filename <- paste0("priors_model", modelver, ".csv")
   
