@@ -89,7 +89,7 @@ mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan")
 
 fit <- mod$sample(data = d_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
+                 refresh = 0, 
                  iter_warmup = iter, iter_sampling = iter,
                  sig_figs = 3)
 
@@ -192,7 +192,7 @@ d2_list$n_trials_to_sim <- 1
 
 fit <- mod$sample(data = d2_list, 
                  chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
+                 refresh = 0, 
                  iter_warmup = iter, iter_sampling = iter,
                  sig_figs = 3)
 
