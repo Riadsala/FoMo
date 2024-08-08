@@ -198,12 +198,12 @@ generated quantities {
       weights = log_inv_logit(weights) + log_inv_logit(b_stick[kk] * S[ii]); 
 
       // compute spatial weights
-      weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets, 
+      weights = weights + compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk],
-        delta_n[ii]));
+        delta_n[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
-      weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
+      weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);

@@ -45,7 +45,7 @@ data {
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
   array[n_trials] int <lower = 1, upper = K> X; // trial features (ie, which condition are we in)
-  matrix<lower = -1, upper = 1>[n_trials, n_targets] item_class; // target class, one row per trial
+  array[n_trials, n_targets] int <lower = -1, upper = 1> item_class; // target class, one row per trial
   array[N] vector<lower = -1, upper = 1>[n_targets] S; // stick/switch (does this targ match prev targ) 
   array[N] int <lower = 1, upper = L> Z; // random effect levels
   array[N] int<lower = 1, upper = n_trials> trial; // what trial are we on? 
@@ -224,10 +224,13 @@ generated quantities {
         u_delta[kk, Z[ii]], delta_n[ii]);
           
       // remove already-selected items, and standarise to sum = 1 
-      weights = standarise_weights(weights, n_targets, remaining_items[ii]);   
+      weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);   
 
       P[ii] = categorical_rng(weights);
-      log_lik[ii] = weights[Y[ii]];
+      log_lik[ii] = log(weights[Y[ii]]);
+      
+   }
+  }
        
 //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own

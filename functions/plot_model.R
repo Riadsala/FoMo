@@ -82,7 +82,7 @@ plot_model_accuracy <- function(pred) {
   
   n_targets <- max((pred$acc$found))
   
-  baseline <- tibble(found = 1:n_targets, accuracy = 1/(41 - found))
+  baseline <- tibble(found = 1:n_targets, accuracy = 1/((n_targets + 1) - found))
   
   pred$acc %>% group_by(found, .draw) %>%
     summarise(accuracy = mean(model_correct, .groups ="last")) %>%
