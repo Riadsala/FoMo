@@ -77,7 +77,7 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real rho_delta; // distance tuning
-  array[K] real rho_psi; // direction tuning 
+  //array[K] real rho_psi; // direction tuning 
 }
 
 transformed parameters {
@@ -200,7 +200,7 @@ generated quantities {
       // compute spatial weights
       weights = exp(weights + compute_spatial_weights(found_order[ii], n_targets, 
         rho_delta[kk],
-        delta[ii]));
+        delta_n[ii]));
           
       // remove already-selected items, and standarise to sum = 1 
       weights = standarise_weights(weights, n_targets, remaining_items[ii]);   

@@ -1,0 +1,431 @@
+---
+title: "Testing Simulation Code"
+author: "A Clarke"
+format: html
+editor: source
+---
+
+This file contains for for checking that our foraging simulation code runs correctly.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(patchwork)
+library(cmdstanr)
+
+options(mc.cores = 8, 
+        digits = 2)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+
+source("../../functions/sim_foraging_data.R")
+source("../../functions/plot_data.R")
+source("../../functions/import_data.R")
+
+# why do we have to define this here?
+# what was the reasoning again?
+class_lab  = c("feature", "conjunction")
+```
+
+The aim of this supp. mat is to: 
+
+- test our code for simulating the visual foraging paramdigm in R. Do the parameters what we want them to do?
+- test our pre-processing code for calculating various features and statistics from foraging data. I.e., run length, inter-target distances and directions. 
+
+TODO: 
+
+- add init sel params
+
+# Simulating a Trial
+
+We first need to determine how many items types we have (`n_item_class`) and their labels (`item_labels`). For this example, we will have two target types (A and B) and two distractor types (d1 and d2), giving a total of 4 item classes. We also will define the number of items per class (`n_item_per_class`).
+
+```{r}
+trl = 1 
+n_item_class = 4
+n_item_per_class = 10
+item_labels = c("A", "B", "d1", "d2")
+```
+
+## Proximity Bias Only
+
+There are a number of parameters that can be included in the model. The first one we will demonstrate is a proximity bias: `rho_delta`. Setting this to a large value (e.g. 50) means that there will be a strong bias towards choosing a nearby target.
+
+Note that data can be simulated for version 1.0 of the model (`rel_proximity = FALSE`) or version 1.1 of the model (`rel_proximity = TRUE`).
+
+In the below demonstration, we have a strong proximity bias, with other parameters either neutral (different target types are equally attractive) or turned off (relative and absolute proximity biases, memory).
+
+
+```{r prox_bias_only}
+item_class_weights = c(0.5, 0.5, 0, 0)
+
+b_stick  <- 0  # no stick or switching
+b_memory <- 0 # no memory of previous weights
+
+rho_delta <- 50 # proximity tuning
+rho_psi   <- 0  # rel. direction tuning
+abs_dir_tuning <- list(kappa = rep(0, 4), theta = rep(1, 4))
+
+# initial bias params
+# this is not currently implemented
+inital_sel_params <- tibble(
+  a1x = 2,
+  b1x = 2,
+  a2x = 1,
+  b2x = 10,
+  a1y = 2,
+  b1y = 2,
+  a2y = 10,
+  b2y = 1) 
+
+init_sel_lambda <- 0
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        b_memory,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = FALSE,
+                        rel_proximity = TRUE)
+
+plot_a_trial(d$stim, d$found, "delta")
+
+```
+
+Setting the proximity bias to a small value (e.g. zero) will mean that there is no/little bias towards choosing a nearby target, as demonstrated below.
+
+```{r check_zero_prox_bias}
+rho_delta = 0 
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Relative Direction 
+
+Relative direction can be thought of as momentum, and is coded in the simulation as `rho_psi`. A positive value will give you forwards momentum, where a target in the same/similar direction is preferred, whereas a negative value will give you negative momentum, where a target in the opposite direction is preferred, giving a 'zig zag' trajectory.
+
+### Forward Momentum
+
+For these examples, we have set the proximity bias to a 'standard' value. The relative direction below has been adjusted to give strong forward momentum - the simulated participant keeps going in the same direction for as long as they can.
+
+```{r forward_mom}
+rho_delta = 10
+rho_psi = 10
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning, 
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found, "psi")
+
+```
+
+### Negative Momentum
+
+Below, the simulated participant has strong negative momentum: they have a much more 'zig zag' trajectory.
+
+```{r negative_mom}
+rho_psi = -10
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda)
+
+plot_a_trial(d$stim, d$found)
+
+```
+
+## Absolute Direction
+
+Absolute direction is the true direction of the next target selection: participants often seem to have biases for horizontal and vertical directions. It is coded in the simulation as `abs_direction_tuning` which takes an argument for `kappa` ($\kappa$) and `theta` ($\theta$).
+
+We fix the mean ($\mu$) for each distribution (one for each cardinal direction). We then allow the $\theta$ for each distribution to vary: so the $\theta$ values for each distribution can be thought of as the probability that you are more likely to select that distribution compared to the other three possible ones (this value is standardised by the uniform distribution). $\kappa$ is a measure of variance i.e. does the simulated person follow exactly the mean value (the cardinal direction) or is there variation around this.
+
+The following graph shows some a simulated tuning curve where all four cardinal directions are equally likely to be picked.
+
+```{r ab_stick_dir, fig.height=3}
+abs_dir_tuning = list(kappa = rep(2, 4), theta = c(5, 5, 5, 5))
+
+# plot absolute tuning curve
+d <- tibble(phi = seq(1, 360),
+            z = compute_all_von_mises(phi=phi, abs_dir_tuning$theta, abs_dir_tuning$kappa))
+
+ggplot(d, aes(phi, z)) + geom_path()
+
+```
+
+### Horizontal Bias
+
+Here, our simulation has a preference for moving horizontally (left and right). We have re-aligned the items on a grid with only one target type to make this easier to see.
+
+```{r ab_stick_dir2}
+abs_dir_tuning = list(kappa = rep(5, 4), theta = c(10, 0, 10, 0))
+rho_delta = 10
+rho_psi = 0
+
+items <- tibble(x = seq(0, 1, 0.2), y = x) %>% modelr::data_grid(x,y ) %>%
+  mutate(item_class = 1, id = 1:n())
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE, items = items)
+
+plot_a_trial(d$stim, d$found)
+```
+
+### Vertical Bias
+
+Here, the preference is for moving vertically (up and down).
+
+```{r vert_bias}
+abs_dir_tuning = list(kappa = rep(5, 4), theta = c(0, 10, 0, 10))
+rho_delta = 10
+rho_psi = 0
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE, items = items)
+
+plot_a_trial(d$stim, d$found)
+```
+
+### Right Bias
+
+You can also set asymmetrical biases e.g. a rightwards bias (although note that this can lead to somewhat counterintuitive behaviour depending on the stimulus set up e.g. the simulation will pick the rightmost target early on, and then is forced to only move leftwards!)
+
+```{r right_bias}
+abs_dir_tuning = list(kappa = rep(5, 4), theta = c(10, 0, 0, 0))
+rho_delta = 10
+rho_psi = 0
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE, items = items)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Run behaviour
+
+Humans tend to forage in 'runs', sticking with the same target type. We can include this in the simulation using `b_stick`, where higher values give more run-like behaviour.
+
+In the following demo, the other parameter values are set to plausible values to generate 'human-like' behaviour. This simulated participant has a medium preference to stick with the same target type.
+
+### Expected human-like run behaviour
+
+```{r human_like_run}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 20
+rho_psi = 1
+b_stick = 3
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+## Memory (one back)
+
+A final parameter is a memory parameter where participants have a 'memory' of the targets they have recently selected, and are more likely to double back on themselves to 'complete' collecting the targets in a given area. This is denoted in the simulation by `b_memory`. 
+
+### Expected human-like run behaviour
+
+```{r mem_one_back}
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 20
+rho_psi = 1
+b_memory = 2
+b_stick = 3
+
+d <- sim_foraging_trial(trl = 1, 
+                        n_item_class, n_item_per_class, 
+                        item_class_weights,
+                        item_labels,
+                        b_stick, 
+                        rho_delta, 
+                        rho_psi,
+                        abs_dir_tuning,
+                        b_memory,
+                        inital_sel_params = inital_sel_params,
+                        init_sel_lambda = init_sel_lambda,
+                        dev_output = TRUE)
+
+plot_a_trial(d$stim, d$found)
+```
+
+# Simulating Multiple Trials
+
+Now, we can move on to simulating multiple trials. The following example has one condition (labelled 'test'). The number of trials per condition is determined by `n_trials_per_cond`.
+
+## A Condition (Block) of $n$ trials
+
+```{r sim_multiple_trials}
+n_trials_per_cond <- 9
+
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 10
+b_memory = 0.5
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 15
+rho_psi = 1
+
+d <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels =item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda) 
+```
+
+### Check Run Statistics
+
+The code for computing run statistics is in the file `compute_summary_statistics`. This will calculate the maximum run length and number of runs for each trial of the condition.
+
+```{r run_stats, message = FALSE}
+source("../../functions/compute_summary_stats.R")
+
+get_run_info_over_trials(d$found %>% rename(trial_p = "trial")) %>% knitr::kable()
+```
+
+We can plot a trial and manually check it to see if the run length statistics are correct.
+
+```{r check_run_plot}
+plot_a_trial(d$stim, d$found, trial = 3)
+```
+
+# Simulate Multiple People & Conditions
+
+Let us generate two conditions (A and B), and multiple participants (denoted by `n_people`).
+
+Our simulation assumes zero correlation in the random effects. For now, we also assume no variation in absolute random directions (as this is a pain to code up).
+
+
+```{r multilevel, message = FALSE}
+
+item_class_weights = list(c(0.5, 0.5, 0, 0), 
+                          c(0.7, 0.3, 0, 0))
+
+b_stick = c(0, 2)
+
+rho_delta = c(20, 15)
+sd_rho_delta = 5
+
+rho_psi = c(-1, -1)
+
+abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
+
+d <- sim_foraging_people(n_people = 12,
+                    n_conditions = 2,
+                    cond_lab = c("A", "B"),
+                    n_trials_per_cond = 8,
+                    n_item_class = 2, n_item_per_class = 10,
+                    item_class_weights, sd_bA = 0.2,
+                    b_stick = b_stick, sd_b_stick = 1,
+                    rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
+                    rho_psi = rho_psi, sd_rho_psi = 0.5,
+                    abs_dir_tuning = abs_dir_tuning,
+                    inital_sel_params = inital_sel_params) 
+```
+
+## Do people with a higher $b_stick$ have fewer runs?
+
+We can again sense check our simulation: here, we can see that participants who have a stronger preference to forage in runs (i.e. a higher `b_stick` value) have a smaller number of runs. Note as well that condition A has a smaller `b_stick` value on average, leading to more runs.
+
+```{r, message = FALSE}
+get_run_info_over_trials(d$found) %>%
+  group_by(person, condition) %>%
+  summarise(median_n_runs = median(n_runs), .groups = "drop") %>%
+  full_join(d$dp) %>%
+  ggplot(aes(b_stick, median_n_runs, colour = condition)) + geom_point(shape = 3, size = 5)
+```
+
+## Compute inter-target directions
+
+We have some processing code `get_inter_targ_stats` which allows visualisation of inter-target directions, by adding them into the plot. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.
+
+```{r}
+
+d_trials <- d$found %>% group_by(person, condition, trial_p) %>% 
+  summarise(.groups = "drop") 
+
+d_sacc <- pmap_df(d_trials, get_inter_targ_stats, d$found)
+
+```
+
+```{r, warning = FALSE}
+
+d_sacc$theta_deg <- round(180*d_sacc$theta/pi)
+plot_a_trial(d$stim, d_sacc, trial = 1, segLabel = "theta_deg")
+
+```
