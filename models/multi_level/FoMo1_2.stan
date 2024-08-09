@@ -165,7 +165,7 @@ model {
     weights = (u_a[X[t], Z[ii]]) * to_vector(item_class[t]) ;
 
     // multiply weights by stick/switch preference
-    weights = log_inv_logit(weights) .* log_inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
+    weights = log_inv_logit(weights) + log_inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
 
     spatial_weights = compute_spatial_weights(found_order[ii], n_targets,
        u_delta[X[t], Z[ii]], delta_n[ii]);

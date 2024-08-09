@@ -1,5 +1,5 @@
 ---
-title: "2) fitting the NEW  old foraging model - to simulated data"
+title: "Testing simple models"
 author: "A D F Clarke & A Excellent Hughes"
 format: html
 editor: source

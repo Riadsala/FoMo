@@ -210,3 +210,20 @@ log_pd_kfold <- gen_test$draws("log_lik", format = "matrix")
 
 elpd_kfold_1_1 <- elpd(log_pd_kfold)
 saveRDS(elpd_kfold_1_1, "scratch/elpd_1_1.rds")
+
+## model 1.2
+
+mod <- cmdstan_model("../../models/multi_level/FoMo1_2.stan")
+
+# run model
+m_train_1_2 <- mod$sample(data = d_train_list, 
+                          chains = 4, parallel_chains = 4, threads = 4,
+                          refresh = 10, 
+                          iter_warmup = iter, iter_sampling = iter,
+                          sig_figs = 3)
+
+gen_test <- mod$generate_quantities(m_train_1_2, data = d_test_list, seed = 123)
+log_pd_kfold <- gen_test$draws("log_lik", format = "matrix")
+
+elpd_kfold_1_2 <- elpd(log_pd_kfold)
+saveRDS(elpd_kfold_1_2, "scratch/elpd_1_2.rds")

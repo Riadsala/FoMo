@@ -1,5 +1,5 @@
 ---
-title: "2) fitting the NEW  old foraging model - to simulated data"
+title: "Testing multi-level models"
 author: "A D F Clarke & A Excellent Hughes"
 format: html
 editor: source
@@ -28,6 +28,8 @@ theme_set(ggthemes::theme_tufte())
 
 - **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
 - **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
+- **Model 1.2**: the same as 1.1 except it has no parameter for relative direction.
+
 
 ## Model 1.0
 
@@ -118,13 +120,52 @@ pred <- summarise_postpred(fit, d2)
 plot_model_accuracy(pred)
 ```
 
+## Model 1.2
+
+```{r}
+
+d2 <- readRDS("scratch/d_1_1.RDS")
+fit <- readRDS("scratch/multi_level_1_2_tmp.rds")
+
+rho_delta = 1
+
+```
+
+### Posterior Density Plots
+
+```{r extractsim1_2post}
+post <- extract_post(fit, d2, multi_level = TRUE)
+```
+
+#### Fixed Effects
+
+```{r plotsim1_2fixed, fig.cap="fixed effects", warning = FALSE}
+
+plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+
+```
+
+### Model Accuracy
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(fit, d2)
+
+plot_model_accuracy(pred)
+```
+
 ## Model comparison
+
 
 ```{r}
 
 elpd_1_0 <- readRDS('scratch/elpd_1_0.rds')
 elpd_1_1 <- readRDS('scratch/elpd_1_1.rds')
+elpd_1_2 <- readRDS('scratch/elpd_1_2.rds')
 
-loo_compare(elpd_1_0, elpd_1_1)
+loo_compare(elpd_1_0, elpd_1_1, elpd_1_2)
 
 ```
