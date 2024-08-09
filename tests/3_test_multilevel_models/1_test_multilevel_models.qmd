@@ -169,3 +169,133 @@ elpd_1_2 <- readRDS('scratch/elpd_1_2.rds')
 loo_compare(elpd_1_0, elpd_1_1, elpd_1_2)
 
 ```
+
+# 2 conditions
+
+## Model 1.0
+
+```{r}
+
+d <- readRDS("scratch/d_2cond.rds")
+fit <- readRDS("scratch/multi_level_2cond_1_0_tmp.rds")
+
+item_class_weights = list(c(0.5, 0.5, 0, 0), 
+                          c(0.7, 0.3, 0, 0))
+
+b_stick = c(0, 2)
+rho_delta = c(20, 15)
+rho_psi = c(-1, -1)
+
+```
+
+We can plot both fixed and random effects from the model.
+
+```{r}
+post <- extract_post(fit, d, multi_level = TRUE)
+```
+
+#### Fixed Effects
+
+```{r, fig.cap="fixed effects", warning = FALSE}
+plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+```
+
+#### Random Effects
+
+```{r, fig.cap="random effects"}
+plot_model_random(post)
+```
+
+### Model Accuracy
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(fit, d)
+
+plot_model_accuracy(pred)
+```
+## Model 1.1
+
+```{r}
+
+d <- readRDS("scratch/d_2cond_relprox.rds")
+fit <- readRDS("scratch/multi_level_2cond_1_1_tmp.rds")
+
+rho_delta = c(1,2)
+
+```
+
+We can plot both fixed and random effects from the model.
+
+```{r}
+post <- extract_post(fit, d, multi_level = TRUE)
+```
+
+#### Fixed Effects
+
+```{r, fig.cap="fixed effects", warning = FALSE}
+plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+```
+
+#### Random Effects
+
+```{r, fig.cap="random effects"}
+plot_model_random(post)
+```
+
+### Model accuracy
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(fit, d)
+
+plot_model_accuracy(pred)
+```
+
+
+## Model 1.2
+
+```{r}
+
+d <- readRDS("scratch/d_2cond_relprox.rds")
+fit <- readRDS("scratch/multi_level_2cond_1_2_tmp.rds")
+
+rho_delta = c(1,2)
+
+```
+
+We can plot both fixed and random effects from the model.
+
+```{r}
+post <- extract_post(fit, d, multi_level = TRUE)
+```
+
+#### Fixed Effects
+
+```{r, fig.cap="fixed effects", warning = FALSE}
+plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
+                                 b_stick = b_stick,
+                                 rho_delta = rho_delta,
+                                 rho_psi = rho_psi))
+```
+
+#### Random Effects
+
+```{r, fig.cap="random effects"}
+plot_model_random(post)
+```
+
+### Model accuracy
+
+```{r, warning = FALSE}
+
+pred <- summarise_postpred(fit, d)
+
+plot_model_accuracy(pred)
+```
