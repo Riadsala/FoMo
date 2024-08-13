@@ -13,10 +13,14 @@
 
 get_run_info_over_trials <- function(df) {
   
+  
   if (".draw" %in% c(names(df))) {
     
     df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
+    draws_present <- TRUE
     
+  } else {
+    draws_present <- FALSE
   }
 
   if ("condition" %in% names(df)) {
@@ -33,27 +37,47 @@ get_run_info_over_trials <- function(df) {
     summarise(.groups = "drop") %>%
     pmap_df(get_run_info, df = df, 
             .progress = TRUE) -> dout
+ 
+ # now split dout$trial up by draws
+ if (draws_present) {
+   
+   dout %>% separate(trial_p, 
+                     into = c("trial_p", ".draw"), 
+                     "_",
+                     convert = TRUE) -> dout
+ }
   
   return(dout)
   
 }
 
-get_inter_sel_info_over_trials <- function(df) {
+get_iisv_over_trials <- function(df) {
 
   if (".draw" %in% c(names(df))) {
     
    df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
+    draws_present <- TRUE
     
+  } else {
+    draws_present <- FALSE
   }
     
     d_trials <- df %>% group_by(person, condition, trial_p) %>% 
       summarise(.groups = "drop") 
 
   
-  d_out <- pmap_df(d_trials, get_inter_targ_stats, df,
+  dout <- pmap_df(d_trials, get_iisv_stats, df,
                    .progress = TRUE) 
   
-  return(d_out)
+  if (draws_present) {
+    
+    dout %>% separate(trial_p, 
+                      into = c("trial_p", ".draw"), 
+                      "_",
+                      convert = TRUE) -> dout
+  }
+  
+  return(dout)
   
 }
 
@@ -71,14 +95,14 @@ get_run_info <- function(person, condition, trial_p, df) {
   
   return(list(
     person = person,
-    trial = trl,
+    trial_p = trl,
     condition = condition,
     n_found = nrow(trl_dat),
     max_run_length = max(rl$lengths), 
     n_runs = length(rl$lengths)))
 }    
 
-get_inter_targ_stats <- function(person, condition, trial_p, d) {
+get_iisv_stats <- function(person, condition, trial_p, d) {
   
   pp = person
   trl = trial_p

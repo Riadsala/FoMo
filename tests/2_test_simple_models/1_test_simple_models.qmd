@@ -24,7 +24,7 @@ options(mc.cores = 4)
 theme_set(ggthemes::theme_tufte())
 
 # create scratch folder if it does not yet exist
-if (!file.exists("scratch"))  dir.create("scatch")
+if (!file.exists("scratch"))  dir.create("scratch")
   
 ```
 
@@ -73,6 +73,7 @@ d1 <- sim_foraging_multiple_trials(person = 1,
 
 # compute run statistics for later
 runs_emp <- get_run_info_over_trials(d1$found) 
+iisv_emp <- get_iisv_over_trials(d1$found) 
 
 ```
 
@@ -84,8 +85,7 @@ Here, we fit model version 1.0.
 
 d1_list <- prep_data_for_stan(d1$found, d1$stim, c("spatial", "item_class"))
 d1_list <- add_priors_to_d_list(d1_list, modelver = "1.0")
-d1_list$n_trials_to_sim <- 1
-
+d1_list$n_trials_to_sim <- n_trials_per_cond
 
 ```
 
@@ -160,21 +160,38 @@ pltsim <- plot_a_trial(d1$stim, pred$sim , trial = 1)
 
 pltreal + pltsim
 
-
 ```
 
 ### Compare Run Statistics
 
 ```{r}
 
-runs_sim <- get_run_info_over_trials(pred$sim) 
+# small wrapper function for plotting run statistic comparison
 
-runs <- bind_rows(runs_emp %>% mutate(class = "empirical"), 
-                  runs_sim %>% mutate(class = "simulated"))
+simple_run_stat_comparison <- function(runs_emp, pred) {
+  
+  runs_sim <- get_run_info_over_trials(pred$sim) 
+  
+  bind_rows(runs_emp %>% mutate(class = "empirical"), 
+            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
+    pivot_longer(c("max_run_length", "n_runs")) %>%
+    ggplot(aes(class, value)) + 
+    geom_boxplot() + 
+    facet_wrap(~name, scales = "free")
+}
 
+simple_run_stat_comparison(runs_emp, pred)
 ```
 
 ### Compares IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d1)
+
+```
+
 
 
 
@@ -264,6 +281,39 @@ plot_model_accuracy(pred)
 
 
 ```
+
+
+### Compare Run Statistics
+
+```{r}
+
+# small wrapper function for plotting run statistic comparison
+
+simple_run_stat_comparison <- function(runs_emp, pred) {
+  
+  runs_sim <- get_run_info_over_trials(pred$sim) 
+  
+  bind_rows(runs_emp %>% mutate(class = "empirical"), 
+            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
+    pivot_longer(c("max_run_length", "n_runs")) %>%
+    ggplot(aes(class, value)) + 
+    geom_boxplot() + 
+    facet_wrap(~name, scales = "free")
+}
+
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compares IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d1)
+
+```
+
+
 
 ## Model 1.2
 
