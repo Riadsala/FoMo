@@ -22,6 +22,10 @@ options(mc.cores = 4)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
+
+# create scratch folder if it does not yet exist
+if (!file.exists("scratch"))  dir.create("scatch")
+  
 ```
 
 # Fitting Model to Simulated Data
@@ -67,6 +71,8 @@ d1 <- sim_foraging_multiple_trials(person = 1,
                                   inital_sel_params = inital_sel_params,
                                   init_sel_lambda = init_sel_lambda)
 
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d1$found) 
 
 ```
 
@@ -85,7 +91,7 @@ d1_list$n_trials_to_sim <- 1
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
-iter = 100
+iter = 500
 mod <- cmdstan_model("../../models/simple/FoMo1_0.stan")
 
 # run model
@@ -160,12 +166,17 @@ pltreal + pltsim
 ### Compare Run Statistics
 
 ```{r}
-get_run_info_over_trials(d1$found) %>% knitr::kable()
 
-get_run_info_over_trials(pred$sim) %>% knitr::kable()
+runs_sim <- get_run_info_over_trials(pred$sim) 
 
+runs <- bind_rows(runs_emp %>% mutate(class = "empirical"), 
+                  runs_sim %>% mutate(class = "simulated"))
 
 ```
+
+### Compares IISVs
+
+
 
 ## Model 1.1
 
