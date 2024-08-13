@@ -150,9 +150,19 @@ And we can plot a comparison between a real and a simulated trial in order to vi
 # plot comparison between a real and simulated trial
 
 pltreal <- plot_a_trial(d1$stim, d1$found, 1)
-pltsim <- plot_a_trial(d1$stim, pred$sim , trial = 2)
+pltsim <- plot_a_trial(d1$stim, pred$sim , trial = 1)
 
 pltreal + pltsim
+
+
+```
+
+### Compare Run Statistics
+
+```{r}
+get_run_info_over_trials(d1$found) %>% knitr::kable()
+
+get_run_info_over_trials(pred$sim) %>% knitr::kable()
 
 
 ```

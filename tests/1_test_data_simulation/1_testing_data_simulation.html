@@ -125,6 +125,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="proximity-bias-only" class="level2">
 <h2 class="anchored" data-anchor-id="proximity-bias-only">Proximity Bias Only</h2>
 <p>There are a number of parameters that can be included in the model. The first one we will demonstrate is a proximity bias: <code>rho_delta</code>. Setting this to a large value (e.g.&nbsp;50) means that there will be a strong bias towards choosing a nearby target.</p>
+<p>Note that data can be simulated for version 1.0 of the model (<code>rel_proximity = FALSE</code>) or version 1.1 of the model (<code>rel_proximity = TRUE</code>).</p>
 <p>In the below demonstration, we have a strong proximity bias, with other parameters either neutral (different target types are equally attractive) or turned off (relative and absolute proximity biases, memory).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>item_class_weights <span class="ot">=</span> <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>)</span>
@@ -182,7 +183,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                        rho_psi,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                        abs_dir_tuning,</span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                        <span class="at">inital_sel_params =</span> inital_sel_params,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">init_sel_lambda =</span> init_sel_lambda,)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                        <span class="at">init_sel_lambda =</span> init_sel_lambda)</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_a_trial</span>(d<span class="sc">$</span>stim, d<span class="sc">$</span>found)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -438,7 +439,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../../functions/compute_summary_stats.R"</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">get_run_info_over_trials</span>(d<span class="sc">$</span>found <span class="sc">%&gt;%</span> <span class="fu">rename</span>(<span class="at">trial_p =</span> <span class="st">"trial"</span>)) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">get_run_info_over_trials</span>(d<span class="sc">$</span>found) <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <table class="table table-sm table-striped small">
 <thead>
@@ -466,7 +467,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
@@ -497,16 +498,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">6</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">7</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -522,15 +523,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">10</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">2</td>
 </tr>
 </tbody>
 </table>

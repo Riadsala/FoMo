@@ -18,9 +18,18 @@ get_run_info_over_trials <- function(df) {
     df %>% unite(trial_p, trial_p, .draw, sep = "_") -> df
     
   }
+
+  if ("condition" %in% names(df)) {
+    
+    df %>% group_by(person, condition, trial_p) -> df
+    
+  } else {
+    
+    df %>% group_by(person, trial_p) -> df
+    
+  }
   
-  df %>%
-    group_by(person, condition, trial_p) %>% 
+ df %>% 
     summarise(.groups = "drop") %>%
     pmap_df(get_run_info, df = df, 
             .progress = TRUE) -> dout

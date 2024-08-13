@@ -6,7 +6,8 @@ library(geomtextpath)
 
 plot_a_trial <- function(ds, df, 
                          trial = NA, segLabel = NULL,
-                         filename = NA) {
+                         filename = NA,
+                         draws_to_plot = 1) {
 
   # This function plots a trial: points indicate all items and a path 
   # joins the items up in the order in which they where selected.
@@ -19,6 +20,15 @@ plot_a_trial <- function(ds, df,
     trl = trial
     ds <- filter(ds, trial == trl)
     df <- filter(df, trial == trl)
+  }
+  
+  # if we have multiple .draws (ie, plotting simulated data from FoMo)
+  # randomly sample nd draws
+  if (".draw" %in% names(df)) {
+    draws <- sample(unique(df$.draw), draws_to_plot)
+    df %>% filter(.draw %in% draws) -> df
+    rm(draws)
+    
   }
   
   ds %>% mutate(item_class = factor(item_class)) -> ds

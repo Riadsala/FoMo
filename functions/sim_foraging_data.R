@@ -132,8 +132,38 @@ sim_foraging_multiple_trials <- function(person = 1,
            person = person) %>%
     relocate(person, condition)
   
+  # correctly label trial and trial_p
+  ds <- fix_trial_index(ds)
+  df <- fix_trial_index(df)
+ 
+  
   return(list(stim = ds, found = df))
 }
+
+fix_trial_index <- function(dat) {
+  
+  if ("person" %in% names(dat)) {
+    
+    dat %>% mutate(
+      trial_p = trial,
+      trial = paste(as.numeric(person), as.numeric(condition), trial)) -> dat
+    
+    
+  } else {
+    
+    dat %>% mutate(
+      trial_p = trial,
+      trial = paste(as.numeric(condition), trial)) -> dat
+  }
+  
+  dat %>% mutate(
+    trial = as_factor(trial),
+    trial = as.numeric(trial)) -> dat
+  
+  return(dat)
+  
+}
+
 
 sim_foraging_trial <- function(trl = 1, 
                                n_item_class = 4, 
