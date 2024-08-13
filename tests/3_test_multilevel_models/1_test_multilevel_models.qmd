@@ -43,6 +43,10 @@ b_stick = 1
 rho_delta = 15
 rho_psi = -1
 
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d$found) 
+iisv_emp <- get_iisv_over_trials(d$found) 
+
 ```
 
 ### Posterior Density Plots
@@ -76,6 +80,39 @@ pred <- summarise_postpred(fit, d)
 
 plot_model_accuracy(pred)
 ```
+
+
+
+### Compare Run Statistics
+
+```{r}
+
+# small wrapper function for plotting run statistic comparison
+
+simple_run_stat_comparison <- function(runs_emp, pred) {
+  
+  runs_sim <- get_run_info_over_trials(pred$sim) 
+  
+  bind_rows(runs_emp %>% mutate(class = "empirical"), 
+            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
+    pivot_longer(c("max_run_length", "n_runs")) %>%
+    ggplot(aes(class, value)) + 
+    geom_boxplot() + 
+    facet_wrap(~name, scales = "free")
+}
+
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compares IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d)
+
+```
+
 
 ## Model 1.1
 
