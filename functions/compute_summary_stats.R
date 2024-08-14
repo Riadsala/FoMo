@@ -111,12 +111,15 @@ get_iisv_stats <- function(person, condition, trial_p, d) {
   trl_dat <- filter(d, person == pp, trial_p == trl,  condition == cnd) %>% 
     arrange(found) %>%
     select(-item_class) %>%
-    mutate(x0 = lag(x), 
-           y0 = lag(y),
+    mutate(x0 = lag(x), y0 = lag(y),
+           x00 = lag(x, 2), y00 = lag(y, 2),
            d2 = (x-x0)^2 + (y-y0)^2,
-           theta = atan2(y-y0, x-x0)) %>%
-    #filter(found > 1) %>%
-    select(-x0, -y0)
+           theta = atan2(y-y0, x-x0),
+           theta0 = atan2(y0-y00, x0-x00),
+           psi = theta - theta0,
+           psi = pmin(abs((psi %% 2*pi)), abs((-psi %% 2*pi))),
+           psi = psi / pi) %>%
+    select(-x0, -y0, -x00, -y00, -theta0)
   
   return(trl_dat)
 }

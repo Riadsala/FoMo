@@ -30,6 +30,7 @@ plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
   
   if (!("person" %in% names(iisv_emp))) iisv_emp$person = 1
   
+  #################################################################
   # create distance plot 
   iisv_emp %>% 
     filter(found > 1) %>%
@@ -55,25 +56,25 @@ plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
     plt_amp <- plt_amp + theme(legend.position = "none")
   }
   
-  
+  #################################################################
   # create direction plot
   
   # first, we need to pad our data to take 0/2pi into account
   bind_rows(iisv_emp, 
             iisv_emp %>% mutate(theta = theta + 2*pi)) %>%
-    filter(found > 1) -> iisv_emp
+    filter(found > 1) -> iisv_emp2
   
   bind_rows(iisv_sim, 
             iisv_sim %>% mutate(theta = theta + 2*pi)) %>%
-    filter(found > 1) -> iisv_sim
+    filter(found > 1) -> iisv_sim2
   
   
   pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2), expression(2*pi))
   
-  iisv_emp %>%
+  iisv_emp2 %>%
     ggplot(aes(theta, group = person)) + 
     geom_line(stat = "density", bw = 0.1) +
-    geom_line(data = iisv_sim, aes(group = .draw), 
+    geom_line(data = iisv_sim2, aes(group = .draw), 
               alpha = 0.25, stat = "density", bw = 0.1, colour = "red") +
     coord_cartesian(xlim = c(0, 2*pi)) +
     theme(legend.position = "none") +
@@ -81,11 +82,34 @@ plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
     scale_x_continuous("inter-item directions", breaks = seq(0, 2*pi, pi/2), 
                        labels = pi_labels) -> plt_wave
   
+  rm(iisv_sim2, iisv_emp2)
   
+  #################################################################
+  # create rel direction plot
+  
+  # first, mirror to fix density plot around 0 
+  bind_rows(iisv_emp, 
+            iisv_emp %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv_emp2
+  
+  bind_rows(iisv_sim, 
+            iisv_sim %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv_sim2
+  
+  iisv_emp2 %>%
+    ggplot(aes(psi, group = person)) + 
+    geom_line(stat = "density", bw = 0.1) +
+    geom_line(data = iisv_sim2, aes(group = .draw), 
+              alpha = 0.25, stat = "density", bw = 0.1, colour = "red") + 
+    coord_cartesian(xlim = c(0, 1)) -> plt_psi
+  
+  rm(iisv_sim2, iisv_emp2)
+  
+  
+  #################################################################
   # output plots
   
-  
-  plt <- plt_amp + plt_wave
+  plt <- plt_amp + plt_wave + plt_psi
   
   return(plt)
 }

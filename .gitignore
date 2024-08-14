@@ -2,3 +2,5 @@
 *.exe
 *.rds
 
+/tests/2_test_simple_models/1_test_simple_models_files/figure-html
+/tests/2_test_simple_models/1_test_simple_models_files/figure-html

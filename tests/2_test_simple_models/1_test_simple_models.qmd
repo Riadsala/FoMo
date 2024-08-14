@@ -2,6 +2,7 @@
 title: "Testing simple models"
 author: "A D F Clarke & A Excellent Hughes"
 format: html
+fig_height: 2
 editor: source
 ---
 
@@ -189,7 +190,6 @@ What about the inter-item selection vectors?
 
 ```{r}
 plot_model_human_iisv_comparison(pred, d1)
-
 ```
 
 
@@ -277,8 +277,6 @@ plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
 pred <- summarise_postpred(m_simple_1_1, dr, multi_level = FALSE, get_sim = TRUE)
 
 plot_model_accuracy(pred)
-
-
 
 ```
 
