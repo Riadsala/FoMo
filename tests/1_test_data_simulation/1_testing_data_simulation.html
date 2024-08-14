@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.3.450">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -424,7 +424,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">sim_foraging_multiple_trials</span>(<span class="at">person =</span> <span class="dv">1</span>, </span>
 <span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">condition =</span> <span class="st">"test"</span>,</span>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">n_item_class =</span>  n_item_class, <span class="at">n_item_per_class =</span> n_item_per_class,</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">item_class_weights =</span> item_class_weights, <span class="at">item_labels =</span>item_labels,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">item_class_weights =</span> item_class_weights, <span class="at">item_labels =</span> item_labels,</span>
 <span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">b_stick =</span> b_stick, </span>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">rho_delta =</span> rho_delta, </span>
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">rho_psi =</span> rho_psi, </span>
@@ -445,7 +445,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th style="text-align: right;">person</th>
-<th style="text-align: right;">trial</th>
+<th style="text-align: right;">trial_p</th>
 <th style="text-align: left;">condition</th>
 <th style="text-align: right;">n_found</th>
 <th style="text-align: right;">max_run_length</th>
@@ -458,8 +458,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">1</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -467,7 +467,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
@@ -482,32 +482,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">4</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">5</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">7</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
@@ -530,8 +530,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td style="text-align: right;">10</td>
 <td style="text-align: left;">test</td>
 <td style="text-align: right;">20</td>
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">2</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
 </tr>
 </tbody>
 </table>
@@ -597,7 +597,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>d_trials <span class="ot">&lt;-</span> d<span class="sc">$</span>found <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(person, condition, trial_p) <span class="sc">%&gt;%</span> </span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.groups =</span> <span class="st">"drop"</span>) </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>d_sacc <span class="ot">&lt;-</span> <span class="fu">pmap_df</span>(d_trials, get_inter_targ_stats, d<span class="sc">$</span>found)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>d_sacc <span class="ot">&lt;-</span> <span class="fu">get_iisv_over_trials</span>(d<span class="sc">$</span>found)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>d_sacc<span class="sc">$</span>theta_deg <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="dv">180</span><span class="sc">*</span>d_sacc<span class="sc">$</span>theta<span class="sc">/</span>pi)</span>

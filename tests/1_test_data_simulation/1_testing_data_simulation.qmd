@@ -419,7 +419,7 @@ We have some processing code `get_inter_targ_stats` which allows visualisation o
 d_trials <- d$found %>% group_by(person, condition, trial_p) %>% 
   summarise(.groups = "drop") 
 
-d_sacc <- pmap_df(d_trials, get_inter_targ_stats, d$found)
+d_sacc <- get_iisv_over_trials(d$found)
 
 ```
 
