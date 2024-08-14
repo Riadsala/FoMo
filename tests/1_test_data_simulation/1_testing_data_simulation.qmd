@@ -338,7 +338,7 @@ rho_psi = 1
 d <- sim_foraging_multiple_trials(person = 1, 
                                   condition = "test",
                                   n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
-                                  item_class_weights = item_class_weights, item_labels =item_labels,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
                                   b_stick = b_stick, 
                                   rho_delta = rho_delta, 
                                   rho_psi = rho_psi, 
@@ -355,7 +355,7 @@ The code for computing run statistics is in the file `compute_summary_statistics
 ```{r run_stats, message = FALSE}
 source("../../functions/compute_summary_stats.R")
 
-get_run_info_over_trials(d$found %>% rename(trial_p = "trial")) %>% knitr::kable()
+get_run_info_over_trials(d$found) %>% knitr::kable()
 ```
 
 We can plot a trial and manually check it to see if the run length statistics are correct.

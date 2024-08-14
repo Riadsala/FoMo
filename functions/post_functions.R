@@ -61,6 +61,7 @@ extrat_post_absdir <- function(m) {
   return(post_absdir)
   
 }
+
 extract_var <- function(m, cl, param_names) {
   
   post_sig <- m$draws("sigma_u", format = "df")
@@ -189,7 +190,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
                condition = factor(condition, labels = unique(d$stim$condition))) -> sim
       
       sim %>%
-        full_join(d$stim, by = join_by(trial, id)) -> sim
+        left_join(d$stim, by = join_by(condition, trial, id)) -> sim
         
     }
     

@@ -1,7 +1,6 @@
 /examples/1_test_data_simulation/1_testing_data_simulation_files
 *.exe
-<<<<<<< Updated upstream
-=======
-*.exe
->>>>>>> Stashed changes
 *.rds
+
+/tests/2_test_simple_models/1_test_simple_models_files/figure-html
+/tests/2_test_simple_models/1_test_simple_models_files/figure-html

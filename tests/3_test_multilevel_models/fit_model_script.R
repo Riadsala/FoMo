@@ -8,6 +8,9 @@ source("../../functions/prep_data.R")
 source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 
+# create scratch folder if it does not yet exist
+if (!file.exists("scratch"))  dir.create("scratch")
+
 
 ## model 1.0
 
@@ -52,7 +55,7 @@ saveRDS(d, "scratch/d_1_0.rds")
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
-d_list$n_trials_to_sim <- 1
+d_list$n_trials_to_sim <- 10
 
 iter = 200
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan")

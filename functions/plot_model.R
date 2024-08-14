@@ -19,57 +19,97 @@ options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
 
-plot_model_human_comparison <- function(pred, df) {
+plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
   
   # Create a plot to compare our model to human/training data
-  # in terms of run statistics, inter-target length etc.
+  # in terms of  inter-item selection amplitude and direction
   
-  d <- get_inter_sel_info_over_trials(post$sim)
+  iisv_sim <- get_iisv_over_trials(pred$sim)
   
-  e <- get_inter_sel_info_over_trials(df$found) %>%
-    group_by(person, found) %>% 
-    summarise(empirical = mean(d2),
-              .groups = "drop")
+  if (is.null(iisv_emp)) iisv_emp <- get_iisv_over_trials(df$found) 
   
-  d %>% group_by(person, found) %>% 
-    summarise(simulated = mean(d2)) %>%
-    full_join(e, by = join_by(person, found)) %>%
-    filter(found != 1) %>%
-    pivot_longer(c(simulated, empirical), values_to = "d2") %>%
-    ggplot(aes(found, sqrt(d2), colour = name, group = interaction(name, person))) + 
-    geom_path(alpha = 0.5) +
-    geom_smooth(aes(group = name), se=FALSE, linetype = 2) + 
-    scale_x_continuous("nth item found") + 
-    scale_y_continuous("inter-target distance") +
-    theme(legend.title = element_blank()) -> plt_amp
+  if (!("person" %in% names(iisv_emp))) iisv_emp$person = 1
   
-  ############## now do run statistics
+  #################################################################
+  # create distance plot 
+  iisv_emp %>% 
+    filter(found > 1) %>%
+    group_by(found, condition) %>%
+    summarise(distance = median(sqrt(d2)), .groups = "drop") -> emp 
   
-  d <- get_run_info_over_trials(post$sim)
+  iisv_sim %>%
+    filter(found > 1) %>%
+    group_by(found, condition, .draw) %>%
+    summarise(distance = median(sqrt(d2)), .groups = "drop_last") %>%
+    median_hdci(distance, .width = c(0.53, 0.97)) -> sim
   
-  e <- get_run_info_over_trials(df$found) %>%
-    group_by(person, condition) %>% 
-    summarise(n_runs = median(n_runs),
-              max_run_length = median(max_run_length),
-              .groups = "drop") %>%
-    mutate(type = "empirical") 
+  ggplot(emp, aes(found, distance)) + 
+    geom_path(data = emp, 
+              aes(colour = condition)) +
+    geom_ribbon(data = sim, 
+                aes(ymin = .lower, ymax = .upper, 
+                    fill = condition,
+                    group = interaction(.width, condition)), alpha = 0.33) -> plt_amp
   
-  d %>% group_by(person, condition) %>% 
-    summarise(n_runs = median(n_runs),
-              max_run_length = median(max_run_length),
-              .groups = "drop") %>%
-    mutate(type = "simulated") %>%
-    full_join(e, by = join_by(person, n_runs, max_run_length, type, condition)) %>%
-    pivot_longer(c(max_run_length, n_runs), names_to = "stat") %>%
-    pivot_wider(names_from = "type", values_from ="value") %>%
-    ggplot(aes(empirical, simulated, 
-               colour = condition, shape = condition)) + 
-    geom_abline(linetype = 2) + 
-    geom_point(size = 2) +
-    facet_wrap(~stat, scales = "free") -> plt_runs
+  if (length(unique(iisv_sim$condition)) == 1) {
+    
+    plt_amp <- plt_amp + theme(legend.position = "none")
+  }
+  
+  #################################################################
+  # create direction plot
+  
+  # first, we need to pad our data to take 0/2pi into account
+  bind_rows(iisv_emp, 
+            iisv_emp %>% mutate(theta = theta + 2*pi)) %>%
+    filter(found > 1) -> iisv_emp2
+  
+  bind_rows(iisv_sim, 
+            iisv_sim %>% mutate(theta = theta + 2*pi)) %>%
+    filter(found > 1) -> iisv_sim2
   
   
-  plt <- plt_amp / plt_runs
+  pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2), expression(2*pi))
+  
+  iisv_emp2 %>%
+    ggplot(aes(theta, group = person)) + 
+    geom_line(stat = "density", bw = 0.1) +
+    geom_line(data = iisv_sim2, aes(group = .draw), 
+              alpha = 0.25, stat = "density", bw = 0.1, colour = "red") +
+    coord_cartesian(xlim = c(0, 2*pi)) +
+    theme(legend.position = "none") +
+    scale_colour_viridis_d() +
+    scale_x_continuous("inter-item directions", breaks = seq(0, 2*pi, pi/2), 
+                       labels = pi_labels) -> plt_wave
+  
+  rm(iisv_sim2, iisv_emp2)
+  
+  #################################################################
+  # create rel direction plot
+  
+  # first, mirror to fix density plot around 0 
+  bind_rows(iisv_emp, 
+            iisv_emp %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv_emp2
+  
+  bind_rows(iisv_sim, 
+            iisv_sim %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv_sim2
+  
+  iisv_emp2 %>%
+    ggplot(aes(psi, group = person)) + 
+    geom_line(stat = "density", bw = 0.1) +
+    geom_line(data = iisv_sim2, aes(group = .draw), 
+              alpha = 0.25, stat = "density", bw = 0.1, colour = "red") + 
+    coord_cartesian(xlim = c(0, 1)) -> plt_psi
+  
+  rm(iisv_sim2, iisv_emp2)
+  
+  
+  #################################################################
+  # output plots
+  
+  plt <- plt_amp + plt_wave + plt_psi
   
   return(plt)
 }
