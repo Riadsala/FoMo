@@ -412,7 +412,7 @@ get_run_info_over_trials(d$found) %>%
 
 ## Compute inter-target directions
 
-We have some processing code `get_inter_targ_stats` which allows visualisation of inter-target directions, by adding them into the plot. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.
+We have some processing code `get_iisv_over_trials` which allows visualisation of inter-target directions, by adding them into the plot. Going left is 180 degrees, down is -90 degrees, up is 90 degrees and going right is 0 degrees.
 
 ```{r}
 

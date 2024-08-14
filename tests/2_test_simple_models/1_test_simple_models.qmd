@@ -150,7 +150,6 @@ plot_model_accuracy(pred)
 
 And we can plot a comparison between a real and a simulated trial in order to visually inspect for obvious differences in the way the model is foraging compared to the simulated data.
 
-[Plotting simulated trial not currently working - need to check Q].
 
 ```{r}
 
@@ -194,7 +193,6 @@ plot_model_human_iisv_comparison(pred, d1)
 
 
 
-
 ## Model 1.1
 
 ### Simulating data with relative proximity set up
@@ -227,9 +225,14 @@ dr <- sim_foraging_multiple_trials(person = 1,
                                   init_sel_lambda = init_sel_lambda,
                                   rel_proximity = TRUE)
 
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(dr$found) 
+iisv_emp <- get_iisv_over_trials(dr$found) 
+
 
 ```
 
+### Run model
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
@@ -251,6 +254,8 @@ m_simple_1_1$save_object("scratch/simple_1_1_tmp.rds")
 
 ```
 
+### Extract posteriors
+
 ```{r}
 
 # read in model
@@ -261,6 +266,7 @@ post <- extract_post(m_simple_1_1, dr, multi_level = FALSE)
 
 ```
 
+### Plot model
 
 ```{r, warning = FALSE}
 
@@ -274,30 +280,29 @@ plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[1]),
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(m_simple_1_1, dr, multi_level = FALSE, get_sim = TRUE)
+pred <- summarise_postpred(m_simple_1_1, dr, draw_sample_frac = 0.1, multi_level = FALSE, get_sim = TRUE)
 
 plot_model_accuracy(pred)
 
 ```
 
+### Plot comparison between a real and a simulated trial
+
+
+```{r}
+
+# plot comparison between a real and simulated trial
+
+pltreal <- plot_a_trial(dr$stim, dr$found, 1)
+pltsim <- plot_a_trial(dr$stim, pred$sim , trial = 1)
+
+pltreal + pltsim
+
+```
 
 ### Compare Run Statistics
 
 ```{r}
-
-# small wrapper function for plotting run statistic comparison
-
-simple_run_stat_comparison <- function(runs_emp, pred) {
-  
-  runs_sim <- get_run_info_over_trials(pred$sim) 
-  
-  bind_rows(runs_emp %>% mutate(class = "empirical"), 
-            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
-    pivot_longer(c("max_run_length", "n_runs")) %>%
-    ggplot(aes(class, value)) + 
-    geom_boxplot() + 
-    facet_wrap(~name, scales = "free")
-}
 
 simple_run_stat_comparison(runs_emp, pred)
 ```
@@ -307,7 +312,7 @@ simple_run_stat_comparison(runs_emp, pred)
 What about the inter-item selection vectors?
 
 ```{r}
-plot_model_human_iisv_comparison(pred, d1)
+plot_model_human_iisv_comparison(pred, dr)
 
 ```
 
@@ -364,12 +369,42 @@ We can assess model accuracy i.e. how well can it predict the next target chosen
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(m_simple_1_2, dr, multi_level = FALSE)
+pred <- summarise_postpred(m_simple_1_2, dr, multi_level = FALSE, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
 
 ```
 
+### Plot comparison between a real and a simulated trial
+
+
+```{r}
+
+# plot comparison between a real and simulated trial
+
+pltreal <- plot_a_trial(dr$stim, dr$found, 1)
+pltsim <- plot_a_trial(dr$stim, pred$sim , trial = 1)
+
+pltreal + pltsim
+
+```
+
+### Compare Run Statistics
+
+```{r}
+
+simple_run_stat_comparison(runs_emp, pred)
+
+```
+
+### Compares IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, dr)
+
+```
 
 
 ## Model comparison

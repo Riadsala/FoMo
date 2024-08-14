@@ -76,12 +76,10 @@ plot_model_random(post)
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(fit, d)
+pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
 ```
-
-
 
 ### Compare Run Statistics
 
@@ -104,7 +102,7 @@ simple_run_stat_comparison <- function(runs_emp, pred) {
 simple_run_stat_comparison(runs_emp, pred)
 ```
 
-### Compares IISVs
+### Compare IISVs
 
 What about the inter-item selection vectors?
 
@@ -122,6 +120,10 @@ d2 <- readRDS("scratch/d_1_1.RDS")
 fit <- readRDS("scratch/multi_level_1_1_tmp.rds")
 
 rho_delta = 1
+
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d2$found) 
+iisv_emp <- get_iisv_over_trials(d2$found) 
 
 ```
 
@@ -157,6 +159,21 @@ pred <- summarise_postpred(fit, d2)
 plot_model_accuracy(pred)
 ```
 
+### Compare Run Statistics
+
+```{r}
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compare IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d2)
+
+```
+
 ## Model 1.2
 
 ```{r}
@@ -189,10 +206,26 @@ plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(fit, d2)
+pred <- summarise_postpred(fit, d2, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
 ```
+
+### Compare Run Statistics
+
+```{r}
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compare IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d2)
+
+```
+
 
 ## Model comparison
 
@@ -222,6 +255,11 @@ item_class_weights = list(c(0.5, 0.5, 0, 0),
 b_stick = c(0, 2)
 rho_delta = c(20, 15)
 rho_psi = c(-1, -1)
+
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d$found) 
+iisv_emp <- get_iisv_over_trials(d$found) 
+
 
 ```
 
@@ -254,6 +292,35 @@ pred <- summarise_postpred(fit, d)
 
 plot_model_accuracy(pred)
 ```
+
+### Compare Run Statistics
+
+```{r}
+
+simple_run_stat_comparison <- function(runs_emp, pred) {
+  
+  runs_sim <- get_run_info_over_trials(pred$sim) 
+  
+  bind_rows(runs_emp %>% mutate(class = "empirical"), 
+            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
+    pivot_longer(c("max_run_length", "n_runs")) %>%
+    ggplot(aes(class, value, fill = condition)) + 
+    geom_boxplot() + 
+    facet_wrap(~name, scales = "free")
+}
+
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compare IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d)
+
+```
+
 ## Model 1.1
 
 ```{r}
@@ -262,6 +329,11 @@ d <- readRDS("scratch/d_2cond_relprox.rds")
 fit <- readRDS("scratch/multi_level_2cond_1_1_tmp.rds")
 
 rho_delta = c(1,2)
+
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d$found) 
+iisv_emp <- get_iisv_over_trials(d$found) 
+
 
 ```
 
@@ -290,11 +362,26 @@ plot_model_random(post)
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(fit, d)
+pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
 ```
 
+
+### Compare Run Statistics
+
+```{r}
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compare IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d)
+
+```
 
 ## Model 1.2
 
@@ -305,6 +392,11 @@ fit <- readRDS("scratch/multi_level_2cond_1_2_tmp.rds")
 
 rho_delta = c(1,2)
 
+# compute run statistics for later
+runs_emp <- get_run_info_over_trials(d$found) 
+iisv_emp <- get_iisv_over_trials(d$found) 
+
+
 ```
 
 We can plot both fixed and random effects from the model.
@@ -332,7 +424,22 @@ plot_model_random(post)
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(fit, d)
+pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
+```
+
+### Compare Run Statistics
+
+```{r}
+simple_run_stat_comparison(runs_emp, pred)
+```
+
+### Compare IISVs
+
+What about the inter-item selection vectors?
+
+```{r}
+plot_model_human_iisv_comparison(pred, d)
+
 ```
