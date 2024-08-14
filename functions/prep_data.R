@@ -88,10 +88,10 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial", remove_last
       mutate(sideh = if_else(x<0.5, 1, 2),
              sidev = if_else(y<0.5, 1, 2)) -> ds
     
-    found_sideh = t(array(as.numeric(ds$sideh), dim = c(32, n_trials)))
+    found_sideh = t(array(as.numeric(ds$sideh), dim = c(max(df$found), n_trials)))
     #found_sideh[which(found_sideh==2)] =  -1
     
-    found_sidev = t(array(as.numeric(ds$sidev), dim = c(32, n_trials)))
+    found_sidev = t(array(as.numeric(ds$sidev), dim = c(max(df$found), n_trials)))
     #found_sidev[which(found_sidev==2)] =  -1
     
     matchingh = array()
