@@ -42,7 +42,7 @@ d <- sim_foraging_people(n_people = 10,
 d$found <- fix_person_and_trial(d$found)
 d$stim <- fix_person_and_trial(d$stim)
 
-d_list <- prep_data_for_stan(d3$found, d3$stim, c("spatial", "item_class"))
+d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
 d_list$n_trials_to_sim <- 1
 
@@ -60,6 +60,8 @@ runs_emp <- get_run_info_over_trials(d$found)
 iisv_emp <- get_iisv_over_trials(d$found) 
 
 post <- extract_post(fit, d, multi_level = TRUE)
+pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
+
 
 simple_run_stat_comparison <- function(runs_emp, pred) {
   
