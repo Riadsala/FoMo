@@ -190,7 +190,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
                condition = factor(condition, labels = unique(d$stim$condition))) -> sim
       
       sim %>%
-        left_join(d$stim, by = join_by(trial, id)) -> sim
+        left_join(d$stim %>% select(, -condition), by = join_by(trial, id)) -> sim
         
     }
     

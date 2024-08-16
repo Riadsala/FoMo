@@ -175,9 +175,9 @@ simple_run_stat_comparison <- function(runs_emp, pred) {
   bind_rows(runs_emp %>% mutate(class = "empirical"), 
             runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
     pivot_longer(c("max_run_length", "n_runs")) %>%
-    ggplot(aes(class, value)) + 
-    geom_boxplot() + 
-    facet_wrap(~name, scales = "free")
+    ggplot(aes(class, value, fill = class)) + 
+    geom_boxplot() +
+    facet_wrap(~name)
 }
 
 simple_run_stat_comparison(runs_emp, pred)
