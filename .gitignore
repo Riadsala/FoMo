@@ -1,5 +1,6 @@
-*.min.js
+*.js
 *.exe
 *.rds
 *.css
 
+/examples/1_test_data_simulation/1_testing_data_simulation_files
