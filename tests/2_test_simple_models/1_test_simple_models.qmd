@@ -455,9 +455,9 @@ d_test_list$n_trials_to_sim <- 1
   
 
 gen_test <- mod$generate_quantities(m_train_1_0, data = d_test_list, seed = 123)
-log_pd_kfold <- gen_test$draws("log_lik", format = "matrix")
+log_pd_kfold_1_0 <- gen_test$draws("log_lik", format = "matrix")
 
-elpd_kfold_1_0 <- elpd(log_pd_kfold)
+elpd_kfold_1_0 <- elpd(log_pd_kfold_1_0)
 
 ## model 1.1
 
@@ -475,9 +475,9 @@ m_train_1_1 <- mod$sample(data = d_train_list,
 d_test_list <- add_priors_to_d_list(d_test_list, modelver = "1.1")
 
 gen_test <- mod$generate_quantities(m_train_1_1, data = d_test_list, seed = 123)
-log_pd_kfold <- gen_test$draws("log_lik", format = "matrix")
+log_pd_kfold_1_1 <- gen_test$draws("log_lik", format = "matrix")
 
-elpd_kfold_1_1 <- elpd(log_pd_kfold)
+elpd_kfold_1_1 <- elpd(log_pd_kfold_1_1)
 
 ## model 1.2
 
@@ -490,14 +490,16 @@ m_train_1_2 <- mod$sample(data = d_train_list,
                   sig_figs = 3)
 
 gen_test <- mod$generate_quantities(m_train_1_2, data = d_test_list, seed = 123)
-log_pd_kfold <- gen_test$draws("log_lik", format = "matrix")
+log_pd_kfold_1_2 <- gen_test$draws("log_lik", format = "matrix")
 
-elpd_kfold_1_2 <- elpd(log_pd_kfold)
+elpd_kfold_1_2 <- elpd(log_pd_kfold_1_2)
 
 ```
 
 ```{r}
 
 loo_compare(elpd_kfold_1_0, elpd_kfold_1_1, elpd_kfold_1_2)
+
+loo_model_weights(list(log_pd_kfold_1_0, log_pd_kfold_1_1, log_pd_kfold_1_2))
 
 ```
