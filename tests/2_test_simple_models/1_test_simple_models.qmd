@@ -413,9 +413,55 @@ We will use the `dr` dataset. Trials 1-5 will be used as the training dataset.
 
 Our data was generated using relative proximity and relative direction, so we expect model 1.1 to do the best job (and we see this when we use `loo_compare`).
 
+## Model comparison
+
+We will use the `dr` dataset. Trials 1-5 will be used as the training dataset.
+
+Our data was generated using relative proximity and relative direction, so we expect model 1.1 to do the best job (and we see this when we use `loo_compare`).
+
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
-# model 1.0
+train_test_simple_FoMo <- function(df_train, ds_train, df_test, ds_test, 
+                            FoMo_ver = "1.1",
+                            features = c("spatial", "item_class"),
+                            n_trials_to_sim = 1,
+                            iter = 500) {
+  
+    
+  d_train_list <- prep_data_for_stan(df_train, ds_train, features)
+  d_train_list <- add_priors_to_d_list(d_train_list, modelver = FoMo_ver)
+  d_train_list$n_trials_to_sim <- n_trials_to_sim
+  
+  mod <- cmdstan_model(paste0("../../models/simple/FoMo", str_replace("1.1", "\\.", "_" ), ".stan"))
+  
+  # train model
+  m_train <- mod$sample(data = d_train_list, 
+                    chains = 4, parallel_chains = 4, threads = 4,
+                    refresh = 0, 
+                    iter_warmup = iter, iter_sampling = iter,
+                    sig_figs = 3)
+  
+  loglik_train <- m_train$draws("log_lik", format = "matrix")
+  
+
+  # test model
+  d_test_list <- prep_data_for_stan(df_test, ds_test, model_components = features)
+  d_test_list <- add_priors_to_d_list(d_test_list, modelver = FoMo_ver)
+  d_test_list$n_trials_to_sim <- n_trials_to_sim
+    
+  
+  gen_test <- mod$generate_quantities(m_train, data = d_test_list, seed = 123)
+  loglik_test <- gen_test$draws("log_lik", format = "matrix")
+  
+  elpd_test <- elpd(loglik_test)
+  
+  return(list(model = m_train, 
+              loglik = list(train = loglik_train, test = loglik_test), 
+              elpd_test = elpd_test))
+  
+}
+
+# split data into training and testing partitions 
 
 df_train <- dr$found %>%
   filter(trial < 6)
@@ -423,83 +469,44 @@ df_train <- dr$found %>%
 ds_train <- dr$stim %>%
   filter(trial < 6)
 
-d_train_list <- prep_data_for_stan(df_train, ds_train, c("spatial", "item_class"))
-d_train_list <- add_priors_to_d_list(d_train_list, modelver = "1.0")
-d_train_list$n_trials_to_sim <- 1
-
-iter = 100
-mod <- cmdstan_model("../../models/simple/FoMo1_0.stan")
-
-# run model
-m_train_1_0 <- mod$sample(data = d_train_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 0, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
-
-df_test <- dr$found %>%
-  filter(trial > 5) %>%
-    group_by(trial) %>%
-    mutate(trial = cur_group_id()) %>%
-    ungroup()
-
-ds_test <- dr$stim %>%
-  filter(trial > 5) %>%
-    group_by(trial) %>%
-    mutate(trial = cur_group_id()) %>%
-    ungroup()
-
-d_test_list <- prep_data_for_stan(df_test, ds_test, model_components = c("spatial", "item_class"))
-d_test_list <- add_priors_to_d_list(d_test_list, modelver = "1.0")
-d_test_list$n_trials_to_sim <- 1
+  df_test <- dr$found %>%
+    filter(trial > 5) %>%
+      group_by(trial) %>%
+      mutate(trial = cur_group_id()) %>%
+      ungroup()
   
-
-gen_test <- mod$generate_quantities(m_train_1_0, data = d_test_list, seed = 123)
-log_pd_kfold_1_0 <- gen_test$draws("log_lik", format = "matrix")
-
-elpd_kfold_1_0 <- elpd(log_pd_kfold_1_0)
+  ds_test <- dr$stim %>%
+    filter(trial > 5) %>%
+      group_by(trial) %>%
+      mutate(trial = cur_group_id()) %>%
+      ungroup()
+ 
+   
+# model 1.0
+model10 <- train_test_simple_FoMo(df_train, ds_train, df_test, ds_test, 
+                            FoMo_ver = "1.0",
+                            features = c("spatial", "item_class"),
+                            n_trials_to_sim = 1,
+                            iter = 500)
 
 ## model 1.1
-
-d_train_list <- add_priors_to_d_list(d_train_list, modelver = "1.1")
-
-mod <- cmdstan_model("../../models/simple/FoMo1_1.stan")
-
-# run model
-m_train_1_1 <- mod$sample(data = d_train_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 0, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
-
-d_test_list <- add_priors_to_d_list(d_test_list, modelver = "1.1")
-
-gen_test <- mod$generate_quantities(m_train_1_1, data = d_test_list, seed = 123)
-log_pd_kfold_1_1 <- gen_test$draws("log_lik", format = "matrix")
-
-elpd_kfold_1_1 <- elpd(log_pd_kfold_1_1)
+model11 <- train_test_simple_FoMo(df_train, ds_train, df_test, ds_test, 
+                            FoMo_ver = "1.1",
+                            features = c("spatial", "item_class"),
+                            n_trials_to_sim = 1,
+                            iter = 500)
 
 ## model 1.2
-
-mod <- cmdstan_model("../../models/simple/FoMo1_2.stan")
-
-m_train_1_2 <- mod$sample(data = d_train_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 0, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
-
-gen_test <- mod$generate_quantities(m_train_1_2, data = d_test_list, seed = 123)
-log_pd_kfold_1_2 <- gen_test$draws("log_lik", format = "matrix")
-
-elpd_kfold_1_2 <- elpd(log_pd_kfold_1_2)
-
+model12 <- train_test_simple_FoMo(df_train, ds_train, df_test, ds_test, 
+                            FoMo_ver = "1.2",
+                            features = c("spatial", "item_class"),
+                            n_trials_to_sim = 1,
+                            iter = 500)
 ```
 
 ```{r}
 
-loo_compare(elpd_kfold_1_0, elpd_kfold_1_1, elpd_kfold_1_2)
-
-loo_model_weights(list(log_pd_kfold_1_0, log_pd_kfold_1_1, log_pd_kfold_1_2))
+loo_compare(model10$elpd_test, model11$elpd_test, model12$elpd_test)
+loo_model_weights(list(model10$loglik$test, model11$loglik$test, model12$loglik$test))
 
 ```
