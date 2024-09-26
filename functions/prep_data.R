@@ -1,3 +1,98 @@
+fit_model <- function(d, fomo_ver = "1.1", mode = "all",
+                      model_components = c("spatial", "item_class"),
+                       iter = 1000) {
+  
+  
+  # if mode = "all", fit data to everything
+  # if mode = "traintest, fit to training set then eval on test set
+  
+  if (mode == "all") {
+    
+    d_list <- prep_data_for_stan(d$found, d$stim)
+    d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+    
+    fomo_ver <- str_replace(fomo_ver, "\\.", "_" )
+    
+    mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver, ".stan"))
+    
+    fit <- mod$sample(data = d_list, 
+                      chains = 4, parallel_chains = 4, threads = 4,
+                      refresh = 10, 
+                      iter_warmup = iter, iter_sampling = iter,
+                      sig_figs = 3)
+    
+    fit$save_object(paste0("scratch/multi_level_", fomo_ver, "_tmp.rds"))
+    
+    lout <- fit
+    
+  } else if (mode == "traintest") {
+    
+    d_list <- prep_train_test_data_for_stan(d$found, d$stim)
+    d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
+    d_list$testing <- add_priors_to_d_list(d_list$testing, modelver = fomo_ver)
+    
+    # run model
+    m <- mod$sample(data = d_list$training, 
+                    chains = 4, parallel_chains = 4, threads = 4,
+                    refresh = 0, 
+                    iter_warmup = iter, iter_sampling = iter,
+                    sig_figs = 3)
+    
+    loglik_train <- m_train$draws("log_lik", format = "matrix")
+    
+    gen_test <- mod$generate_quantities(m_train, data = d_test_list, seed = 123)
+    loglik_test <- gen_test$draws("log_lik", format = "matrix")
+    
+    elpd_test <- elpd(loglik_test)
+    
+    lout <- list(model = m_train, 
+                 loglik = list(train = loglik_train, test = loglik_test), 
+                 elpd_test = elpd_test)
+    
+  }
+  
+  return(lout)
+
+  
+}
+
+
+prep_train_test_data_for_stan <- function(df, ds, 
+                                          model_components = c("spatial", "item_class"), 
+                                          remove_last_found = FALSE,
+                                          n_trials_to_sim = 10) {
+  
+  # runs the same as prep_data_for_stan, but outputs a list of lists
+  # ie, training set and test set
+  
+  test_train_split <- d$found %>% 
+    group_by(person, condition) %>% 
+    summarise(n = length(unique(trial_p)), .groups = "drop") %>%
+    mutate(split =  ceiling((n/2)), .keep = "unused")
+  
+  training <- list(
+    found = d$found %>% full_join(test_train_split) %>% filter(trial_p <= split),
+    stim  = d$stim  %>% full_join(test_train_split) %>% filter(trial_p <= split))
+  
+  testing <- list(
+    found = d$found %>% full_join(test_train_split) %>% filter(trial_p >  split),
+    stim  = d$stim  %>% full_join(test_train_split) %>% filter(trial_p >  split))
+  
+ 
+  training_list <- prep_data_for_stan(training$found, training$stim, 
+                                      model_components, remove_last_found,
+                                      n_trials_to_sim) 
+  
+  testing_list <- prep_data_for_stan(esting$found, esting$stim, 
+                                      model_components, remove_last_found,
+                                      n_trials_to_sim) 
+  
+  return(list(training = training_list,
+              testing  = testing_list))
+  
+  
+}
+
 
 add_priors_to_d_list <- function(dl, modelver="1.1") {
   
@@ -18,7 +113,9 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   
 }
 
-prep_data_for_stan <- function(df, ds, model_components = "spatial", remove_last_found = FALSE) {
+prep_data_for_stan <- function(df, ds, model_components = "spatial", 
+                               remove_last_found = FALSE,
+                               n_trials_to_sim = 10) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
@@ -200,6 +297,8 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial", remove_last
   }
   
   d_list$trial = df$trial
+  
+  d_list$n_trials_to_sim <- n_trials_to_sim
  
   return(d_list)
   

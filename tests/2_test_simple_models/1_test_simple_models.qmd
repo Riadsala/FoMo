@@ -432,7 +432,7 @@ train_test_simple_FoMo <- function(df_train, ds_train, df_test, ds_test,
   d_train_list <- add_priors_to_d_list(d_train_list, modelver = FoMo_ver)
   d_train_list$n_trials_to_sim <- n_trials_to_sim
   
-  mod <- cmdstan_model(paste0("../../models/simple/FoMo", str_replace("1.1", "\\.", "_" ), ".stan"))
+  mod <- cmdstan_model(paste0("../../models/simple/FoMo", str_replace(FoMo_ver, "\\.", "_" ), ".stan"))
   
   # train model
   m_train <- mod$sample(data = d_train_list, 

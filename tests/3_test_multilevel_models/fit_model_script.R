@@ -53,20 +53,8 @@ d$stim <- fix_person_and_trial(d$stim)
 
 saveRDS(d, "scratch/d_1_0.rds")
 
-d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
-d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
-d_list$n_trials_to_sim <- 10
 
-iter = 200
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan")
-
-fit <- mod$sample(data = d_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 10, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
-
-fit$save_object("scratch/multi_level_1_0_tmp.rds")
+m <- fit_model(d, fomo_ver = "1.0", mode = "all",  iter = 500) 
 
 ## model 1.1
 
