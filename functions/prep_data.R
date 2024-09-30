@@ -8,7 +8,7 @@ fit_model <- function(d, fomo_ver = "1.1", mode = "all",
   
   if (mode == "all") {
     
-    d_list <- prep_data_for_stan(d$found, d$stim)
+    d_list <- prep_data_for_stan(d$found, d$stim, model_components)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
     fomo_ver <- str_replace(fomo_ver, "\\.", "_" )
@@ -32,22 +32,18 @@ fit_model <- function(d, fomo_ver = "1.1", mode = "all",
     d_list$testing <- add_priors_to_d_list(d_list$testing, modelver = fomo_ver)
     
     # run model
-    m <- mod$sample(data = d_list$training, 
+    m_train <- mod$sample(data = d_list$training, 
                     chains = 4, parallel_chains = 4, threads = 4,
                     refresh = 0, 
                     iter_warmup = iter, iter_sampling = iter,
                     sig_figs = 3)
     
-    loglik_train <- m_train$draws("log_lik", format = "matrix")
     
-    gen_test <- mod$generate_quantities(m_train, data = d_test_list, seed = 123)
-    loglik_test <- gen_test$draws("log_lik", format = "matrix")
+    m_test <- mod$generate_quantities(m_train, data = d_test_list, seed = 123)
     
-    elpd_test <- elpd(loglik_test)
     
-    lout <- list(model = m_train, 
-                 loglik = list(train = loglik_train, test = loglik_test), 
-                 elpd_test = elpd_test)
+    lout <- list(train = m_train,
+                 test  = m_test)
     
   }
   
