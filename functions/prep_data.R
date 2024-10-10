@@ -1,19 +1,19 @@
-fit_model <- function(d, fomo_ver = "1.1", mode = "all",
+fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
                        iter = 1000) {
   
+  d <- import_data(dataset)
   
   # if mode = "all", fit data to everything
   # if mode = "traintest, fit to training set then eval on test set
+  
+  fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
+  mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver_str, ".stan"))
   
   if (mode == "all") {
     
     d_list <- prep_data_for_stan(d$found, d$stim, model_components)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
-    
-    fomo_ver <- str_replace(fomo_ver, "\\.", "_" )
-    
-    mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver, ".stan"))
     
     fit <- mod$sample(data = d_list, 
                       chains = 4, parallel_chains = 4, threads = 4,
@@ -28,8 +28,9 @@ fit_model <- function(d, fomo_ver = "1.1", mode = "all",
   } else if (mode == "traintest") {
     
     d_list <- prep_train_test_data_for_stan(d$found, d$stim)
+    
     d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
-    d_list$testing <- add_priors_to_d_list(d_list$testing, modelver = fomo_ver)
+    d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
     
     # run model
     m_train <- mod$sample(data = d_list$training, 
@@ -38,17 +39,15 @@ fit_model <- function(d, fomo_ver = "1.1", mode = "all",
                     iter_warmup = iter, iter_sampling = iter,
                     sig_figs = 3)
     
-    
-    m_test <- mod$generate_quantities(m_train, data = d_test_list, seed = 123)
-    
+    m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
     
     lout <- list(train = m_train,
                  test  = m_test)
     
   }
   
-  return(lout)
-
+  filename <- paste0("scratch/", dataset, "_", mode, "_", fomo_ver_str, ".model")
+  saveRDS(lout, filename)
   
 }
 
@@ -67,19 +66,28 @@ prep_train_test_data_for_stan <- function(df, ds,
     mutate(split =  ceiling((n/2)), .keep = "unused")
   
   training <- list(
-    found = d$found %>% full_join(test_train_split) %>% filter(trial_p <= split),
-    stim  = d$stim  %>% full_join(test_train_split) %>% filter(trial_p <= split))
+    found = d$found %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p <= split),
+    stim  = d$stim  %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p <= split))
   
   testing <- list(
-    found = d$found %>% full_join(test_train_split) %>% filter(trial_p >  split),
-    stim  = d$stim  %>% full_join(test_train_split) %>% filter(trial_p >  split))
+    found = d$found %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p >  split),
+    stim  = d$stim  %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p >  split))
+  
+  testing$found <- fix_person_and_trial(testing$found)
+  testing$stim <- fix_person_and_trial(testing$stim)
+  training$found <- fix_person_and_trial(training$found)
+  training$stim <- fix_person_and_trial(training$stim)
   
  
   training_list <- prep_data_for_stan(training$found, training$stim, 
                                       model_components, remove_last_found,
                                       n_trials_to_sim) 
   
-  testing_list <- prep_data_for_stan(esting$found, esting$stim, 
+  testing_list <- prep_data_for_stan(testing$found, testing$stim, 
                                       model_components, remove_last_found,
                                       n_trials_to_sim) 
   
