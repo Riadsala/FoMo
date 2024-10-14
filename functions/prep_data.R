@@ -15,15 +15,14 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     d_list <- prep_data_for_stan(d$found, d$stim, model_components)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
-    fit <- mod$sample(data = d_list, 
+    m <- mod$sample(data = d_list, 
                       chains = 4, parallel_chains = 4, threads = 4,
                       refresh = 10, 
                       iter_warmup = iter, iter_sampling = iter,
                       sig_figs = 3)
     
-    fit$save_object(paste0("scratch/multi_level_", fomo_ver, "_tmp.rds"))
-    
-    lout <- fit
+    filename_all <- paste0("scratch/", dataset, "_all_", fomo_ver_str, ".model")
+    m$save_object(filename_all)
     
   } else if (mode == "traintest") {
     
@@ -41,13 +40,14 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
     m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
     
-    lout <- list(train = m_train,
-                 test  = m_test)
+    # save
+    filename_train <- paste0("scratch/", dataset, "_train_", fomo_ver_str, ".model")
+    m_train$save_object(filename_train)
+    
+    filename_train <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
+    m_test$save_object(filename_test)
     
   }
-  
-  filename <- paste0("scratch/", dataset, "_", mode, "_", fomo_ver_str, ".model")
-  saveRDS(lout, filename)
   
 }
 
