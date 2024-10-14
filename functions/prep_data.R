@@ -26,7 +26,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
   } else if (mode == "traintest") {
     
-    d_list <- prep_train_test_data_for_stan(d$found, d$stim)
+    d_list <- prep_train_test_data_for_stan(d)
     
     d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
     d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
@@ -52,7 +52,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 }
 
 
-prep_train_test_data_for_stan <- function(df, ds, 
+prep_train_test_data_for_stan <- function(d, 
                                           model_components = c("spatial", "item_class"), 
                                           remove_last_found = FALSE,
                                           n_trials_to_sim = 10) {
