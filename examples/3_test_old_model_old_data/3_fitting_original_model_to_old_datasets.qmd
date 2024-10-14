@@ -22,15 +22,17 @@ options(mc.cores = 1)
 theme_set(ggthemes::theme_tufte())
 ```
 
-# Fitting Model to Previously Collected Datasets
 
-some text...
+these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
-these are fit by scripts xxx.R and run on our cluster.
+# Clarke2022qjep
 
-## Clarke2022qjep
+```{r}
+m10 <- readRDS("scratch/clarke2022qjep_traintest_1_0.model")
+```
 
-## Tagu2022cog
+
+# Tagu2022cog
 
 ```{r}
 
