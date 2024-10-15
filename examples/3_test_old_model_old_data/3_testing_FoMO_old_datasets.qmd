@@ -1,7 +1,7 @@
 ---
 title: "3_fitting_original_model_to_old_datasets"
 format: html
-editor: visual
+editor: source
 ---
 
 ```{r, message=FALSE, warning = FALSE}
@@ -24,97 +24,46 @@ theme_set(ggthemes::theme_tufte())
 
 these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
-# Clarke2022qjep
+# Kristjansson 2014
+
 
 ```{r}
-m10 <- readRDS("scratch/clarke2022qjep_traintest_1_0.model")
-```
+d <- import_data("kristjansson2014plos")
 
-# Tagu2022cog
-
-```{r}
-
-d <- import_data('tagu2022cog')
-
-```
-
-```{r, eval = FALSE}
-d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
-d_list <- add_priors_to_d_list(d_list, modelver = 1.0)
-
-```
-
-```{r, eval = FALSE}
-
-iter = 100
-d_list$n_trials_to_sim <- 1
-
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
-
-fit <- mod$sample(data = d_list, 
-                 chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
-                 init = 1,
-                 iter_warmup = iter, iter_sampling = iter,
-                 sig_figs = 3)
-
-fit$save_object("scratch/tagu_1_0_tmp.rds")
-
-# pre save moment match loo
-fit1_0_loo <- fit$loo(moment_match = TRUE)
-saveRDS(fit1_0_loo, "scratch/tagu_1_0_loo.rds")
-
-
-```
-
-```{r, eval = FALSE}
-
-mod1_1 <- cmdstan_model("../../models/multi_level/FoMo1_1.stan", 
-                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
-
-fit1_1 <- mod1_1$sample(data = d_list, 
-                 chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
-                 init = 1,
-                 iter_warmup = iter, iter_sampling = iter,
-                 sig_figs = 3)
-
-fit1_1$save_object("scratch/tagu_1_1_tmp.rds")
-
-# pre save moment match loo
-fit1_1_loo <- fit1_1$loo(moment_match = TRUE)
-saveRDS(fit1_1_loo, "scratch/tagu_1_1_loo.rds")
-
+m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+t10 <- readRDS("scratch/kristjansson2014plos_test_1_0.model")
 ```
 
 ### Model checking
 
+Did the mcmc sampling work ok? 
+
 ```{r}
 
-fit1_0 <- readRDS("scratch/tagu_1_0_tmp.rds")
-fit1_1 <- readRDS("scratch/tagu_1_1_tmp.rds")
 
 # diagnostic checks
-fit1_0$diagnostic_summary()
+m10$diagnostic_summary()
 fit1_1$diagnostic_summary()
 
 # traceplots
-bayesplot::mcmc_trace(fit1_0$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"))
-
-bayesplot::mcmc_trace(fit1_1$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+bayesplot::mcmc_trace(m10$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
                                                "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"))
 
 ```
 
-### Which model fits best - training set acc
+
+## Which model fits best 
+
+### Prediction Accuracy
+
+
 
 ```{r}
 chance_acc <- mean(1/(seq(53, 1)))
 
 
-pred <- summarise_postpred(fit1_0, d, get_sim = FALSE, draw_sample_frac=1)
+pred_training <- summarise_postpred(m10, d, get_sim = FALSE, draw_sample_frac=1)
+
 acc10 <- compute_training_acc(pred$acc) %>% mutate(model = "FoMo 1.0")
 
 
@@ -126,6 +75,19 @@ bind_rows(acc10, acc11) %>%
   ggplot(aes(y = condition, x = accuracy, xmin = .lower, xmax = .upper, colour = model )) +
   geom_pointinterval(position = position_dodge(width = 0.25))
 ```
+
+### Test set acc
+
+How well does it work on new data?
+
+
+
+# Tagu2022cog
+
+
+
+
+
 
 ### Which model fits best - LOO?
 
