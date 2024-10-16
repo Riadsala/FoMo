@@ -26,7 +26,6 @@ these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
 # Kristjansson 2014
 
-
 ```{r}
 d <- import_data("kristjansson2014plos")
 
@@ -48,15 +47,12 @@ bayesplot::mcmc_trace(m10$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b
                       facet_args = list(nrow = 2))
 ```
 
-
 ## Which model fits best 
 
 ### Prediction Accuracy
 
-
 ```{r}
-chance_acc <- mean(1/(seq(53, 1)))
-
+# chance_acc <- mean(1/(seq(53, 1)))
 
 pred <- summarise_postpred(list(training = m10, testing = t10), d, get_sim = FALSE, draw_sample_frac=1)
 
