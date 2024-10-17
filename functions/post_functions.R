@@ -206,10 +206,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     # get training set predictions
     pred <- extract_pred(mtr, d)
     
-    
   }
-  
-  print("2")
   
   if (get_sim) {
   

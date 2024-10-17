@@ -1,5 +1,5 @@
 ---
-title: "3_fitting_original_model_to_old_datasets"
+title: "3 Results using Existing Data"
 format: html
 editor: source
 ---
@@ -31,6 +31,9 @@ d <- import_data("kristjansson2014plos")
 
 m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 t10 <- readRDS("scratch/kristjansson2014plos_test_1_0.model")
+
+m11 <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
+t11 <- readRDS("scratch/kristjansson2014plos_test_1_1.model")
 ```
 
 ## Model checking
@@ -51,19 +54,35 @@ bayesplot::mcmc_trace(m10$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b
 
 ### Prediction Accuracy
 
+Eventually we're going to turn this into a wrapper function that does all of our model comparison stuff
+
 ```{r}
 # chance_acc <- mean(1/(seq(53, 1)))
 
-pred <- summarise_postpred(list(training = m10, testing = t10), d, get_sim = FALSE, draw_sample_frac=1)
+pred10 <- summarise_postpred(list(training = m10, testing = t10), d, get_sim = FALSE, draw_sample_frac=0.5)
+pred11 <- summarise_postpred(list(training = m11, testing = t11), d, get_sim = FALSE, draw_sample_frac=0.5)
 
-acc10 <- compute_acc(pred$acc) %>% mutate(model = "FoMo 1.0")
+acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
+acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
 
-acc10 %>% ggplot(aes(condition, accuracy, colour = data,
-                     ymin = .lower, ymax = .upper))+ 
-  geom_interval(position = position_dodge(0.1), alpha = 0.5)
+bind_rows(acc10, acc11) %>% ggplot(aes(condition, accuracy, colour = model,
+                     ymin = .lower, ymax = .upper)) + 
+  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+  facet_wrap(~data)
 ```
 
 ## Posterior Densities
+
+Let's look at the model fit for the best performing model 
+At present, we only have 1.0 so we will use that
+
+```{r}
+post <- extract_post(m11, d)
+
+plot_model_fixed(post)
+```
+
+
 
 
 ## Posterior Predictions
