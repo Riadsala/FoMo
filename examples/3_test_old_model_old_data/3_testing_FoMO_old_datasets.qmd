@@ -16,7 +16,7 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 1)
+options(mc.cores = 1, digits = 2)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
@@ -24,16 +24,38 @@ theme_set(ggthemes::theme_tufte())
 
 these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
+
+Let us write a function that does all the computations for the models that we're interested in:
+
+```{r}
+
+compare_FoMo_accuracy <- function(dataset) {
+  
+  d <- import_data(dataset)
+
+  m10 <- readRDS(paste0("scratch/", dataset, "_train_1_0.model"))
+  t10 <- readRDS(paste0("scratch/", dataset, "_test_1_0.model"))
+  
+  m11 <- readRDS(paste0("scratch/", dataset, "_train_1_1.model"))
+  t11 <- readRDS(paste0("scratch/", dataset, "_test_1_1.model"))
+  
+  pred10 <- summarise_postpred(list(training = m10, testing = t10), d, get_sim = FALSE, draw_sample_frac=0.5)
+  pred11 <- summarise_postpred(list(training = m11, testing = t11), d, get_sim = FALSE, draw_sample_frac=0.5)
+  
+  acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
+  acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
+  
+  return(bind_rows(acc10, acc11) %>%
+           mutate(data = dataset))
+  
+}
+
+```
+
 # Kristjansson 2014
 
 ```{r}
-d <- import_data("kristjansson2014plos")
-
 m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
-t10 <- readRDS("scratch/kristjansson2014plos_test_1_0.model")
-
-m11 <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
-t11 <- readRDS("scratch/kristjansson2014plos_test_1_1.model")
 ```
 
 ## Model checking
@@ -41,6 +63,8 @@ t11 <- readRDS("scratch/kristjansson2014plos_test_1_1.model")
 Did the mcmc sampling work ok? 
 
 ```{r}
+
+
 # diagnostic checks
 m10$diagnostic_summary()
 
@@ -59,16 +83,18 @@ Eventually we're going to turn this into a wrapper function that does all of our
 ```{r}
 # chance_acc <- mean(1/(seq(53, 1)))
 
-pred10 <- summarise_postpred(list(training = m10, testing = t10), d, get_sim = FALSE, draw_sample_frac=0.5)
-pred11 <- summarise_postpred(list(training = m11, testing = t11), d, get_sim = FALSE, draw_sample_frac=0.5)
+d_acc_k2014 <- compare_FoMo_accuracy("kristjansson2014plos")
+d_acc_t2022 <- compare_FoMo_accuracy("tagu2022cog")
 
-acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
-acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
+d_acc <- bind_rows(d_acc_k2014, d_acc_t2022) 
+rm(d_acc_k2014, d_acc_t2022)
 
-bind_rows(acc10, acc11) %>% ggplot(aes(condition, accuracy, colour = model,
+
+d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
                      ymin = .lower, ymax = .upper)) + 
   geom_interval(position = position_dodge(0.1), alpha = 0.5) +
-  facet_wrap(~data)
+  geom_path(aes(x = as.numeric(as_factor(model)))) + 
+  facet_grid(.~split)
 ```
 
 ## Posterior Densities

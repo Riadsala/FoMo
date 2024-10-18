@@ -192,14 +192,13 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     rm(dtt)
     
     # get training set predictions
-    pred_tr <- extract_pred(mtr, training, pvars, draw_sample_frac) %>% mutate(data = "training")
+    pred_tr <- extract_pred(mtr, training, pvars, draw_sample_frac) %>% mutate(split = "training")
     # now we also need to get the test set predictions
-    pred_te <- extract_pred(mte, testing, pvars, draw_sample_frac) %>% mutate(data = "testing")
+    pred_te <- extract_pred(mte, testing, pvars, draw_sample_frac) %>% mutate(split = "testing")
     
     pred <- bind_rows(pred_tr,pred_te)
     
     rm(pred_tr, pred_te)
-    
     
   } else {
     
@@ -263,11 +262,12 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
 
 compute_acc <- function(acc) {
   
-  if ("data" %in% names(acc)) {
+  if ("split" %in% names(acc)) {
     
     acc %>% 
       filter(found != 1) %>%
-      group_by(data, condition, .draw, person, trial) -> acc
+      group_by(split, condition, .draw, person, trial) -> acc
+    
   } else {
     
     acc %>% 
