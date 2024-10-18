@@ -103,12 +103,10 @@ Let's look at the model fit for the best performing model
 At present, we only have 1.0 so we will use that
 
 ```{r}
-post <- extract_post(m11, d)
-
-plot_model_fixed(post)
+# post <- extract_post(m11, d)
+# 
+# plot_model_fixed(post)
 ```
-
-
 
 
 ## Posterior Predictions
