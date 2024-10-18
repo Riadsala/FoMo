@@ -52,10 +52,82 @@ compare_FoMo_accuracy <- function(dataset) {
 
 ```
 
+
+# Which model fits best 
+
+## Prediction Accuracy
+
+Eventually we're going to turn this into a wrapper function that does all of our model comparison stuff
+
+
+Compute chance base-rates for each dataset
+
+```{r}
+datasets <- c("kristjansson2014plos", "tagu2022cog")
+
+baseline <- tibble()
+
+for (dataset in datasets) {
+  
+  d <- import_data(dataset)
+  
+  d$stim %>% group_by(person, trial) %>%
+    summarise(n = n(), .groups = "drop") -> dn
+  
+  items <- seq(1, unique(dn$n))
+  items_left <- unique(dn$n) - items + 1
+  
+  n_conditions <- length(levels(d$stim$condition))
+  
+  d_baseline <- tibble(data = rep(dataset, n_conditions),
+                       condition = levels(d$stim$condition),
+                       accuracy = rep(mean(1/items_left), n_conditions))
+  
+  baseline <- bind_rows(baseline, d_baseline)
+}
+
+baseline <- bind_rows(baseline %>% mutate(split = "training"),
+                      baseline %>% mutate(split = "testing")) %>%
+  mutate(model = "baseline")
+
+rm(d, items, items_left)
+```
+
+
+```{r}
+#| label: compute-all_acc
+#| cache: true
+
+# chance_acc <- mean(1/(seq(53, 1)))
+
+d_acc_k2014 <- compare_FoMo_accuracy("kristjansson2014plos")
+d_acc_t2022 <- compare_FoMo_accuracy("tagu2022cog")
+
+d_acc <- bind_rows(d_acc_k2014, d_acc_t2022, baseline) 
+rm(d_acc_k2014, d_acc_t2022)
+
+  # combine this with baseline
+
+d_acc%>% mutate(model = factor(model),
+                split = factor(split, levels = c("training", "testing"))) -> d_acc
+
+d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
+                     ymin = .lower, ymax = .upper)) + 
+  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+  geom_line(aes(x = as.numeric(as_factor(model)))) + 
+  facet_grid(.~split) +
+  scale_color_viridis_d("dataset - condition")
+```
+
+## ELPD? 
+
+
 # Kristjansson 2014
 
 ```{r}
-m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+d <- import_data("kristjansson2014plos")
+
+m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 ```
 
 ## Model checking
@@ -63,39 +135,16 @@ m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 Did the mcmc sampling work ok? 
 
 ```{r}
-
-
 # diagnostic checks
-m10$diagnostic_summary()
+m$diagnostic_summary()
 
 # traceplots
-bayesplot::mcmc_trace(m10$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+bayesplot::mcmc_trace(m$draws(),
+                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
                       facet_args = list(nrow = 2))
 ```
 
-## Which model fits best 
-
-### Prediction Accuracy
-
-Eventually we're going to turn this into a wrapper function that does all of our model comparison stuff
-
-```{r}
-# chance_acc <- mean(1/(seq(53, 1)))
-
-d_acc_k2014 <- compare_FoMo_accuracy("kristjansson2014plos")
-d_acc_t2022 <- compare_FoMo_accuracy("tagu2022cog")
-
-d_acc <- bind_rows(d_acc_k2014, d_acc_t2022) 
-rm(d_acc_k2014, d_acc_t2022)
-
-
-d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
-                     ymin = .lower, ymax = .upper)) + 
-  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
-  geom_path(aes(x = as.numeric(as_factor(model)))) + 
-  facet_grid(.~split)
-```
 
 ## Posterior Densities
 
@@ -103,10 +152,26 @@ Let's look at the model fit for the best performing model
 At present, we only have 1.0 so we will use that
 
 ```{r}
-# post <- extract_post(m11, d)
-# 
-# plot_model_fixed(post)
+post <- extract_post(m, d)
+plot_model_fixed(post)
 ```
 
 
 ## Posterior Predictions
+
+Compare run statistics and inter-item-selection-vectors
+
+```{r}
+pred <- summarise_postpred(list(training = m, testing = m), d, get_sim = FALSE, draw_sample_frac=0.5)
+```
+
+
+```{r}
+rle <- get_run_info_over_trials(d$found) %>% 
+  group_by(person, condition) %>%
+  summarise(max_run_length = mean(max_run_length))
+
+rlp <- get_run_info_over_trials()
+```
+
+

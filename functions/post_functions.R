@@ -154,7 +154,6 @@ extract_pred <- function(my_model, my_data, pv, sample_frac) {
                     pred, by = join_by(n)) %>%
     select(-n, -item_class, -x, -y) %>%
     mutate(model_correct = (P == id))
-    
   
 }
 
@@ -181,7 +180,6 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   vars <- mtr$metadata()$stan_variables
   # all fixed effects should start with "rho_" or "b_"
   pvars <- vars[str_detect(vars, "^[PW]")]
-  
   
   if (class(m)=="list") {
     
