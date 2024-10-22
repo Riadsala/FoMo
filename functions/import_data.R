@@ -120,7 +120,8 @@ import_tagu2022cog <- function(small_test) {
            id = "id", found = "found", item_class = "targ_type",
            x = "x", y = "y") %>%
     mutate(item_class = item_class + 1,
-           condition = as.factor(condition)) -> d
+           condition = as.factor(condition),
+           condition = fct_recode(condition, value = "1", control = "2")) -> d
   
   if (small_test) {
      
@@ -128,8 +129,6 @@ import_tagu2022cog <- function(small_test) {
    }
   
   d <- fix_person_and_trial(d)
-  
- 
   
   # scale x to (0, 1) and y to (0, a) where a is the aspect ratio
    
