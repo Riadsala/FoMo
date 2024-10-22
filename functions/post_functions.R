@@ -138,31 +138,76 @@ extract_post_random <- function(m, cl) {
   
 }
 
-summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01, get_sim = TRUE) {
+extract_pred <- function(my_model, my_data, pv, sample_frac) {
   
-  # first, get list of variables in the model:
-  vars <- m$metadata()$stan_variables
-  # all fixed effects should start with "rho_" or "b_"
-  pvars <- vars[str_detect(vars, "^[PW]")]
-  
-  # now get prior distributions from model object
-  pred <- m$draws(pvars, format = "df") %>%
-    sample_frac(draw_sample_frac) %>%
+  pred_test <- my_model$draws(pv, format = "df") %>% 
+    sample_frac(sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw) %>%
     mutate(n = parse_number(name),
            name = str_remove(name, "\\[\\d*\\]")) %>%
-    pivot_wider(names_from = "name", values_from = "value")
+    pivot_wider(names_from = "name", values_from = "value") -> pred
   
-  pred <- full_join(d$found %>% mutate(n = 1:n()), 
+  
+  pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
                     pred, by = join_by(n)) %>%
     select(-n, -item_class, -x, -y) %>%
     mutate(model_correct = (P == id))
   
+}
+
+summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01, get_sim = TRUE) {
+  
+  # first, deal with m being either one model or a list
+  
+  if (class(m)=="list") {
+    
+    # m has been input as a list, presumably:
+    # i) a model to to training data
+    # ii) test set predictions
+    
+    mtr <- m$training
+    mte <- m$testing
+    
+  } else {
+    
+    mtr <- m
+    
+  }
+  
+  # first, get list of variables in the model:
+  vars <- mtr$metadata()$stan_variables
+  # all fixed effects should start with "rho_" or "b_"
+  pvars <- vars[str_detect(vars, "^[PW]")]
+  
+  if (class(m)=="list") {
+    
+    # get the training/test data split
+    dtt <- get_train_test_split(d)
+    training <- dtt$training
+    testing <- dtt$testing
+    rm(dtt)
+    
+    # get training set predictions
+    pred_tr <- extract_pred(mtr, training, pvars, draw_sample_frac) %>% mutate(split = "training")
+    # now we also need to get the test set predictions
+    pred_te <- extract_pred(mte, testing, pvars, draw_sample_frac) %>% mutate(split = "testing")
+    
+    pred <- bind_rows(pred_tr,pred_te)
+    
+    rm(pred_tr, pred_te)
+    
+  } else {
+    
+    # get training set predictions
+    pred <- extract_pred(mtr, d)
+    
+  }
+  
   if (get_sim) {
   
-    sim <- m$draws("Q", format = "df")  %>%
+    sim <- mtr$draws("Q", format = "df")  %>%
       sample_frac(draw_sample_frac) %>%
       as_tibble() %>%
       select(-.chain, -.iteration) %>%
@@ -213,15 +258,26 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
 }
 
 
-compute_training_acc <- function(acc) {
+compute_acc <- function(acc) {
   
-  acc %>% 
-    filter(found != 1) %>%
-    group_by(.draw, condition, person, trial) %>%
-    summarise(trial_acc = mean(model_correct)) %>%
-    summarise(person_acc = mean(trial_acc)) %>%
-    summarise(accuracy = mean(person_acc)) %>%
-    group_by(condition) %>%
+  if ("split" %in% names(acc)) {
+    
+    acc %>% 
+      filter(found != 1) %>%
+      group_by(split, condition, .draw, person, trial) -> acc
+    
+  } else {
+    
+    acc %>% 
+      filter(found != 1) %>%
+      group_by(condition, .draw, person, trial) -> acc
+
+  }
+  
+acc  %>%
+    summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
+    summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
+    summarise(accuracy = mean(person_acc), .groups = "drop_last") %>%
     median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
     select(-.interval, -.point) -> acc
   

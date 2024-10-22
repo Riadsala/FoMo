@@ -44,12 +44,13 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     filename_train <- paste0("scratch/", dataset, "_train_", fomo_ver_str, ".model")
     m_train$save_object(filename_train)
     
-    filename_test <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
+    filename_train <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
     m_test$save_object(filename_test)
     
   }
   
 }
+
 
 
 prep_train_test_data_for_stan <- function(d, 
@@ -59,28 +60,10 @@ prep_train_test_data_for_stan <- function(d,
   
   # runs the same as prep_data_for_stan, but outputs a list of lists
   # ie, training set and test set
-  
-  test_train_split <- d$found %>% 
-    group_by(person, condition) %>% 
-    summarise(n = length(unique(trial_p)), .groups = "drop") %>%
-    mutate(split =  ceiling((n/2)), .keep = "unused")
-  
-  training <- list(
-    found = d$found %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p <= split),
-    stim  = d$stim  %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p <= split))
-  
-  testing <- list(
-    found = d$found %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p >  split),
-    stim  = d$stim  %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p >  split))
-  
-  testing$found <- fix_person_and_trial(testing$found)
-  testing$stim <- fix_person_and_trial(testing$stim)
-  training$found <- fix_person_and_trial(training$found)
-  training$stim <- fix_person_and_trial(training$stim)
+ d <- get_train_test_split(d)
+ training <- d$training
+ testing <- d$testing
+
  
   training_list <- prep_data_for_stan(training$found, training$stim, 
                                       model_components, remove_last_found,

@@ -1,5 +1,5 @@
 ---
-title: "3_fitting_original_model_to_old_datasets"
+title: "3 Results using Existing Data"
 format: html
 editor: source
 ---
@@ -16,7 +16,7 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 1)
+options(mc.cores = 1, digits = 2)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
@@ -24,135 +24,162 @@ theme_set(ggthemes::theme_tufte())
 
 these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
-# Kristjansson 2014
 
+Let us write a function that does all the computations for the models that we're interested in:
+
+```{r}
+
+compare_FoMo_accuracy <- function(dataset) {
+  
+  d <- import_data(dataset)
+
+  m10 <- readRDS(paste0("scratch/", dataset, "_train_1_0.model"))
+  t10 <- readRDS(paste0("scratch/", dataset, "_test_1_0.model"))
+  
+  
+  pred10 <- summarise_postpred(list(training = m10, testing = t10), d, 
+                               get_sim = FALSE, draw_sample_frac=0.25)
+  acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
+  
+  rm(m10, t10) 
+  
+  m11 <- readRDS(paste0("scratch/", dataset, "_train_1_1.model"))
+  t11 <- readRDS(paste0("scratch/", dataset, "_test_1_1.model"))
+   
+  pred11 <- summarise_postpred(list(training = m11, testing = t11), d, 
+                               get_sim = FALSE, draw_sample_frac=0.25)
+  acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
+  
+  rm(m11, t11)
+  
+  return(bind_rows(acc10, acc11) %>%
+           mutate(data = dataset))
+  
+ }
+
+```
+
+
+# Which model fits best 
+
+## Prediction Accuracy
+
+Eventually we're going to turn this into a wrapper function that does all of our model comparison stuff
+
+
+Compute chance base-rates for each dataset
+
+```{r}
+datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+
+baseline <- tibble()
+
+for (dataset in datasets) {
+  
+  d <- import_data(dataset)
+  
+  d$stim %>% group_by(person, trial) %>%
+    summarise(n = n(), .groups = "drop") -> dn
+  
+  items <- seq(1, unique(dn$n))
+  items_left <- unique(dn$n) - items + 1
+  
+  n_conditions <- length(levels(d$stim$condition))
+  
+  d_baseline <- tibble(data = rep(dataset, n_conditions),
+                       condition = levels(d$stim$condition),
+                       accuracy = rep(mean(1/items_left), n_conditions))
+  
+  baseline <- bind_rows(baseline, d_baseline)
+}
+
+baseline <- bind_rows(baseline %>% mutate(split = "training"),
+                      baseline %>% mutate(split = "testing")) %>%
+  mutate(model = "baseline")
+
+rm(d, items, items_left)
+```
+
+
+```{r}
+#| label: compute-all_acc
+#| cache: true
+
+# chance_acc <- mean(1/(seq(53, 1)))
+
+d_acc_k2014 <- compare_FoMo_accuracy("kristjansson2014plos")
+d_acc_t2022 <- compare_FoMo_accuracy("tagu2022cog")
+d_acc_c2022 <- compare_FoMo_accuracy("clarke2022qjep")
+
+d_acc <- bind_rows(d_acc_k2014, d_acc_t2022, baseline) 
+rm(d_acc_k2014, d_acc_t2022)
+
+  # combine this with baseline
+
+d_acc%>% mutate(model = factor(model),
+                split = factor(split, levels = c("training", "testing"))) -> d_acc
+
+d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
+                     ymin = .lower, ymax = .upper)) + 
+  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+  geom_line(aes(x = as.numeric(as_factor(model)))) + 
+  facet_grid(.~split) +
+  scale_color_viridis_d("dataset - condition")
+```
+
+## ELPD? 
+
+
+# Kristjansson 2014
 
 ```{r}
 d <- import_data("kristjansson2014plos")
 
-m10 <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
-t10 <- readRDS("scratch/kristjansson2014plos_test_1_0.model")
+m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 ```
 
-### Model checking
+## Model checking
 
 Did the mcmc sampling work ok? 
 
 ```{r}
-
-
 # diagnostic checks
-m10$diagnostic_summary()
-fit1_1$diagnostic_summary()
+m$diagnostic_summary()
 
 # traceplots
-bayesplot::mcmc_trace(m10$draws(), pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"))
-
+bayesplot::mcmc_trace(m$draws(),
+                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+                      facet_args = list(nrow = 2))
 ```
 
 
-## Which model fits best 
+## Posterior Densities
 
-### Prediction Accuracy
-
-
-
-```{r}
-chance_acc <- mean(1/(seq(53, 1)))
-
-
-pred_training <- summarise_postpred(m10, d, get_sim = FALSE, draw_sample_frac=1)
-
-acc10 <- compute_training_acc(pred$acc) %>% mutate(model = "FoMo 1.0")
-
-
-pred <- summarise_postpred(fit1_1, d, get_sim = FALSE, draw_sample_frac=1)
-acc11 <- compute_training_acc(pred$acc) %>% mutate(model = "FoMo 1.1")
-  
-
-bind_rows(acc10, acc11) %>%
-  ggplot(aes(y = condition, x = accuracy, xmin = .lower, xmax = .upper, colour = model )) +
-  geom_pointinterval(position = position_dodge(width = 0.25))
-```
-
-### Test set acc
-
-How well does it work on new data?
-
-
-
-# Tagu2022cog
-
-
-
-
-
-
-### Which model fits best - LOO?
+Let's look at the model fit for the best performing model 
+At present, we only have 1.0 so we will use that
 
 ```{r}
-
-fit1_0_loo <- readRDS("scratch/tagu_1_0_loo.rds")
-fit1_1_loo <- readRDS("scratch/tagu_1_1_loo.rds")
-
-knitr::kable(loo::loo_model_weights(list(
-  "model 1.1" = fit1_1_loo,
-  "model 1.0" = fit1_0_loo)))
-
-
-```
-
-This suggests that model 1.1 fits best.
-
-### Plotting the model
-
-```{r}
-
-# extract post
-post <- extract_post(fit1_1, d)
-
-# plot model
-# things to think about - rho delta here is squished because the scale is changed. I think this is because the prior is a bit wrong.
+post <- extract_post(m, d)
 plot_model_fixed(post)
-plot_model_random(post)
-
 ```
 
-## Kristjansson2014plos
+
+## Posterior Predictions
+
+Compare run statistics and inter-item-selection-vectors
 
 ```{r}
-
-d2 <- import_data('kristjansson2014plos')
-
+pred <- summarise_postpred(list(training = m, testing = m), d, get_sim = FALSE, draw_sample_frac=0.5)
 ```
 
-```{r, eval = FALSE}
-d2_list <- prep_data_for_stan(d2$found, d2$stim, c("spatial", "item_class"))
-d2_list <- add_priors_to_d_list(d2_list, modelver = "1.0")
 
+```{r}
+rle <- get_run_info_over_trials(d$found) %>% 
+  group_by(person, condition) %>%
+  summarise(max_run_length = mean(max_run_length))
+
+rlp <- get_run_info_over_trials()
 ```
 
-```{r, eval = FALSE}
 
-iter = 100
-d2_list$n_trials_to_sim <- 1
-
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan", 
-                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
-
-fit <- mod$sample(data = d2_list, 
-                 chains = 4, parallel_chains = 4, threads = 4,
-                 refresh = 10, 
-                 init = 1,
-                 iter_warmup = iter, iter_sampling = iter,
-                 sig_figs = 3)
-
-fit$save_object("scratch/kristjansson_1_0_tmp.rds")
-
-# pre save moment match loo
-fit1_0_loo <- fit$loo(moment_match = TRUE)
-saveRDS(fit1_0_loo, "scratch/kristjansson_1_0_loo.rds")
-
-
-```

@@ -112,10 +112,6 @@ plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
   return(plt)
 }
 
-
-
-
-
 plot_model_accuracy <- function(pred) {
   
   n_targets <- max((pred$acc$found))
@@ -147,6 +143,24 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL)
   
   return(plt)
 }
+
+plot_cts_params <- function(post,  gt=NULL, clist=NULL)
+{
+  
+  my_widths <- c(0.53, 0.97)
+  
+  # create a plot for each parameter
+  plts <- map(post$params, plt_post_prior, 
+              post = post$fixed, prior = post$prior, 
+              gt = gt, clist = clist)
+  
+  # assemble the plots!
+  plt <- wrap_plots(plts, nrow = 1) + 
+    plot_layout(guides = "collect")
+  
+  return(plt)
+}
+
 
 plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   
@@ -207,13 +221,23 @@ plot_model_random <- function(post)
 
 plot_model_weights <- function(post, params) {
   
-  plts <- pmap(params, create_weight_plot, post = post)
+  plts <- map(params, create_weight_plot, post = post)
   
   plt <- wrap_plots(plts) + plot_layout(guides = "collect")
+  
+  return(plt)
   
 }
 
 create_weight_plot <- function(param, x1, x2, post) {
+  
+  x1 <- 0
+  
+  if (param == "rho_psi") {
+    x2 <- 1  
+  } else {
+    x2 <- 2
+  }
   
   x <- seq(x1, x2, (x2-x1)/100)
   

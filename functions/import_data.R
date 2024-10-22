@@ -20,6 +20,37 @@ import_data <- function(dataset, small_test=FALSE) {
 }
 
 
+
+get_train_test_split <- function(d) {
+  
+  test_train_split <- d$found %>% 
+    group_by(person, condition) %>% 
+    summarise(n = length(unique(trial_p)), .groups = "drop") %>%
+    mutate(split =  ceiling((n/2)), .keep = "unused")
+  
+  training <- list(
+    found = d$found %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p <= split),
+    stim  = d$stim  %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p <= split))
+  
+  testing <- list(
+    found = d$found %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p >  split),
+    stim  = d$stim  %>% full_join(test_train_split, 
+                                  by = join_by(person, condition)) %>% filter(trial_p >  split))
+  
+  
+  
+  testing$found <- fix_person_and_trial(testing$found)
+  testing$stim <- fix_person_and_trial(testing$stim)
+  training$found <- fix_person_and_trial(training$found)
+  training$stim <- fix_person_and_trial(training$stim)
+  
+  
+  return(list(training = training, testing = testing))
+}
+
 filter_one_person <- function(d, pp) {
 
 
@@ -88,7 +119,8 @@ import_tagu2022cog <- function(small_test) {
            id = "id", found = "found", item_class = "targ_type",
            x = "x", y = "y") %>%
     mutate(item_class = item_class + 1,
-           condition = as.factor(condition)) -> d
+           condition = as.factor(condition),
+           condition = fct_recode(condition, value = "1", control = "2")) -> d
   
   if (small_test) {
      
@@ -96,8 +128,6 @@ import_tagu2022cog <- function(small_test) {
    }
   
   d <- fix_person_and_trial(d)
-  
- 
   
   # scale x to (0, 1) and y to (0, a) where a is the aspect ratio
    
@@ -249,7 +279,8 @@ import_kristjansson2014plos <- function(small_test) {
            id = "id", found = "found", item_class = "targ_type",
            x = "x", y = "y") %>%
     mutate(item_class = item_class + 1,
-           condition = as.factor(condition)) -> d
+           condition = as.factor(condition),
+           condition = fct_recode(condition, feature = "1", conjunction = "2")) -> d
   
   if (small_test) {
     
