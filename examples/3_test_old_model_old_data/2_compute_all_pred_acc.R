@@ -14,8 +14,7 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
 
-###################
-#
+############################################################################
 
 
 compare_FoMo_accuracy <- function(dataset) {
@@ -45,5 +44,13 @@ compare_FoMo_accuracy <- function(dataset) {
   
  }
 
+############################################################################
 
-d_acc_c2022 <- compare_FoMo_accuracy("clarke2022qjep")
+datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+
+
+for (ds in datasets)
+{
+  d_acc_c2022 <- compare_FoMo_accuracy(ds)
+  write_csv(d_acc_c2022, paste0("scratch/post_acc_", ds, ".csv"))
+}
