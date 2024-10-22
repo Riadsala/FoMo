@@ -44,7 +44,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     filename_train <- paste0("scratch/", dataset, "_train_", fomo_ver_str, ".model")
     m_train$save_object(filename_train)
     
-    filename_train <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
+    filename_test <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
     m_test$save_object(filename_test)
     
   }
@@ -81,7 +81,6 @@ prep_train_test_data_for_stan <- function(d,
   testing$stim <- fix_person_and_trial(testing$stim)
   training$found <- fix_person_and_trial(training$found)
   training$stim <- fix_person_and_trial(training$stim)
-  
  
   training_list <- prep_data_for_stan(training$found, training$stim, 
                                       model_components, remove_last_found,
