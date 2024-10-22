@@ -1,0 +1,8 @@
+,attribute,block0,block1,block2,block3,block4,block5,block6
+0,label,practice,feature_A,feature_B,feature_AB,conj_A,conj_B,conj_AB
+1,conditions,cond_prac,cond_feature_A,cond_feature_B,cond_feature_AB,cond_conj_A,cond_conj_B,cond_conj_AB
+2,n_trials_per_cond,1,10,10,10,10,10,10
+3,group,none,1,1,1,2,2,2
+4,intro_text,"This is a practice block. In this block, you need to find the white and black triangles.","In this block, you need to find the green and red circles.","In this block, you need to find the green and red circles.","In this block, you need to find the green and red circles.","In this block, you need to find the red squares and the green circles.","In this block, you need to find the red squares and the green circles.","In this block, you need to find the red squares and the green circles."
+5,outro_text,Now you will complete the real trials.,This block is complete. Take a break!,This block is complete. Take a break!,This block is complete. Take a break!,This block is complete. Take a break!,This block is complete. Take a break!,This block is complete. Take a break!
+6,practice,none,none,none,none,none,none,none
