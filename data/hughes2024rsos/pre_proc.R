@@ -84,8 +84,6 @@ d_found  %>%
          id = "id", found = "found", item_class = "item_class",
          x = "x", y = "y", rt = "rt") %>%
   mutate(item_class = as.numeric(factor(item_class)),
-         condition = as.factor(condition),
-         condition = as.integer(condition),
          condition = as.factor(condition)) -> d_found
 
 d_stim  %>%
@@ -97,8 +95,6 @@ d_stim  %>%
   filter(item_class != "dist_class2") %>%
   mutate(id_seq = rep(1:20)) %>% # this is hard coded and should be fixed
   mutate(item_class = as.numeric(factor(item_class)),
-         condition = as.factor(condition),
-         condition = as.integer(condition),
          condition = as.factor(condition)) -> d_stim
 
 # need to get sequential id into d_found
@@ -151,6 +147,11 @@ xmax <- max(d_stim$x)
 d_stim %>% mutate(x = x/xmax,
                   y = y/xmax) -> d_stim
 
+d_found$x <- round(d_found$x, 3)
+d_found$y <- round(d_found$y, 3)
+
+d_stim$x <- round(d_stim$x, 3)
+d_stim$y <- round(d_stim$y, 3)
 
 d_found <- fix_person_and_trial(d_found)
 d_stim <- fix_person_and_trial(d_stim)
