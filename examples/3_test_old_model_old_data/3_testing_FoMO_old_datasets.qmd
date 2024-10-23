@@ -24,53 +24,24 @@ theme_set(ggthemes::theme_tufte())
 
 these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
-
-Let us write a function that does all the computations for the models that we're interested in:
-
-```{r}
-
-compare_FoMo_accuracy <- function(dataset) {
-  
-  d <- import_data(dataset)
-
-  m10 <- readRDS(paste0("scratch/", dataset, "_train_1_0.model"))
-  t10 <- readRDS(paste0("scratch/", dataset, "_test_1_0.model"))
-  
-  
-  pred10 <- summarise_postpred(list(training = m10, testing = t10), d, 
-                               get_sim = FALSE, draw_sample_frac=0.25)
-  acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
-  
-  rm(m10, t10) 
-  
-  m11 <- readRDS(paste0("scratch/", dataset, "_train_1_1.model"))
-  t11 <- readRDS(paste0("scratch/", dataset, "_test_1_1.model"))
-   
-  pred11 <- summarise_postpred(list(training = m11, testing = t11), d, 
-                               get_sim = FALSE, draw_sample_frac=0.25)
-  acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
-  
-  rm(m11, t11)
-  
-  return(bind_rows(acc10, acc11) %>%
-           mutate(data = dataset))
-  
- }
-
-```
-
+We then compute accuracy for each model using script `2_`
 
 # Which model fits best 
 
-## Prediction Accuracy
-
-Eventually we're going to turn this into a wrapper function that does all of our model comparison stuff
-
-
-Compute chance base-rates for each dataset
+We are evaluating using the following datasets:
 
 ```{r}
 datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+```
+
+
+## Prediction Accuracy
+
+Compute chance base-rates for each dataset
+
+- Should these calculations include initial and last selection?
+
+```{r}
 
 baseline <- tibble()
 
@@ -100,23 +71,30 @@ baseline <- bind_rows(baseline %>% mutate(split = "training"),
 rm(d, items, items_left)
 ```
 
+Now get all the pre-computed training/test split accuracies
+
+```{r}
+get_acc <- function(dataset) {
+  
+  acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
+                  show_col_types = FALSE)
+  return(acc)
+  
+} 
+
+d_acc <- map_df(datasets, get_acc)
+
+rm(get_acc)
+```
 
 ```{r}
 #| label: compute-all_acc
 #| cache: true
 
-# chance_acc <- mean(1/(seq(53, 1)))
 
-d_acc_k2014 <- compare_FoMo_accuracy("kristjansson2014plos")
-d_acc_t2022 <- compare_FoMo_accuracy("tagu2022cog")
-d_acc_c2022 <- compare_FoMo_accuracy("clarke2022qjep")
-
-d_acc <- bind_rows(d_acc_k2014, d_acc_t2022, baseline) 
-rm(d_acc_k2014, d_acc_t2022)
-
-  # combine this with baseline
-
-d_acc%>% mutate(model = factor(model),
+# combine this with baseline
+d_acc %>% bind_rows(baseline) %>%
+  mutate(model = factor(model),
                 split = factor(split, levels = c("training", "testing"))) -> d_acc
 
 d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
@@ -130,56 +108,62 @@ d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
 ## ELPD? 
 
 
-# Kristjansson 2014
-
-```{r}
-d <- import_data("kristjansson2014plos")
-
-m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
-```
-
-## Model checking
+# Model checking
 
 Did the mcmc sampling work ok? 
 
 ```{r}
-# diagnostic checks
-m$diagnostic_summary()
 
-# traceplots
-bayesplot::mcmc_trace(m$draws(),
-                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
-                      facet_args = list(nrow = 2))
+# m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+# diagnostic checks
+# m$diagnostic_summary()
+# 
+# # traceplots
+# bayesplot::mcmc_trace(m$draws(),
+#                       pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+#                                "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+#                       facet_args = list(nrow = 2))
 ```
 
 
-## Posterior Densities
+# Posterior Densities
 
 Let's look at the model fit for the best performing model 
 At present, we only have 1.0 so we will use that
 
 ```{r}
-post <- extract_post(m, d)
-plot_model_fixed(post)
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
 ```
 
-
-## Posterior Predictions
+# Posterior Predictions
 
 Compare run statistics and inter-item-selection-vectors
 
+## Run Statistics
+
+### FoMo 1.0
+
 ```{r}
-pred <- summarise_postpred(list(training = m, testing = m), d, get_sim = FALSE, draw_sample_frac=0.5)
+rl <- read_csv("scratch/run_statistics1_0.csv")
+
+rl %>%
+ ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() + 
+  geom_abline(linetype = 2) + 
+  facet_wrap(~ dataset)
 ```
 
+### FoMo 1.1
 
 ```{r}
-rle <- get_run_info_over_trials(d$found) %>% 
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length))
+rl <- read_csv("scratch/run_statistics1_1.csv")
 
-rlp <- get_run_info_over_trials()
+rl %>%
+ ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() + 
+  geom_abline(linetype = 2) + 
+  facet_wrap(~ dataset)
 ```
 
 

@@ -62,9 +62,8 @@ get_iisv_over_trials <- function(df) {
     draws_present <- FALSE
   }
     
-    d_trials <- df %>% group_by(person, condition, trial_p) %>% 
-      summarise(.groups = "drop") 
-
+  d_trials <- df %>% group_by(person, condition, trial_p) %>% 
+    summarise(.groups = "drop") 
   
   dout <- pmap_df(d_trials, get_iisv_stats, df,
                    .progress = TRUE) 

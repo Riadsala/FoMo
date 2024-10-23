@@ -281,7 +281,7 @@ generated quantities {
             }
 
             // multiply weights by stick/switch preference
-            weights = inv_logit(weights) + inv_logit(u_stick[k, l] * Sj); 
+            weights = log_inv_logit(weights) + log_inv_logit(u_stick[k, l] * Sj); 
 
             // compute spatial weights
             weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
