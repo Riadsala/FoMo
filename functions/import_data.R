@@ -215,33 +215,28 @@ import_clarke2022qjep <- function(small_test) {
 
 import_hughes2024rsos <- function(small_test){
   
-  found_spec <- cols(
-    person = col_character(),
-    block = col_character(),
-    condition = col_character(),
-    trial = col_double(),
-    attempt = col_double(),
-    id = col_double(),
-    found = col_double(),
-    score = col_double(),
-    item_class = col_character(),
-    x = col_double(),
-    y = col_double(),
-    rt = col_double())
+  # import from csv files. 
+  # These were computed by the pre-processing script in data/hughes2024
   
-  stim_spec <- cols(
-    person = col_character(),
-    block = col_character(),
-    condition = col_character(),
-    trial = col_double(),
-    attempt = col_double(),
-    id = col_double(),
-    item_class = col_character(),
-    x = col_double(),
-    y = col_double())
+  d_stim <- read_csv("../../data/hughes2024rsos/hughes2024rsos_stim.csv",
+                     show_col_types = FALSE) 
+  d_found <- read_csv("../../data/hughes2024rsos/hughes2024rsos_found.csv",
+                      show_col_types = FALSE)
   
-  d_stim <- read_csv("../../data/hughes2024rsos/hughes2024rsos_stim.csv") 
-  d_found <- read_csv("../../data/hughes2024rsos/hughes2024rsos_found.csv")
+  # fix condition labels
+  d_found %>% mutate(
+    condition = str_remove(condition, "cond_"),
+    condition = str_replace(condition, "conj", "conjunction"),
+    condition = str_replace(condition, "_", "_scarce"),
+    condition = str_replace(condition, "scarceAB", "equal"),
+    condition = as_factor(condition)) -> d_found
+  
+  d_stim %>% mutate(
+    condition = str_remove(condition, "cond_"),
+    condition = str_replace(condition, "conj", "conjunction"),
+    condition = str_replace(condition, "_", "_scarce"),
+    condition = str_replace(condition, "scarceAB", "equal"),
+    condition = as_factor(condition)) -> d_stim
   
   return(list(stim = d_stim,
               found = d_found))
