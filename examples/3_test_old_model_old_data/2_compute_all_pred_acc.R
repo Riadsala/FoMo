@@ -58,37 +58,38 @@ for (ds in datasets)
 # compute simulated run statistics
 ############################################################################
 
-model_ver <- "1_1"
+for (model_ver in c("1_0", "1_1")) {
+  
+  rl <- tibble()
+  
+  for (ds in datasets) {
+    
+    # load dataset and model
+    d <- import_data(ds)
+    m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
+    
+    # get simulation data for model
+    pred <- summarise_postpred(list(training = m, testing = m), d, 
+                               get_sim = TRUE, draw_sample_frac = 0.001)
+    
+    # compute empirical run statistics
+    rle <- get_run_info_over_trials(d$found) %>%
+      group_by(person, condition) %>%
+      summarise(max_run_length = mean(max_run_length))
+    
+    # compute simulated run statistics
+    rlp <- get_run_info_over_trials(pred$sim) %>%
+      group_by(person, condition) %>%
+      summarise(max_run_length = mean(max_run_length))
+    
+    # bind everything together
+    bind_rows(rle %>% mutate(x = "observed"),
+              rlp %>% mutate(x = "predicted")) %>%
+      pivot_wider(names_from = "x", values_from = "max_run_length") %>%
+      mutate(dataset = ds) %>% 
+      bind_rows(rl) -> rl
+  }
+  
+  write_csv(rl, paste0("scratch/run_statistics", model_ver, ".csv"))
 
-rl <- tibble()
-
-for (ds in datasets) {
-  
-  # load dataset and model
-  d <- import_data(ds)
-  m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
-  
-  # get simulation data for model
-  pred <- summarise_postpred(list(training = m, testing = m), d, 
-                             get_sim = TRUE, draw_sample_frac = 0.001)
-  
-  # compute empirical run statistics
-  rle <- get_run_info_over_trials(d$found) %>%
-    group_by(person, condition) %>%
-    summarise(max_run_length = mean(max_run_length))
-  
-  # compute simulated run statistics
-  rlp <- get_run_info_over_trials(pred$sim) %>%
-    group_by(person, condition) %>%
-    summarise(max_run_length = mean(max_run_length))
-  
-  # bind everything together
-  bind_rows(rle %>% mutate(x = "observed"),
-            rlp %>% mutate(x = "predicted")) %>%
-    pivot_wider(names_from = "x", values_from = "max_run_length") %>%
-    mutate(dataset = ds) %>% 
-    bind_rows(rl) -> rl
 }
-
-
-write_csv(rl, "scratch/run_statistics.csv")
