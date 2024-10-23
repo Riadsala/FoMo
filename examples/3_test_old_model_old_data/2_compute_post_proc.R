@@ -93,3 +93,43 @@ for (model_ver in c("1_0", "1_1")) {
   write_csv(rl, paste0("scratch/run_statistics", model_ver, ".csv"))
 
 }
+
+############################################################################
+# compute simulated iisv statistics
+############################################################################
+
+
+for (model_ver in c("1_0", "1_1")) {
+  
+  iisv <- tibble()
+  
+  for (ds in datasets) {
+    
+    # load dataset and model
+    d <- import_data(ds)
+    m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
+    
+    # get simulation data for model
+    pred <- summarise_postpred(list(training = m, testing = m), d, 
+                               get_sim = TRUE, draw_sample_frac = 0.001)
+    
+    # compute empirical run statistics
+    iisve <- get_iisv_over_trials(d$found) %>%
+      group_by(condition, found) %>%
+      median_hdci(d2)
+    
+    # compute simulated run statistics
+    iisvp <- get_iisv_over_trials(pred$sim) %>%
+      group_by(condition, found) %>%
+      median_hdci(d2, .width = c(0.53, 0.97))
+    
+    # bind everything together
+    bind_rows(iisve %>% mutate(x = "human"),
+              iisvp %>% mutate(x = "model")) %>%
+      mutate(dataset = ds) %>% 
+      bind_rows(iisv) -> iisv
+  }
+  
+  write_csv(iisv, paste0("scratch/iisv_statistics", model_ver, ".csv"))
+  
+}

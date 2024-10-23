@@ -38,7 +38,10 @@ get_run_info_over_trials <- function(df) {
     pmap_df(get_run_info, df = df, 
             .progress = TRUE) -> dout
  
- # now split dout$trial up by draws
+   # get simulation data for model
+    pred <- summarise_postpred(list(training = m, testing = m), d, 
+                               get_sim = TRUE, draw_sample_frac = 0.001)
+    # now split dout$trial up by draws
  if (draws_present) {
    
    dout %>% separate(trial_p, 
