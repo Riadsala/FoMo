@@ -20,8 +20,6 @@ import_data <- function(dataset, small_test=FALSE) {
               "unknown dataset")
 }
 
-
-
 get_train_test_split <- function(d) {
   
   test_train_split <- d$found %>% 
@@ -241,7 +239,7 @@ import_hughes2024rsos <- function(small_test){
     y = col_double())
   
   # should read in all csvs
-  p_folders <- dir("../data/hughes2024rsos/")
+  p_folders <- dir("../../data/hughes2024rsos/")
   
   d_stim <- tibble()
   d_found <- tibble()
@@ -250,8 +248,8 @@ import_hughes2024rsos <- function(small_test){
   
   for (pp in 1:length(p_folders)) {
     
-    p_file_found <- dir(paste0("../data/hughes2024rsos/", p_folders[pp]), "_found.csv", full.names = TRUE)
-    p_file_stim <- dir(paste0("../data/hughes2024rsos/", p_folders[pp]), "_stim.csv", full.names = TRUE)
+    p_file_found <- dir(paste0("../../data/hughes2024rsos/", p_folders[pp]), "_found.csv", full.names = TRUE)
+    p_file_stim <- dir(paste0("../../data/hughes2024rsos/", p_folders[pp]), "_stim.csv", full.names = TRUE)
     
     p_found <- read_csv(p_file_found, col_types = found_spec)
     p_stim <- read_csv(p_file_stim, col_types = stim_spec)
