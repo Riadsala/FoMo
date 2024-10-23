@@ -15,8 +15,10 @@ options(mc.cores = 1, digits = 2)
 theme_set(ggthemes::theme_tufte())
 
 ############################################################################
+datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+############################################################################
 
-
+# wrapper function for computing train/test accuracy
 compare_FoMo_accuracy <- function(dataset) {
   
   d <- import_data(dataset)
@@ -46,11 +48,47 @@ compare_FoMo_accuracy <- function(dataset) {
 
 ############################################################################
 
-datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
-
-
 for (ds in datasets)
 {
   d_acc_c2022 <- compare_FoMo_accuracy(ds)
   write_csv(d_acc_c2022, paste0("scratch/post_acc_", ds, ".csv"))
 }
+
+############################################################################
+# compute simulated run statistics
+############################################################################
+
+model_ver <- "1_1"
+
+rl <- tibble()
+
+for (ds in datasets) {
+  
+  # load dataset and model
+  d <- import_data(ds)
+  m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
+  
+  # get simulation data for model
+  pred <- summarise_postpred(list(training = m, testing = m), d, 
+                             get_sim = TRUE, draw_sample_frac = 0.001)
+  
+  # compute empirical run statistics
+  rle <- get_run_info_over_trials(d$found) %>%
+    group_by(person, condition) %>%
+    summarise(max_run_length = mean(max_run_length))
+  
+  # compute simulated run statistics
+  rlp <- get_run_info_over_trials(pred$sim) %>%
+    group_by(person, condition) %>%
+    summarise(max_run_length = mean(max_run_length))
+  
+  # bind everything together
+  bind_rows(rle %>% mutate(x = "observed"),
+            rlp %>% mutate(x = "predicted")) %>%
+    pivot_wider(names_from = "x", values_from = "max_run_length") %>%
+    mutate(dataset = ds) %>% 
+    bind_rows(rl) -> rl
+}
+
+
+write_csv(rl, "scratch/run_statistics.csv")

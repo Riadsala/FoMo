@@ -107,31 +107,26 @@ d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
 
 ## ELPD? 
 
-# Kristjansson 2014
 
-```{r}
-d <- import_data("kristjansson2014plos")
-
-m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
-```
-
-## Model checking
+# Model checking
 
 Did the mcmc sampling work ok? 
 
 ```{r}
-# diagnostic checks
-m$diagnostic_summary()
 
-# traceplots
-bayesplot::mcmc_trace(m$draws(),
-                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                               "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
-                      facet_args = list(nrow = 2))
+# m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+# diagnostic checks
+# m$diagnostic_summary()
+# 
+# # traceplots
+# bayesplot::mcmc_trace(m$draws(),
+#                       pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+#                                "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+#                       facet_args = list(nrow = 2))
 ```
 
 
-## Posterior Densities
+# Posterior Densities
 
 Let's look at the model fit for the best performing model 
 At present, we only have 1.0 so we will use that
@@ -141,12 +136,15 @@ post <- extract_post(m, d)
 plot_model_fixed(post)
 ```
 
-## Posterior Predictions
+# Posterior Predictions
 
 Compare run statistics and inter-item-selection-vectors
 
+## Run Statistics
+
 ```{r}
-pred <- summarise_postpred(list(training = m, testing = m), d, get_sim = FALSE, draw_sample_frac=0.5)
+pred <- summarise_postpred(list(training = m, testing = m), d, 
+                           get_sim = TRUE, draw_sample_frac = 0.01)
 ```
 
 
@@ -155,7 +153,16 @@ rle <- get_run_info_over_trials(d$found) %>%
   group_by(person, condition) %>%
   summarise(max_run_length = mean(max_run_length))
 
-rlp <- get_run_info_over_trials(pred$)
+rlp <- get_run_info_over_trials(pred$sim) %>%
+  group_by(person, condition) %>%
+  summarise(max_run_length = mean(max_run_length))
+
+bind_rows(rle %>% mutate(x = "observed"),
+          rlp %>% mutate(x = "predicted")) %>%
+  pivot_wider(names_from = "x", values_from = "max_run_length") %>%
+  ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() + 
+  geom_abline(linetype = 2)
 ```
 
 

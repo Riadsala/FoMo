@@ -117,13 +117,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We then compute accuracy for each model using script <code>2_</code></p>
 <section id="which-model-fits-best" class="level1">
 <h1>Which model fits best</h1>
-<p>We are evaulating using the following datasets:</p>
+<p>We are evaluating using the following datasets:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>datasets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"kristjansson2014plos"</span>, <span class="st">"tagu2022cog"</span>, <span class="st">"clarke2022qjep"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="prediction-accuracy" class="level2">
 <h2 class="anchored" data-anchor-id="prediction-accuracy">Prediction Accuracy</h2>
 <p>Compute chance base-rates for each dataset</p>
+<ul>
+<li>Should these calculations include initial and last selection?</li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">tibble</span>()</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -271,14 +274,63 @@ Warning: Dropping 'draws_df' class as required metadata was removed.</code></pre
 <h2 class="anchored" data-anchor-id="posterior-predictions">Posterior Predictions</h2>
 <p>Compare run statistics and inter-item-selection-vectors</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">summarise_postpred</span>(<span class="fu">list</span>(<span class="at">training =</span> m, <span class="at">testing =</span> m), d, <span class="at">get_sim =</span> <span class="cn">FALSE</span>, <span class="at">draw_sample_frac=</span><span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">summarise_postpred</span>(<span class="fu">list</span>(<span class="at">training =</span> m, <span class="at">testing =</span> m), d, </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">get_sim =</span> <span class="cn">TRUE</span>, <span class="at">draw_sample_frac =</span> <span class="fl">0.001</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># rle &lt;- get_run_info_over_trials(d$found) %&gt;% </span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_by(person, condition) %&gt;%</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   summarise(max_run_length = mean(max_run_length))</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># rlp &lt;- get_run_info_over_trials()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>rle <span class="ot">&lt;-</span> <span class="fu">get_run_info_over_trials</span>(d<span class="sc">$</span>found) <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person, condition) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">max_run_length =</span> <span class="fu">mean</span>(max_run_length))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■                                8% |  ETA: 23s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■                           21% |  ETA: 19s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■■■■■                       34% |  ETA: 16s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■■■■■■■■■                   48% |  ETA: 12s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■■■■■■■■■■■■■■              62% |  ETA:  9s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■■■■■■■■■■■■■■■■■■          77% |  ETA:  5s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      91% |  ETA:  2s</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'person'. You can override using the
+`.groups` argument.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>rlp <span class="ot">&lt;-</span> <span class="fu">get_run_info_over_trials</span>(pred<span class="sc">$</span>sim) <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(person, condition) <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">max_run_length =</span> <span class="fu">mean</span>(max_run_length))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code> ■■■■■■■                           19% |  ETA: 17s
+ ■■■■■■■■■■■                       33% |  ETA: 14s
+ ■■■■■■■■■■■■■■■                   47% |  ETA: 11s
+ ■■■■■■■■■■■■■■■■■■■               61% |  ETA:  8s
+ ■■■■■■■■■■■■■■■■■■■■■■■           75% |  ETA:  5s
+ ■■■■■■■■■■■■■■■■■■■■■■■■■■■■      89% |  ETA:  2s
+`summarise()` has grouped output by 'person'. You can override using the `.groups` argument.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(rle <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">x =</span> <span class="st">"observed"</span>),</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>          rlp <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">x =</span> <span class="st">"predicted"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> <span class="st">"x"</span>, <span class="at">values_from =</span> <span class="st">"max_run_length"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(observed, predicted, <span class="at">colour =</span> condition))  <span class="sc">+</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">linetype =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="3_testing_FoMO_old_datasets_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
 </div>
 </section>
 </section>
