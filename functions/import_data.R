@@ -20,8 +20,6 @@ import_data <- function(dataset, small_test=FALSE) {
               "unknown dataset")
 }
 
-
-
 get_train_test_split <- function(d) {
   
   test_train_split <- d$found %>% 
@@ -237,6 +235,7 @@ import_hughes2024rsos <- function(small_test){
     condition = str_replace(condition, "_", "_scarce"),
     condition = str_replace(condition, "scarceAB", "equal"),
     condition = as_factor(condition)) -> d_stim
+
   
   return(list(stim = d_stim,
               found = d_found))
