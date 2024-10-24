@@ -44,7 +44,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     filename_train <- paste0("scratch/", dataset, "_train_", fomo_ver_str, ".model")
     m_train$save_object(filename_train)
     
-    filename_train <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
+    filename_test <- paste0("scratch/", dataset, "_test_", fomo_ver_str, ".model")
     m_test$save_object(filename_test)
     
   }
