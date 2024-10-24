@@ -2,7 +2,13 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
                        iter = 1000) {
   
+  if (class(dataset) != "list") {
+  
   d <- import_data(dataset)
+  
+  } else {
+    d <- dataset
+  }
   
   # if mode = "all", fit data to everything
   # if mode = "traintest, fit to training set then eval on test set
