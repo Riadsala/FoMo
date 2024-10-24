@@ -98,7 +98,6 @@ for (model_ver in c("1_0", "1_1")) {
 # compute simulated iisv statistics
 ############################################################################
 
-
 for (model_ver in c("1_0", "1_1")) {
   
   iisv <- tibble()
