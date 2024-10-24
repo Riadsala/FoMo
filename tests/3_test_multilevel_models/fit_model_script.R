@@ -17,10 +17,10 @@ item_class_weights = list(c(0.7, 0.3, 0, 0))
 
 b_stick = 1
 
-rho_delta = 15
+rho_delta = 20
 sd_rho_delta = 1
 
-rho_psi = -1
+rho_psi = 2
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
 
@@ -43,7 +43,7 @@ d <- sim_foraging_people(n_people = 16,
                          item_class_weights, sd_bA = 0.2,
                          b_stick = b_stick, sd_b_stick = 1,
                          rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
-                         rho_psi = rho_psi, sd_rho_psi = 0.5,
+                         rho_psi = rho_psi, sd_rho_psi = 0.25,
                          abs_dir_tuning = abs_dir_tuning,
                          inital_sel_params = inital_sel_params) 
 

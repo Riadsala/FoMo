@@ -236,19 +236,10 @@ generated quantities {
       z = Z[t];
       x = X[t];
 
-      // set the weight of each target to be its class weight
-      weights = (u_a[x, z]) * to_vector(item_class[t]);
-
-      // multiply weights by stick/switch preference
-      weights = log_inv_logit(weights) + log_inv_logit(u_stick[x, z] * S[ii]);
-
-      // compute spatial weights
-      weights = weights + compute_spatial_weights(found_order[ii], n_targets,
-        u_delta[x, z], u_psi[x, z],
-        delta[ii], psi[ii]);
-
-      // remove already-selected items, and standarise to sum = 1
-      weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);
+      weights = compute_weights(
+        u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
+        to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
+        found_order[ii], n_targets, remaining_items[ii]); 
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);
@@ -259,8 +250,8 @@ generated quantities {
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
-    vector[n_targets] remaining_items2;
-    vector[n_targets] Sj;
+    vector[n_targets] remaining_items_j;
+    vector[n_targets] S_j;
     // some counters and index variables, etc.
     vector[n_targets] weights;  // class weight for teach target
 
@@ -276,7 +267,7 @@ generated quantities {
       int ts; // trial number, in terms of number simulated
 
       // first, set things up!
-      remaining_items2 = rep_vector(1, n_targets);
+      remaining_items_j = rep_vector(1, n_targets);
 
       // check that we haven't done enoguh trials already
       if (n_trials_simmed[z, x] < n_trials_to_sim) {
@@ -287,24 +278,27 @@ generated quantities {
         sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
 
         // simulate a trial!
-        for (jj in 1:n_targets) {
+        for (ii in 1:n_targets) {
 
-          // set the weight of each target to be its class weight
-          weights = (u_a[x, z]) * to_vector(item_class[t]);
-               
           // delta_j: distance to previously selected item
-          Sj = rep_vector(0, n_targets);
+          S_j = rep_vector(0, n_targets);
           delta_j = rep_vector(1, n_targets);
           phi_j = rep_vector(1, n_targets);
             
-          if (jj > 1) {
+          if (ii > 1) {
 
-            Sj      = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], jj);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], jj);
-            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], jj); 
+            S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
               
           }
 
+          weights = compute_weights(
+            u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
+            to_vector(item_class[t]), S_j, delta_j, psi_j,
+            found_order[ii], n_targets, remaining_items_j); 
+
+              /*
           // multiply weights by stick/switch preference
           weights = log_inv_logit(weights) + log_inv_logit(u_stick[x, z] * Sj); 
 
@@ -315,11 +309,11 @@ generated quantities {
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
-      
-          Q[z, x, ts, jj] = categorical_rng(weights);
+      */
+          Q[z, x, ts, ii] = categorical_rng(weights);
 
           // update remaining_items2
-          remaining_items2[Q[z, x, ts, jj]] = 0;
+          remaining_items_j[Q[z, x, ts, ii]] = 0;
  
         }
       }
