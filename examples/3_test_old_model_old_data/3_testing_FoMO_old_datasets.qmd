@@ -138,16 +138,19 @@ d <- import_data("tagu2022cog")
 #| warning: false
 #| echo: false
 
+d <- import_data("kristjansson2014plos")
 m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
 ```
+
 ### clarke2022qjep
 
 ```{r}
 #| warning: false
 #| echo: false
 
+d <- import_data("clarke2022qjep")
 m <- readRDS("scratch/clarke2022qjep_train_1_0.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
@@ -159,6 +162,7 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
+d <- import_data("tagu2022cog")
 m <- readRDS("scratch/tagu2022cog_train_1_0.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
@@ -173,6 +177,7 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
+d <- import_data("kristjansson2014plos")
 m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
@@ -183,6 +188,7 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
+d <- import_data("clarke2022qjep")
 m <- readRDS("scratch/clarke2022qjep_train_1_1.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
@@ -194,6 +200,7 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
+d <- import_data("tagu2022cog")
 m <- readRDS("scratch/tagu2022cog_train_1_1.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
