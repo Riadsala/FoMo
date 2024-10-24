@@ -198,6 +198,7 @@ generated quantities {
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
   array[L, K, n_trials_to_sim, n_targets] int Q; 
+  array[L, K, n_trials_to_sim] int sim_trial_id; 
 
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -245,56 +246,64 @@ generated quantities {
 
     vector[n_targets] psi_j, phi_j, delta_j;
 
-    // for each particicpant
-    for (l in 1:L) {
-  
-      // for each condition
-      for (k in 1:K) {
+    array[L, K] int n_trials_simmed = rep_array(0, L, K);
 
-        //for each trial
-        for (t in 1:n_trials_to_sim) {
+    //for each trial
+    for (t in 1:n_trials) {
 
-          // first, set things up!
-          remaining_items2 = rep_vector(1, n_targets);
+      int l = Z[t];
+      int k = X[t];
 
-          // simulate a trial!
-          for (jj in 1:n_targets) {
+      // first, set things up!
+      remaining_items2 = rep_vector(1, n_targets);
 
-            // set the weight of each target to be its class weight
-            weights = (u_a[k, l]) * to_vector(item_class[t]);
-             
-            // delta_j: distance to previously selected item
-            Sj = rep_vector(0, n_targets);
-            delta_j = rep_vector(1, n_targets);
-            phi_j = rep_vector(1, n_targets);
-             
-            if (jj > 1) {
+      // check that we haven't done enoguh trials already
+      if (n_trials_simmed[l, k] < n_trials_to_sim) {
 
-              Sj      = compute_matching(item_class[t], n_targets, Q[l, k, t, ], jj);
-              delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj);
-              psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj); 
-                
-            }
+        // simulate another trial!
+        n_trials_simmed[l, k] += 1;
+        sim_trial_id[l, k, n_trials_simmed[l, k]] = t;
 
-            // multiply weights by stick/switch preference
-            weights = log_inv_logit(weights) + log_inv_logit(u_stick[k, l] * Sj); 
 
-            // compute spatial weights
-            weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
-              u_delta[k, l], u_psi[k, l],
-              delta_j, psi_j);
-                  
-            // remove already-selected items, and standarise to sum = 1 
-            weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
-       
-            Q[l, k, t, jj] = categorical_rng(weights);
+        // simulate a trial!
+        for (jj in 1:n_targets) {
 
-            // update remaining_items2
-            remaining_items2[Q[l, k, t, jj]] = 0;
+          // set the weight of each target to be its class weight
+          weights = (u_a[k, l]) * to_vector(item_class[t]);
+               
+          // delta_j: distance to previously selected item
+          Sj = rep_vector(0, n_targets);
+          delta_j = rep_vector(1, n_targets);
+          phi_j = rep_vector(1, n_targets);
+            
+          if (jj > 1) {
 
+            Sj      = compute_matching(item_class[t], n_targets, Q[l, k, t, ], jj);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj); 
+              
           }
+
+          // multiply weights by stick/switch preference
+          weights = log_inv_logit(weights) + log_inv_logit(u_stick[k, l] * Sj); 
+
+          // compute spatial weights
+          weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
+            u_delta[k, l], u_psi[k, l],
+            delta_j, psi_j);
+                
+          // remove already-selected items, and standarise to sum = 1 
+          weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
+      
+          Q[l, k, t, jj] = categorical_rng(weights);
+
+          // update remaining_items2
+          remaining_items2[Q[l, k, t, jj]] = 0;
+
+ 
         }
       }
+      
     }
   } 
 }
