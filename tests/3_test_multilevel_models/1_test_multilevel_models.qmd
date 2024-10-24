@@ -36,11 +36,14 @@ theme_set(ggthemes::theme_tufte())
 ```{r}
 
 d <- readRDS("scratch/d_1_0.rds")
-fit <- readRDS("scratch/multi_level_1_0_tmp.rds")
+fit <- readRDS("scratch/unknown_all_1_0.model")
 
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 b_stick = 1
+
 rho_delta = 15
+sd_rho_delta = 1
+
 rho_psi = -1
 
 # compute run statistics for later

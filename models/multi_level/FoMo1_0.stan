@@ -4,6 +4,33 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
+  vector compute_weights(
+    real u_a, real u_s, real u_delta, real u_psi,
+    vector item_class, vector match_prev_item, vector delta, vector psi,
+    int n, int n_targets, vector remaining_items) {
+
+    vector[n_targets] weights;
+    vector[n_targets] spatial_weights;
+
+    // set the weight of each target to be its class weight
+    weights = log_inv_logit(u_a * to_vector(item_class));
+
+    // multiply weights by stick/switch preference
+    weights = weights + log_inv_logit(u_s * match_prev_item); 
+
+    // calculate by spatial weights
+    spatial_weights = compute_spatial_weights(
+      n, n_targets, u_delta, u_psi, delta, psi);
+
+    weights = weights + spatial_weights;
+        
+    // remove already-selected items, and standarise to sum = 1 
+    weights = standarise_weights(exp(weights), n_targets, remaining_items); 
+
+    return(weights);
+
+  }
+
   vector compute_spatial_weights(int n, int n_targets, 
     real rho_delta, real rho_psi, vector delta, vector psi) {
 
@@ -46,9 +73,11 @@ data {
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
   array[n_trials] int <lower = 1, upper = K> X; // trial features (ie, which condition are we in)
+  array[n_trials] int <lower = 1, upper = L> Z; // random effect levels
+
   array[n_trials, n_targets] int <lower = -1, upper = 1> item_class; // target class, one row per trial
   array[N] vector<lower = -1, upper = 1>[n_targets] S; // stick/switch (does this targ match prev targ) 
-  array[N] int <lower = 1, upper = L> Z; // random effect levels
+  
   array[N] int<lower = 1, upper = n_trials> trial; // what trial are we on? 
 
   // read in priors
@@ -150,33 +179,23 @@ model {
   // // step through data row by row and define LLH
   //////////////////////////////////////////////////  
   vector[n_targets] weights;
-  vector[n_targets] spatial_weights;
 
-  // some counters and index variables, etc.
-  int t; // trial counter
+  // some IDs for trial, condition, and condition
+  int t, z, x; 
+
   //////////////////////////////////////////////////
   // // step through data row by row and define LLH
   //////////////////////////////////////////////////  
   for (ii in 1:N) {
 
     t = trial[ii];
+    z = Z[t];
+    x = X[t];
  
-    // set the weight of each target to be its class weight
-    weights = (u_a[X[t], Z[ii]]) * to_vector(item_class[t]) ;
-
-    // multiply weights by stick/switch preference
-    weights = log_inv_logit(weights) + log_inv_logit(u_stick[X[t], Z[ii]] * S[ii]); 
-
-    spatial_weights = compute_spatial_weights(found_order[ii], n_targets,
-       u_delta[X[t], Z[ii]], u_psi[X[t], Z[ii]], delta[ii], psi[ii]);
-
-    weights = weights + spatial_weights;
-        
-    // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(exp(weights), n_targets, remaining_items[ii]);   
-    //print("Y ", Y[ii]);
-    //print("item y ", item_y[t]);
-    //print(weights);
+    weights = compute_weights(
+      u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
+      to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
+      found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
 
@@ -191,22 +210,22 @@ generated quantities {
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
   real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 
-
   array[N] int P;
   array[N] real log_lik;
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
   array[L, K, n_trials_to_sim, n_targets] int Q; 
-  array[L, K, n_trials_to_sim] int sim_trial_id; 
+  array[L, K, n_trials_to_sim] int sim_trial_id = rep_array(0, L, K, n_trials_to_sim); 
 
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
   {
     // some counters and index variables, etc.
     vector[n_targets] weights;  // class weight for teach target
-    int t = 0; // counter for trial number
-    int kk; // which condition are we in?
+    
+    // some IDs for trial, condition, and condition
+    int t, z, x; 
 
     //////////////////////////////////////////////////
     // // step through data row by row and define LLH
@@ -214,17 +233,18 @@ generated quantities {
    for (ii in 1:N) {
 
       t = trial[ii];
-      kk = X[t];
+      z = Z[t];
+      x = X[t];
 
       // set the weight of each target to be its class weight
-      weights = (u_a[kk, Z[ii]]) * to_vector(item_class[t]);
+      weights = (u_a[x, z]) * to_vector(item_class[t]);
 
       // multiply weights by stick/switch preference
-      weights = log_inv_logit(weights) + log_inv_logit(u_stick[kk, Z[ii]] * S[ii]);
+      weights = log_inv_logit(weights) + log_inv_logit(u_stick[x, z] * S[ii]);
 
       // compute spatial weights
       weights = weights + compute_spatial_weights(found_order[ii], n_targets,
-        u_delta[kk, Z[ii]], u_psi[kk, Z[ii]],
+        u_delta[x, z], u_psi[x, z],
         delta[ii], psi[ii]);
 
       // remove already-selected items, and standarise to sum = 1
@@ -251,25 +271,26 @@ generated quantities {
     //for each trial
     for (t in 1:n_trials) {
 
-      int l = Z[t];
-      int k = X[t];
+      int z = Z[t];
+      int x = X[t];
+      int ts; // trial number, in terms of number simulated
 
       // first, set things up!
       remaining_items2 = rep_vector(1, n_targets);
 
       // check that we haven't done enoguh trials already
-      if (n_trials_simmed[l, k] < n_trials_to_sim) {
+      if (n_trials_simmed[z, x] < n_trials_to_sim) {
 
         // simulate another trial!
-        n_trials_simmed[l, k] += 1;
-        sim_trial_id[l, k, n_trials_simmed[l, k]] = t;
-
+        n_trials_simmed[z, x] += 1;
+        ts = n_trials_simmed[z, x];
+        sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
 
         // simulate a trial!
         for (jj in 1:n_targets) {
 
           // set the weight of each target to be its class weight
-          weights = (u_a[k, l]) * to_vector(item_class[t]);
+          weights = (u_a[x, z]) * to_vector(item_class[t]);
                
           // delta_j: distance to previously selected item
           Sj = rep_vector(0, n_targets);
@@ -278,28 +299,27 @@ generated quantities {
             
           if (jj > 1) {
 
-            Sj      = compute_matching(item_class[t], n_targets, Q[l, k, t, ], jj);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj);
-            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj); 
+            Sj      = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], jj);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], jj);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], jj); 
               
           }
 
           // multiply weights by stick/switch preference
-          weights = log_inv_logit(weights) + log_inv_logit(u_stick[k, l] * Sj); 
+          weights = log_inv_logit(weights) + log_inv_logit(u_stick[x, z] * Sj); 
 
           // compute spatial weights
           weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
-            u_delta[k, l], u_psi[k, l],
+            u_delta[x, z], u_psi[x, z],
             delta_j, psi_j);
                 
           // remove already-selected items, and standarise to sum = 1 
           weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
       
-          Q[l, k, t, jj] = categorical_rng(weights);
+          Q[z, x, ts, jj] = categorical_rng(weights);
 
           // update remaining_items2
-          remaining_items2[Q[l, k, t, jj]] = 0;
-
+          remaining_items2[Q[z, x, ts, jj]] = 0;
  
         }
       }

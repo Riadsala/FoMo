@@ -35,10 +35,10 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d <- sim_foraging_people(n_people = 10,
+d <- sim_foraging_people(n_people = 16,
                          n_conditions = 1,
                          cond_lab = c("simple test"),
-                         n_trials_per_cond = 4,
+                         n_trials_per_cond = 8,
                          n_item_class = 2, n_item_per_class = 10,
                          item_class_weights, sd_bA = 0.2,
                          b_stick = b_stick, sd_b_stick = 1,
@@ -55,7 +55,7 @@ saveRDS(d, "scratch/d_1_0.rds")
 
 m <- fit_model(d, fomo_ver = "1.0", mode = "all",  iter = 500) 
 
-## model 1.1
+  ## model 1.1
 
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 
