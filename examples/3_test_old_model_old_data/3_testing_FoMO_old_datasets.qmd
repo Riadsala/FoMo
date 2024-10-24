@@ -114,7 +114,8 @@ Did the mcmc sampling work ok?
 
 ```{r}
 
-# m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+ m <- readRDS("scratch/tagu2022cog_train_1_1.model")
+d <- import_data("tagu2022cog")
 # diagnostic checks
 # m$diagnostic_summary()
 # 
@@ -132,8 +133,8 @@ Let's look at the model fit for the best performing model
 At present, we only have 1.0 so we will use that
 
 ```{r}
-# post <- extract_post(m, d)
-# plot_model_fixed(post)
+post <- extract_post(m, d)
+plot_model_fixed(post)
 ```
 
 # Posterior Predictions
@@ -157,13 +158,28 @@ rl %>%
 ### FoMo 1.1
 
 ```{r}
-rl <- read_csv("scratch/run_statistics1_1.csv")
+rl <- read_csv("scratch/run_statistics1_0.csv")
 
 rl %>%
- ggplot(aes(observed, predicted, colour = condition))  +
+ ggplot(aes(found, d2, colour = x))  +
   geom_point() + 
   geom_abline(linetype = 2) + 
-  facet_wrap(~ dataset)
+  facet_grid(condition~ dataset)
 ```
 
 
+## Inter-Item Selection Distance
+
+### FoMo 1.0
+
+```{r}
+iisv <- read_csv("scratch/iisv_statistics1_1.csv")
+
+iisv %>%
+ ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
+  geom_path(aes(colour = x)) + 
+  geom_ribbon(alpha = 0.33) + 
+  facet_wrap(condition ~ dataset) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+```
