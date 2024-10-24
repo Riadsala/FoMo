@@ -38,7 +38,7 @@ inital_sel_params <- tibble(
 d <- sim_foraging_people(n_people = 16,
                          n_conditions = 1,
                          cond_lab = c("simple test"),
-                         n_trials_per_cond = 8,
+                         n_trials_per_cond = 10,
                          n_item_class = 2, n_item_per_class = 10,
                          item_class_weights, sd_bA = 0.2,
                          b_stick = b_stick, sd_b_stick = 1,
