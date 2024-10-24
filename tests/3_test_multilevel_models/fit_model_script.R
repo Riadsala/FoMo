@@ -11,7 +11,6 @@ source("../../functions/import_data.R")
 # create scratch folder if it does not yet exist
 if (!file.exists("scratch"))  dir.create("scratch")
 
-
 ## model 1.0
 
 item_class_weights = list(c(0.7, 0.3, 0, 0))

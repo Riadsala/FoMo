@@ -8,6 +8,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   } else {
     d <- dataset
+    dataset <- "unknown"
   }
   
   # if mode = "all", fit data to everything
