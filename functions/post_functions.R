@@ -161,7 +161,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   
   # first, deal with m being either one model or a list
   
-  if (class(m)=="list") {
+  if (unique(class(m)=="list")) {
     
     # m has been input as a list, presumably:
     # i) a model to to training data
@@ -181,7 +181,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   # all fixed effects should start with "rho_" or "b_"
   pvars <- vars[str_detect(vars, "^[PW]")]
   
-  if (class(m)=="list") {
+  if (unique(class(m)=="list")) {
     
     # get the training/test data split
     dtt <- get_train_test_split(d)
@@ -201,7 +201,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   } else {
     
     # get training set predictions
-    pred <- extract_pred(mtr, d)
+    pred <- extract_pred(mtr, d, pvars, draw_sample_frac)
     
   }
   
