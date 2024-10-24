@@ -119,7 +119,8 @@ import_tagu2022cog <- function(small_test) {
            x = "x", y = "y") %>%
     mutate(item_class = item_class + 1,
            condition = as.factor(condition),
-           condition = fct_recode(condition, value = "1", control = "2")) -> d
+           condition = fct_recode(condition, value = "1", control = "2"),
+           item_class = if_else(item_class == 1, 2, 1)) -> d
   
   if (small_test) {
      
