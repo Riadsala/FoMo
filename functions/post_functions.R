@@ -213,7 +213,13 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       select(-.chain, -.iteration) %>%
       pivot_longer(-.draw, values_to = "id") 
     
-    if (multi_level) {
+    sim_trials <- mtr$draws("sim_trial_id", format = "df") %>%
+      as_tibble() %>%
+      filter(row_number() == 1) %>%
+      select(-.chain, -.iteration, -.draw) %>%
+      pivot_longer(everything(), values_to = "id") 
+    
+      if (multi_level) {
       
       sim %>%
         separate(name, 

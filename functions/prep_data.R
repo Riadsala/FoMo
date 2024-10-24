@@ -126,7 +126,6 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
     
     df %>% 
       filter(found != max(found)) -> df
-    
   
   }
   # 
@@ -152,6 +151,8 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
   
   X <- as.numeric(d_trl$condition)
   
+  Z <- (d$stim %>% group_by(trial) %>% summarise(person = unique(person)))$person
+  
   # add  these to list
   d_list <- list(
     N = nrow(df),
@@ -161,7 +162,7 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
     n_targets = n_targets,
     Y = Y,
     X = array(X),
-    Z = df$person,
+    Z = Z,
     found_order = df$found)  
   
   rm(d_trl, X)
