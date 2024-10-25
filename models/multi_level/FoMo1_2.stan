@@ -88,8 +88,6 @@ data {
   real prior_sd_b_stick; // prior for sd for bS
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
-  real prior_mu_rho_psi;
-  real prior_sd_rho_psi;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
@@ -209,7 +207,6 @@ generated quantities {
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
   real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
-  real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 
   array[N] int P;
   array[N] real log_lik;
