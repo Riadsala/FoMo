@@ -1,4 +1,11 @@
-// spatial foraging project
+/* FoMo V1.1 - multi-level
+
+delta is noramlised by distance from currently selected item
+to the last remaining item
+
+b_a, b_stick, rho_delta, rho_psi
+
+*/
 
 functions {
 

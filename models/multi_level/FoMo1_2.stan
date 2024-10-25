@@ -1,4 +1,10 @@
-// spatial foraging project
+/* FoMo V1.2 - multi-level
+
+Removes relative direction:
+
+b_a, b_stick, rho_delta
+
+*/
 
 functions {
 

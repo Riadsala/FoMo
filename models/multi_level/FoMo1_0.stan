@@ -1,4 +1,10 @@
-// spatial foraging project
+/* FoMo V1.0 - multi-level
+
+Includes the core parameters:
+
+b_a, b_stick, rho_delta, rho_psi
+
+*/
 
 functions {
 
