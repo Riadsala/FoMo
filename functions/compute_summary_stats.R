@@ -1,6 +1,5 @@
 # Computes some descriptive summary statistics of foraging data
 
-
 # get_run_info_over_trials(df) - pass in a dataframe, and get out one row per trial
 # - number items found per trial
 # - number of runs
@@ -13,6 +12,11 @@
 
 get_run_info_over_trials <- function(df) {
   
+  # Function to compute run statistics (max run length and number of runs) for 
+  # a dataframe (d$found) of trials
+  
+  # If posterior predictions are supplied, .draw will be included as a column.
+  # In this case, we compute the run statistics for each .draw x trial
   
   if (".draw" %in% c(names(df))) {
     
@@ -38,23 +42,26 @@ get_run_info_over_trials <- function(df) {
     pmap_df(get_run_info, df = df, 
             .progress = TRUE) -> dout
  
-   # get simulation data for model
-    pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.001)
-    # now split dout$trial up by draws
- if (draws_present) {
+  # now split dout$trial up by draws
+  if (draws_present) {
    
-   dout %>% separate(trial_p, 
-                     into = c("trial_p", ".draw"), 
-                     "_",
-                     convert = TRUE) -> dout
- }
-  
+    dout %>% separate(trial_p, 
+                      into = c("trial_p", ".draw"), 
+                      "_", convert = TRUE) -> dout
+  }
+ 
   return(dout)
   
 }
 
 get_iisv_over_trials <- function(df) {
+  
+  # Function to compute iisv statistics for a dataframe (d$found) of trials
+  
+  # Returns delta (distance), theta (direction) and psi (relative direction)
+  
+  # If posterior predictions are supplied, .draw will be included as a column.
+  # In this case, we compute the run statistics for each .draw x trial
 
   if (".draw" %in% c(names(df))) {
     

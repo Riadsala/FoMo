@@ -35,7 +35,7 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d <- sim_foraging_people(n_people = 16,
+d <- sim_foraging_people(n_people = 5,
                          n_conditions = 1,
                          cond_lab = c("simple test"),
                          n_trials_per_cond = 10,
@@ -53,7 +53,7 @@ d$stim <- fix_person_and_trial(d$stim)
 saveRDS(d, "scratch/d_1_0.rds")
 
 
-m <- fit_model(d, fomo_ver = "1.0", mode = "all",  iter = 500) 
+m <- fit_model(d, fomo_ver = "1.0", mode = "all",  iter = 500, n_trials_to_sim = 3) 
 
   ## model 1.1
 
