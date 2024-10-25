@@ -141,7 +141,7 @@ extract_post_random <- function(m, cl) {
 extract_pred <- function(my_model, my_data, pv, sample_frac) {
   
    my_model$draws(pv, format = "df") %>% 
-    # sample_frac(sample_frac) %>%
+    sample_frac(sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw) %>%
