@@ -30,7 +30,6 @@ theme_set(ggthemes::theme_tufte())
 - **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
 - **Model 1.2**: the same as 1.1 except it has no parameter for relative direction.
 
-
 ## Model 1.0
 
 ```{r}
@@ -41,14 +40,14 @@ fit <- readRDS("scratch/unknown_all_1_0.model")
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 b_stick = 1
 
-rho_delta = 15
+rho_delta = 20
 sd_rho_delta = 1
 
-rho_psi = -1
+rho_psi = 2
 
 # compute run statistics for later
-runs_emp <- get_run_info_over_trials(d$found) 
-iisv_emp <- get_iisv_over_trials(d$found) 
+# runs_emp <- get_run_info_over_trials(d$found) 
+# iisv_emp <- get_iisv_over_trials(d$found) 
 
 ```
 
@@ -78,7 +77,6 @@ plot_model_random(post)
 ### Model Accuracy
 
 ```{r, warning = FALSE}
-
 pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
@@ -87,22 +85,22 @@ plot_model_accuracy(pred)
 ### Compare Run Statistics
 
 ```{r}
-
-# small wrapper function for plotting run statistic comparison
-
-simple_run_stat_comparison <- function(runs_emp, pred) {
-  
-  runs_sim <- get_run_info_over_trials(pred$sim) 
-  
-  bind_rows(runs_emp %>% mutate(class = "empirical"), 
-            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
-    pivot_longer(c("max_run_length", "n_runs")) %>%
-    ggplot(aes(class, value)) + 
-    geom_boxplot() + 
-    facet_wrap(~name, scales = "free")
-}
-
-simple_run_stat_comparison(runs_emp, pred)
+# 
+# # small wrapper function for plotting run statistic comparison
+# 
+# simple_run_stat_comparison <- function(runs_emp, pred) {
+#   
+#   runs_sim <- get_run_info_over_trials(pred$sim) 
+#   
+#   bind_rows(runs_emp %>% mutate(class = "empirical"), 
+#             runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
+#     pivot_longer(c("max_run_length", "n_runs")) %>%
+#     ggplot(aes(class, value)) + 
+#     geom_boxplot() + 
+#     facet_wrap(~name, scales = "free")
+# }
+# 
+# simple_run_stat_comparison(runs_emp, pred)
 ```
 
 ### Compare IISVs
@@ -110,7 +108,7 @@ simple_run_stat_comparison(runs_emp, pred)
 What about the inter-item selection vectors?
 
 ```{r}
-plot_model_human_iisv_comparison(pred, d)
+# plot_model_human_iisv_comparison(pred, d)
 
 ```
 
@@ -118,54 +116,54 @@ plot_model_human_iisv_comparison(pred, d)
 ## Model 1.1
 
 ```{r}
-
-d2 <- readRDS("scratch/d_1_1.RDS")
-fit <- readRDS("scratch/multi_level_1_1_tmp.rds")
-
-rho_delta = 1
-
-# compute run statistics for later
-runs_emp <- get_run_info_over_trials(d2$found) 
-iisv_emp <- get_iisv_over_trials(d2$found) 
+# 
+# d2 <- readRDS("scratch/d_1_1.RDS")
+# fit <- readRDS("scratch/multi_level_1_1_tmp.rds")
+# 
+# rho_delta = 1
+# 
+# # compute run statistics for later
+# runs_emp <- get_run_info_over_trials(d2$found) 
+# iisv_emp <- get_iisv_over_trials(d2$found) 
 
 ```
 
 ### Posterior Density Plots
 
 ```{r extractsim1_1post}
-post <- extract_post(fit, d2, multi_level = TRUE)
+# post <- extract_post(fit, d2, multi_level = TRUE)
 ```
 
 #### Fixed Effects
 
 ```{r plotsim1_1fixed, fig.cap="fixed effects", warning = FALSE}
-
-plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
-                                 b_stick = b_stick,
-                                 rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
+# 
+# plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+#                                  b_stick = b_stick,
+#                                  rho_delta = rho_delta,
+#                                  rho_psi = rho_psi))
 
 ```
 
 #### Random Effects
 
 ```{r plotsim1_1random, fig.cap="random effects"}
-plot_model_random(post)
+# plot_model_random(post)
 ```
 
 ### Model Accuracy
 
 ```{r, warning = FALSE}
-
-pred <- summarise_postpred(fit, d2)
-
-plot_model_accuracy(pred)
+# 
+# pred <- summarise_postpred(fit, d2)
+# 
+# plot_model_accuracy(pred)
 ```
 
 ### Compare Run Statistics
 
 ```{r}
-simple_run_stat_comparison(runs_emp, pred)
+# simple_run_stat_comparison(runs_emp, pred)
 ```
 
 ### Compare IISVs
@@ -173,18 +171,18 @@ simple_run_stat_comparison(runs_emp, pred)
 What about the inter-item selection vectors?
 
 ```{r}
-plot_model_human_iisv_comparison(pred, d2)
+# plot_model_human_iisv_comparison(pred, d2)
 
 ```
 
 ## Model 1.2
 
 ```{r}
-
-d2 <- readRDS("scratch/d_1_1.RDS")
-fit <- readRDS("scratch/multi_level_1_2_tmp.rds")
-
-rho_delta = 1
+# 
+# d2 <- readRDS("scratch/d_1_1.RDS")
+# fit <- readRDS("scratch/multi_level_1_2_tmp.rds")
+# 
+# rho_delta = 1
 
 ```
 
@@ -197,27 +195,27 @@ post <- extract_post(fit, d2, multi_level = TRUE)
 #### Fixed Effects
 
 ```{r plotsim1_2fixed, fig.cap="fixed effects", warning = FALSE}
-
-plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
-                                 b_stick = b_stick,
-                                 rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
+# 
+# plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+#                                  b_stick = b_stick,
+#                                  rho_delta = rho_delta,
+#                                  rho_psi = rho_psi))
 
 ```
 
 ### Model Accuracy
 
 ```{r, warning = FALSE}
-
-pred <- summarise_postpred(fit, d2, draw_sample_frac = 0.1)
-
-plot_model_accuracy(pred)
+# 
+# pred <- summarise_postpred(fit, d2, draw_sample_frac = 0.1)
+# 
+# plot_model_accuracy(pred)
 ```
 
 ### Compare Run Statistics
 
 ```{r}
-simple_run_stat_comparison(runs_emp, pred)
+# simple_run_stat_comparison(runs_emp, pred)
 ```
 
 ### Compare IISVs
@@ -225,7 +223,7 @@ simple_run_stat_comparison(runs_emp, pred)
 What about the inter-item selection vectors?
 
 ```{r}
-plot_model_human_iisv_comparison(pred, d2)
+# plot_model_human_iisv_comparison(pred, d2)
 
 ```
 
@@ -234,215 +232,215 @@ plot_model_human_iisv_comparison(pred, d2)
 
 
 ```{r}
-
-elpd_1_0 <- readRDS('scratch/elpd_1_0.rds')
-elpd_1_1 <- readRDS('scratch/elpd_1_1.rds')
-elpd_1_2 <- readRDS('scratch/elpd_1_2.rds')
-
-loo_compare(elpd_1_0, elpd_1_1, elpd_1_2)
-
-```
-
-# 2 conditions
-
-## Model 1.0
-
-```{r}
-
-d <- readRDS("scratch/d_2cond.rds")
-fit <- readRDS("scratch/multi_level_2cond_1_0_tmp.rds")
-
-item_class_weights = list(c(0.5, 0.5, 0, 0), 
-                          c(0.7, 0.3, 0, 0))
-
-b_stick = c(0, 2)
-rho_delta = c(20, 15)
-rho_psi = c(-1, -1)
-
-# compute run statistics for later
-runs_emp <- get_run_info_over_trials(d$found) 
-iisv_emp <- get_iisv_over_trials(d$found) 
-
+# 
+# elpd_1_0 <- readRDS('scratch/elpd_1_0.rds')
+# elpd_1_1 <- readRDS('scratch/elpd_1_1.rds')
+# elpd_1_2 <- readRDS('scratch/elpd_1_2.rds')
+# 
+# loo_compare(elpd_1_0, elpd_1_1, elpd_1_2)
 
 ```
 
-We can plot both fixed and random effects from the model.
+<!-- # 2 conditions -->
 
-```{r}
-post <- extract_post(fit, d, multi_level = TRUE)
-```
+<!-- ## Model 1.0 -->
 
-#### Fixed Effects
+<!-- ```{r} -->
 
-```{r, fig.cap="fixed effects", warning = FALSE}
-plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
-                                 b_stick = b_stick,
-                                 rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
-```
+<!-- d <- readRDS("scratch/d_2cond.rds") -->
+<!-- fit <- readRDS("scratch/multi_level_2cond_1_0_tmp.rds") -->
 
-#### Random Effects
+<!-- item_class_weights = list(c(0.5, 0.5, 0, 0),  -->
+<!--                           c(0.7, 0.3, 0, 0)) -->
 
-```{r, fig.cap="random effects"}
-plot_model_random(post)
-```
+<!-- b_stick = c(0, 2) -->
+<!-- rho_delta = c(20, 15) -->
+<!-- rho_psi = c(-1, -1) -->
 
-### Model Accuracy
+<!-- # compute run statistics for later -->
+<!-- runs_emp <- get_run_info_over_trials(d$found)  -->
+<!-- iisv_emp <- get_iisv_over_trials(d$found)  -->
 
-```{r, warning = FALSE}
 
-pred <- summarise_postpred(fit, d)
+<!-- ``` -->
 
-plot_model_accuracy(pred)
-```
+<!-- We can plot both fixed and random effects from the model. -->
 
-### Compare Run Statistics
+<!-- ```{r} -->
+<!-- post <- extract_post(fit, d, multi_level = TRUE) -->
+<!-- ``` -->
 
-```{r}
+<!-- #### Fixed Effects -->
 
-simple_run_stat_comparison <- function(runs_emp, pred) {
-  
-  runs_sim <- get_run_info_over_trials(pred$sim) 
-  
-  bind_rows(runs_emp %>% mutate(class = "empirical"), 
-            runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>%
-    pivot_longer(c("max_run_length", "n_runs")) %>%
-    ggplot(aes(class, value, fill = condition)) + 
-    geom_boxplot() + 
-    facet_wrap(~name, scales = "free")
-}
+<!-- ```{r, fig.cap="fixed effects", warning = FALSE} -->
+<!-- plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])), -->
+<!--                                  b_stick = b_stick, -->
+<!--                                  rho_delta = rho_delta, -->
+<!--                                  rho_psi = rho_psi)) -->
+<!-- ``` -->
 
-simple_run_stat_comparison(runs_emp, pred)
-```
+<!-- #### Random Effects -->
 
-### Compare IISVs
+<!-- ```{r, fig.cap="random effects"} -->
+<!-- plot_model_random(post) -->
+<!-- ``` -->
 
-What about the inter-item selection vectors?
+<!-- ### Model Accuracy -->
 
-```{r}
-plot_model_human_iisv_comparison(pred, d)
+<!-- ```{r, warning = FALSE} -->
 
-```
+<!-- pred <- summarise_postpred(fit, d) -->
 
-## Model 1.1
+<!-- plot_model_accuracy(pred) -->
+<!-- ``` -->
 
-```{r}
+<!-- ### Compare Run Statistics -->
 
-d <- readRDS("scratch/d_2cond_relprox.rds")
-fit <- readRDS("scratch/multi_level_2cond_1_1_tmp.rds")
+<!-- ```{r} -->
 
-rho_delta = c(1,2)
+<!-- simple_run_stat_comparison <- function(runs_emp, pred) { -->
 
-# compute run statistics for later
-runs_emp <- get_run_info_over_trials(d$found) 
-iisv_emp <- get_iisv_over_trials(d$found) 
+<!--   runs_sim <- get_run_info_over_trials(pred$sim)  -->
 
+<!--   bind_rows(runs_emp %>% mutate(class = "empirical"),  -->
+<!--             runs_sim %>% mutate(class = "simulated") %>% select(-.draw)) %>% -->
+<!--     pivot_longer(c("max_run_length", "n_runs")) %>% -->
+<!--     ggplot(aes(class, value, fill = condition)) +  -->
+<!--     geom_boxplot() +  -->
+<!--     facet_wrap(~name, scales = "free") -->
+<!-- } -->
 
-```
+<!-- simple_run_stat_comparison(runs_emp, pred) -->
+<!-- ``` -->
 
-We can plot both fixed and random effects from the model.
+<!-- ### Compare IISVs -->
 
-```{r}
-post <- extract_post(fit, d, multi_level = TRUE)
-```
+<!-- What about the inter-item selection vectors? -->
 
-#### Fixed Effects
+<!-- ```{r} -->
+<!-- plot_model_human_iisv_comparison(pred, d) -->
 
-```{r, fig.cap="fixed effects", warning = FALSE}
-plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
-                                 b_stick = b_stick,
-                                 rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
-```
+<!-- ``` -->
 
-#### Random Effects
+<!-- ## Model 1.1 -->
 
-```{r, fig.cap="random effects"}
-plot_model_random(post)
-```
+<!-- ```{r} -->
 
-### Model accuracy
+<!-- d <- readRDS("scratch/d_2cond_relprox.rds") -->
+<!-- fit <- readRDS("scratch/multi_level_2cond_1_1_tmp.rds") -->
 
-```{r, warning = FALSE}
+<!-- rho_delta = c(1,2) -->
 
-pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
+<!-- # compute run statistics for later -->
+<!-- runs_emp <- get_run_info_over_trials(d$found)  -->
+<!-- iisv_emp <- get_iisv_over_trials(d$found)  -->
 
-plot_model_accuracy(pred)
-```
 
+<!-- ``` -->
 
-### Compare Run Statistics
+<!-- We can plot both fixed and random effects from the model. -->
 
-```{r}
-simple_run_stat_comparison(runs_emp, pred)
-```
+<!-- ```{r} -->
+<!-- post <- extract_post(fit, d, multi_level = TRUE) -->
+<!-- ``` -->
 
-### Compare IISVs
+<!-- #### Fixed Effects -->
 
-What about the inter-item selection vectors?
+<!-- ```{r, fig.cap="fixed effects", warning = FALSE} -->
+<!-- plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])), -->
+<!--                                  b_stick = b_stick, -->
+<!--                                  rho_delta = rho_delta, -->
+<!--                                  rho_psi = rho_psi)) -->
+<!-- ``` -->
 
-```{r}
-plot_model_human_iisv_comparison(pred, d)
+<!-- #### Random Effects -->
 
-```
+<!-- ```{r, fig.cap="random effects"} -->
+<!-- plot_model_random(post) -->
+<!-- ``` -->
 
-## Model 1.2
+<!-- ### Model accuracy -->
 
-```{r}
+<!-- ```{r, warning = FALSE} -->
 
-d <- readRDS("scratch/d_2cond_relprox.rds")
-fit <- readRDS("scratch/multi_level_2cond_1_2_tmp.rds")
+<!-- pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1) -->
 
-rho_delta = c(1,2)
+<!-- plot_model_accuracy(pred) -->
+<!-- ``` -->
 
-# compute run statistics for later
-runs_emp <- get_run_info_over_trials(d$found) 
-iisv_emp <- get_iisv_over_trials(d$found) 
 
+<!-- ### Compare Run Statistics -->
 
-```
+<!-- ```{r} -->
+<!-- simple_run_stat_comparison(runs_emp, pred) -->
+<!-- ``` -->
 
-We can plot both fixed and random effects from the model.
+<!-- ### Compare IISVs -->
 
-```{r}
-post <- extract_post(fit, d, multi_level = TRUE)
-```
+<!-- What about the inter-item selection vectors? -->
 
-#### Fixed Effects
+<!-- ```{r} -->
+<!-- plot_model_human_iisv_comparison(pred, d) -->
 
-```{r, fig.cap="fixed effects", warning = FALSE}
-plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])),
-                                 b_stick = b_stick,
-                                 rho_delta = rho_delta,
-                                 rho_psi = rho_psi))
-```
+<!-- ``` -->
 
-#### Random Effects
+<!-- ## Model 1.2 -->
 
-```{r, fig.cap="random effects"}
-plot_model_random(post)
-```
+<!-- ```{r} -->
 
-### Model accuracy
+<!-- d <- readRDS("scratch/d_2cond_relprox.rds") -->
+<!-- fit <- readRDS("scratch/multi_level_2cond_1_2_tmp.rds") -->
 
-```{r, warning = FALSE}
+<!-- rho_delta = c(1,2) -->
 
-pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
+<!-- # compute run statistics for later -->
+<!-- runs_emp <- get_run_info_over_trials(d$found)  -->
+<!-- iisv_emp <- get_iisv_over_trials(d$found)  -->
 
-plot_model_accuracy(pred)
-```
 
-### Compare Run Statistics
+<!-- ``` -->
 
-```{r}
-simple_run_stat_comparison(runs_emp, pred)
-```
+<!-- We can plot both fixed and random effects from the model. -->
 
-### Compare IISVs
+<!-- ```{r} -->
+<!-- post <- extract_post(fit, d, multi_level = TRUE) -->
+<!-- ``` -->
 
-What about the inter-item selection vectors?
+<!-- #### Fixed Effects -->
 
-```{r}
-plot_model_human_iisv_comparison(pred, d)
+<!-- ```{r, fig.cap="fixed effects", warning = FALSE} -->
+<!-- plot_model_fixed(post, gt = list(b_a = c(qlogis(item_class_weights[[1]][1]),qlogis(item_class_weights[[2]][1])), -->
+<!--                                  b_stick = b_stick, -->
+<!--                                  rho_delta = rho_delta, -->
+<!--                                  rho_psi = rho_psi)) -->
+<!-- ``` -->
 
-```
+<!-- #### Random Effects -->
+
+<!-- ```{r, fig.cap="random effects"} -->
+<!-- plot_model_random(post) -->
+<!-- ``` -->
+
+<!-- ### Model accuracy -->
+
+<!-- ```{r, warning = FALSE} -->
+
+<!-- pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1) -->
+
+<!-- plot_model_accuracy(pred) -->
+<!-- ``` -->
+
+<!-- ### Compare Run Statistics -->
+
+<!-- ```{r} -->
+<!-- simple_run_stat_comparison(runs_emp, pred) -->
+<!-- ``` -->
+
+<!-- ### Compare IISVs -->
+
+<!-- What about the inter-item selection vectors? -->
+
+<!-- ```{r} -->
+<!-- plot_model_human_iisv_comparison(pred, d) -->
+
+<!-- ``` -->

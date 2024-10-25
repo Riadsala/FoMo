@@ -140,7 +140,7 @@ extract_post_random <- function(m, cl) {
 
 extract_pred <- function(my_model, my_data, pv, sample_frac) {
   
-  pred_test <- my_model$draws(pv, format = "df") %>% 
+   my_model$draws(pv, format = "df") %>% 
     sample_frac(sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
@@ -217,10 +217,18 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       as_tibble() %>%
       filter(row_number() == 1) %>%
       select(-.chain, -.iteration, -.draw) %>%
-      pivot_longer(everything(), values_to = "id") 
+      pivot_longer(everything(), values_to = "trial_id")
     
       if (multi_level) {
-      
+        
+        sim_trials %>%
+          separate(name,
+                   c("person", "condition", "trial"), 
+                   sep = ",", convert = TRUE) %>%
+          mutate(person = parse_number(person),
+                 trial = parse_number(trial),
+                 condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+        
       sim %>%
         separate(name, 
                  c("person", "condition", "trial", "found"), 
@@ -228,6 +236,13 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
         mutate(person = parse_number(person),
                found = parse_number(found),
                condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+      
+      # fix trial numbers
+      full_join(sim, sim_trials, by = c("person", "condition", "trial")) %>%
+        select(-trial) %>%
+        rename(trial = "trial_id") -> sim
+      
+      rm(sim_trials)
       
       sim %>%
         left_join(d$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim

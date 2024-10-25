@@ -298,18 +298,7 @@ generated quantities {
             to_vector(item_class[t]), S_j, delta_j, psi_j,
             found_order[ii], n_targets, remaining_items_j); 
 
-              /*
-          // multiply weights by stick/switch preference
-          weights = log_inv_logit(weights) + log_inv_logit(u_stick[x, z] * Sj); 
 
-          // compute spatial weights
-          weights = weights + compute_spatial_weights(found_order[jj], n_targets, 
-            u_delta[x, z], u_psi[x, z],
-            delta_j, psi_j);
-                
-          // remove already-selected items, and standarise to sum = 1 
-          weights = standarise_weights(exp(weights), n_targets, remaining_items2);   
-      */
           Q[z, x, ts, ii] = categorical_rng(weights);
 
           // update remaining_items2
