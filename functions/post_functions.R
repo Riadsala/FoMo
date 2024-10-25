@@ -259,7 +259,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     rm(sim_trials)
     
     sim %>%
-      left_join(d$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim
+      left_join(training$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim
     
     # define output list
     list_out <- list(acc = pred, sim = sim)
