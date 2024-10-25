@@ -33,7 +33,7 @@ We then compute accuracy for each model using script `2_`
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+datasets <- c("kristjansson2014plos", "tagu2022cog")
 ```
 
 ## Prediction Accuracy
@@ -75,35 +75,35 @@ rm(d, items, items_left)
 Now get all the pre-computed training/test split accuracies
 
 ```{r}
-get_acc <- function(dataset) {
-  
-  acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
-                  show_col_types = FALSE)
-  return(acc)
-  
-} 
-
-d_acc <- map_df(datasets, get_acc)
-
-rm(get_acc)
+# get_acc <- function(dataset) {
+#   
+#   acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
+#                   show_col_types = FALSE)
+#   return(acc)
+#   
+# } 
+# 
+# d_acc <- map_df(datasets, get_acc)
+# 
+# rm(get_acc)
 ```
 
 ```{r}
 #| label: compute-all_acc
 #| cache: true
 
-
-# combine this with baseline
-d_acc %>% bind_rows(baseline) %>%
-  mutate(model = factor(model),
-                split = factor(split, levels = c("training", "testing"))) -> d_acc
-
-d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
-                     ymin = .lower, ymax = .upper)) + 
-  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
-  geom_line(aes(x = as.numeric(as_factor(model)))) + 
-  facet_grid(.~split) +
-  scale_color_viridis_d("dataset - condition")
+# 
+# # combine this with baseline
+# d_acc %>% bind_rows(baseline) %>%
+#   mutate(model = factor(model),
+#                 split = factor(split, levels = c("training", "testing"))) -> d_acc
+# 
+# d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
+#                      ymin = .lower, ymax = .upper)) + 
+#   geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+#   geom_line(aes(x = as.numeric(as_factor(model)))) + 
+#   facet_grid(.~split) +
+#   scale_color_viridis_d("dataset - condition")
 ```
 
 ## ELPD? 
@@ -115,7 +115,7 @@ Did the mcmc sampling work ok?
 
 ```{r}
 
- m <- readRDS("scratch/tagu2022cog_train_1_1.model")
+ m <- readRDS("scratch/tagu2022cog_train_1_0.model")
 d <- import_data("tagu2022cog")
 # diagnostic checks
 # m$diagnostic_summary()
@@ -150,10 +150,10 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
-d <- import_data("clarke2022qjep")
-m <- readRDS("scratch/clarke2022qjep_train_1_0.model")
-post <- extract_post(m, d)
-plot_model_fixed(post)
+# d <- import_data("clarke2022qjep")
+# m <- readRDS("scratch/clarke2022qjep_train_1_0.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
 ```
 
 ### tagu2022cog
@@ -177,10 +177,10 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
-d <- import_data("kristjansson2014plos")
-m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
-post <- extract_post(m, d)
-plot_model_fixed(post)
+# d <- import_data("kristjansson2014plos")
+# m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
 ```
 ### clarke2022qjep
 
@@ -188,10 +188,10 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
-d <- import_data("clarke2022qjep")
-m <- readRDS("scratch/clarke2022qjep_train_1_1.model")
-post <- extract_post(m, d)
-plot_model_fixed(post)
+# d <- import_data("clarke2022qjep")
+# m <- readRDS("scratch/clarke2022qjep_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
 ```
 
 ### tagu2022cog
@@ -200,10 +200,10 @@ plot_model_fixed(post)
 #| warning: false
 #| echo: false
 
-d <- import_data("tagu2022cog")
-m <- readRDS("scratch/tagu2022cog_train_1_1.model")
-post <- extract_post(m, d)
-plot_model_fixed(post)
+# d <- import_data("tagu2022cog")
+# m <- readRDS("scratch/tagu2022cog_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
 ```
 
 # Posterior Predictions
@@ -227,13 +227,13 @@ rl %>%
 ### FoMo 1.1
 
 ```{r}
-rl <- read_csv("scratch/run_statistics1_0.csv")
-
-rl %>%
- ggplot(aes(observed, predicted, colour = condition))  +
-  geom_point() + 
-  geom_abline(linetype = 2) + 
-  facet_wrap(~ dataset)
+# rl <- read_csv("scratch/run_statistics1_1.csv")
+# 
+# rl %>%
+#  ggplot(aes(observed, predicted, colour = condition))  +
+#   geom_point() + 
+#   geom_abline(linetype = 2) + 
+#   facet_wrap(~ dataset)
 ```
 
 
@@ -242,7 +242,7 @@ rl %>%
 ### FoMo 1.0
 
 ```{r}
-iisv <- read_csv("scratch/iisv_statistics1_1.csv")
+iisv <- read_csv("scratch/iisv_statistics1_0.csv")
 
 iisv %>%
  ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
