@@ -36,7 +36,7 @@ extract_post <- function(m, d, multi_level = TRUE, absdir = FALSE) {
     post_var <- extract_var(m, cl, param_names)
     
     post_list <- append(post_list, list(random = 
-                                   post_random, variances = post_var))
+                                          post_random, variances = post_var))
   }
   
   if (absdir) {
@@ -140,7 +140,7 @@ extract_post_random <- function(m, cl) {
 
 extract_pred <- function(my_model, my_data, pv, sample_frac) {
   
-   my_model$draws(pv, format = "df") %>% 
+  my_model$draws(pv, format = "df") %>% 
     sample_frac(sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
@@ -205,7 +205,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   }
   
   if (get_sim) {
-  
+    
     sim <- mtr$draws("Q", format = "df")  %>%
       sample_frac(draw_sample_frac) %>%
       as_tibble() %>%
@@ -218,59 +218,58 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       select(-.chain, -.iteration, -.draw) %>%
       pivot_longer(everything(), values_to = "trial_id")
     
-      if (multi_level) {
-        
-        sim_trials %>%
-          separate(name,
-                   c("person", "condition", "trial"), 
-                   sep = ",", convert = TRUE) %>%
-          mutate(person = parse_number(person),
-                 trial = parse_number(trial),
-                 condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
-      sim %>%
-        separate(name, 
-                 c("person", "condition", "trial", "found"), 
-                 sep = ",", convert = TRUE) %>%
-        mutate(person = parse_number(person),
-               found = parse_number(found),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+    if (multi_level) {
       
-      # fix trial numbers
-      full_join(sim, sim_trials, by = c("person", "condition", "trial")) %>%
-        select(-trial) %>%
-        rename(trial = "trial_id") -> sim
-      
-      rm(sim_trials)
-      
-      sim %>%
-        left_join(d$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim
+      col_names <- c("person", "condition", "trial")
       
     } else {
       
-      sim %>%
-        separate(name, c("condition", "trial", "found"), 
-                 sep = ",", convert = TRUE) %>%
-        mutate(found = parse_number(found),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+      col_names <- c("condition", "trial")
       
-      sim %>%
-        left_join(d$stim %>% select( -condition), by = join_by(trial, id)) -> sim
-        
     }
     
+    sim_trials %>%
+      separate(name,
+               col_names, 
+               sep = ",", convert = TRUE) %>%
+      mutate(trial = parse_number(trial),
+             condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+    sim %>%
+      separate(name, 
+               c(col_names, "found"), 
+               sep = ",", convert = TRUE) %>%
+      mutate(found = parse_number(found),
+             condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+    
+    if (multi_level == TRUE) {
+      
+      sim %>% 
+        mutate(person = parse_number(person)) -> sim
+      
+      sim_trials %>%
+        mutate(person = parse_number(person)) -> sim_trials
+      
+    }
+    
+    # fix trial numbers
+    full_join(sim, sim_trials, by = col_names) %>%
+      select(-trial) %>%
+      rename(trial = "trial_id") -> sim
+    
+    rm(sim_trials)
+    
+    sim %>%
+      left_join(d$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim
+    
+    # define output list
     list_out <- list(acc = pred, sim = sim)
     
   } else {
     
+    # define output list
     list_out <- list(acc = pred)
   }
   
-  #sim <- sim %>%
- #   mutate(condition = parse_number(condition),
- #          trial = parse_number(trial),
-  #         found = parse_number(found)) %>%
- #   full_join(d$stim, by = join_by(trial, id))
-
   
   return(list_out)
   
@@ -290,10 +289,10 @@ compute_acc <- function(acc) {
     acc %>% 
       filter(found != 1) %>%
       group_by(condition, .draw, person, trial) -> acc
-
+    
   }
   
-acc  %>%
+  acc  %>%
     summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
     summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
     summarise(accuracy = mean(person_acc), .groups = "drop_last") %>%
