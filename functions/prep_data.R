@@ -155,7 +155,7 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
   
   X <- as.numeric(d_trl$condition)
   
-  Z <- (d$stim %>% group_by(trial) %>% summarise(person = unique(person)))$person
+  Z <- (ds %>% group_by(trial) %>% summarise(person = unique(person)))$person
   
   # add  these to list
   d_list <- list(
