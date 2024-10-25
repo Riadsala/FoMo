@@ -168,8 +168,8 @@ generated quantities {
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
-  array[L, K, n_trials_to_sim, n_targets] int Q; 
-  array[L, K, n_trials_to_sim] int sim_trial_id = rep_array(0, L, K, n_trials_to_sim); 
+  array[ K, n_trials_to_sim, n_targets] int Q; 
+  array[ K, n_trials_to_sim] int sim_trial_id = rep_array(0, K, n_trials_to_sim); 
 
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -178,7 +178,7 @@ generated quantities {
     vector[n_targets] weights;  // class weight for teach target
     
     // some IDs for trial, condition, and condition
-    int t, z, x; 
+    int t, x; 
 
     //////////////////////////////////////////////////
     // // step through data row by row and define LLH
@@ -186,7 +186,6 @@ generated quantities {
    for (ii in 1:N) {
 
       t = trial[ii];
-      z = Z[t];
       x = X[t];
 
       weights = compute_weights(
@@ -210,12 +209,11 @@ generated quantities {
 
     vector[n_targets] psi_j, phi_j, delta_j;
 
-    array[L, K] int n_trials_simmed = rep_array(0, L, K);
+    array[ K] int n_trials_simmed = rep_array(0, K);
 
     //for each trial
     for (t in 1:n_trials) {
 
-      int z = Z[t];
       int x = X[t];
       int ts; // trial number, in terms of number simulated
 
@@ -223,12 +221,12 @@ generated quantities {
       remaining_items_j = rep_vector(1, n_targets);
 
       // check that we haven't done enoguh trials already
-      if (n_trials_simmed[z, x] < n_trials_to_sim) {
+      if (n_trials_simmed[x] < n_trials_to_sim) {
 
         // simulate another trial!
-        n_trials_simmed[z, x] += 1;
-        ts = n_trials_simmed[z, x];
-        sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
+        n_trials_simmed[x] += 1;
+        ts = n_trials_simmed[x];
+        sim_trial_id[x, n_trials_simmed[x]] = t;
 
         // simulate a trial!
         for (ii in 1:n_targets) {
@@ -240,21 +238,21 @@ generated quantities {
             
           if (ii > 1) {
 
-            S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
-            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
+            S_j     = compute_matching(item_class[t], n_targets, Q[x, ts, ], ii);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
               
           }
 
           weights = compute_weights(
             b_a[x], b_stick[x], rho_delta[x], rho_psi[x],
-            to_vector(item_class_j[t]), S_j[ii], delta_j[ii], psi_j[ii],
-            found_order[ii], n_targets, remaining_items2[ii]); 
+            to_vector(item_class[t]), S_j, delta_j, psi_j,
+            found_order[ii], n_targets, remaining_items_j); 
 
-          Q[z, x, ts, ii] = categorical_rng(weights);
+          Q[x, ts, ii] = categorical_rng(weights);
 
           // update remaining_items2
-          remaining_items_j[Q[z, x, ts, ii]] = 0;
+          remaining_items_j[Q[x, ts, ii]] = 0;
  
         }
       }

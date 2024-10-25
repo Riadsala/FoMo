@@ -301,7 +301,6 @@ generated quantities {
             to_vector(item_class[t]), S_j, delta_j, psi_j,
             found_order[ii], n_targets, remaining_items_j); 
 
-
           Q[z, x, ts, ii] = categorical_rng(weights);
 
           // update remaining_items2
