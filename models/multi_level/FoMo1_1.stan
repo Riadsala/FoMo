@@ -270,41 +270,44 @@ generated quantities {
       // first, set things up!
       remaining_items_j = rep_vector(1, n_targets);
 
-       if (n_trials_simmed[z, x] < n_trials_to_sim) {
+      // check that we haven't done enoguh trials already
+      if (n_trials_simmed[z, x] < n_trials_to_sim) {
 
         // simulate another trial!
         n_trials_simmed[z, x] += 1;
         ts = n_trials_simmed[z, x];
         sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
-           
-            // delta_j: distance to previously selected item
-        S_j = rep_vector(0, n_targets);
-        delta_j = rep_vector(1, n_targets);
-        phi_j = rep_vector(1, n_targets);
-             
-        if (jj > 1) {
 
-          S_j = compute_matching(item_class[t], n_targets, Q[l, k, t, ], jj);
-          delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj);
-          delta_j = scale_prox(delta_j, remaining_items2, n_targets);
-          psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[l, k, t, ], jj); 
-                
-        }
+        // simulate a trial!
+        for (ii in 1:n_targets) {
 
-        weights = compute_weights(
-        u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
-        to_vector(item_class[t]), S_j, delta_j, psi_j,
-        found_order[ii], n_targets, remaining_items_j); 
+          // delta_j: distance to previously selected item
+          S_j = rep_vector(0, n_targets);
+          delta_j = rep_vector(1, n_targets);
+          phi_j = rep_vector(1, n_targets);
+            
+          if (ii > 1) {
+
+            S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
+            delta_j = scale_prox(delta_j, remaining_items2, n_targets);
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
+              
+          }
+
+          weights = compute_weights(
+            u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
+            to_vector(item_class[t]), S_j, delta_j, psi_j,
+            found_order[ii], n_targets, remaining_items_j); 
 
 
-        Q[z, x, ts, ii] = categorical_rng(weights);
+          Q[z, x, ts, ii] = categorical_rng(weights);
 
-        // update remaining_items2
-        remaining_items_j[Q[z, x, ts, ii]] = 0;
+          // update remaining_items2
+          remaining_items_j[Q[z, x, ts, ii]] = 0;
  
         }
-      }
-      
+      } 
     }
-  } 
+  }  
 }
