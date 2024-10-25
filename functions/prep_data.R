@@ -1,6 +1,6 @@
 fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
-                       iter = 1000) {
+                      iter = 1000, n_trials_to_sim = 10) {
   
   if (class(dataset) != "list") {
   
@@ -19,7 +19,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   if (mode == "all") {
     
-    d_list <- prep_data_for_stan(d$found, d$stim, model_components)
+    d_list <- prep_data_for_stan(d$found, d$stim, model_components, n_trials_to_sim = n_trials_to_sim)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
     m <- mod$sample(data = d_list, 
@@ -33,7 +33,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
   } else if (mode == "traintest") {
     
-    d_list <- prep_train_test_data_for_stan(d)
+    d_list <- prep_train_test_data_for_stan(d, n_trials_to_sim = n_trials_to_sim)
     
     d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
     d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
@@ -57,8 +57,6 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   }
   
 }
-
-
 
 prep_train_test_data_for_stan <- function(d, 
                                           model_components = c("spatial", "item_class"), 
@@ -113,6 +111,12 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
   
+  
+  if (class(remove_last_found) != "logical") {
+    
+    print("error")
+    break 
+  }
 
   ###################################################
   # first, do some processing that everything requires
@@ -123,12 +127,12 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
      filter(item_class %in% c(1, 2)) -> ds
   
   if (remove_last_found) {
-    
-    df %>% 
+
+    df %>%
       filter(found != max(found)) -> df
-  
+
   }
-  # 
+
   # extract stimulus parameters
   n_people <- length(unique(df$person))
   n_trials <- length(unique(df$trial))
@@ -166,53 +170,6 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
     found_order = df$found)  
   
   rm(d_trl, X)
-  
-  ###################################################
-  if ("cross_line" %in% model_components) {
-    
-
-    df %>% group_by(person, condition, trial) %>%
-      mutate(sideh = if_else(x<0.5, 1, 2),
-             sidev = if_else(y<0.5, 1, 2)) -> df
-    
-    ds %>% group_by(person, condition, trial) %>%
-      mutate(sideh = if_else(x<0.5, 1, 2),
-             sidev = if_else(y<0.5, 1, 2)) -> ds
-    
-    found_sideh = t(array(as.numeric(ds$sideh), dim = c(max(df$found), n_trials)))
-    #found_sideh[which(found_sideh==2)] =  -1
-    
-    found_sidev = t(array(as.numeric(ds$sidev), dim = c(max(df$found), n_trials)))
-    #found_sidev[which(found_sidev==2)] =  -1
-    
-    matchingh = array()
-    matchingv = array()
-    trl <- 1
-    
-    for (ii in 2:length(Y)) {
-      if (df$found[ii]==1) {trl = trl + 1}
-      
-
-        found_classh <- df$sideh[ii-1]
-        found_classv <- df$sidev[ii-1]
-        
-      
-      matchingh <- rbind(matchingh, as.numeric(found_sideh[trl,] == found_classh))
-      matchingv <- rbind(matchingv, as.numeric(found_sidev[trl,] == found_classv))
-      
-    }
-    
-    matchingh[which(matchingh == 0 )] = -1
-    matchingh[which(is.na(matchingh))] = 0
-    
-    matchingv[which(matchingv == 0 )] = -1
-    matchingv[which(is.na(matchingv))] = 0
-    
-    
-    d_list <- append(d_list,
-                     list(cross_line_h = matchingh,
-                          cross_line_v = matchingv))
-  }
   
   
   if ("spatial" %in% model_components) {

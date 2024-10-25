@@ -141,7 +141,7 @@ extract_post_random <- function(m, cl) {
 extract_pred <- function(my_model, my_data, pv, sample_frac) {
   
    my_model$draws(pv, format = "df") %>% 
-    sample_frac(sample_frac) %>%
+    # sample_frac(sample_frac) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw) %>%
@@ -228,7 +228,6 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
           mutate(person = parse_number(person),
                  trial = parse_number(trial),
                  condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
-        
       sim %>%
         separate(name, 
                  c("person", "condition", "trial", "found"), 
