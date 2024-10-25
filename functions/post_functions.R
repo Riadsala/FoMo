@@ -149,7 +149,6 @@ extract_pred <- function(my_model, my_data, pv, sample_frac) {
            name = str_remove(name, "\\[\\d*\\]")) %>%
     pivot_wider(names_from = "name", values_from = "value") -> pred
   
-  
   pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
                     pred, by = join_by(n)) %>%
     select(-n, -item_class, -x, -y) %>%
