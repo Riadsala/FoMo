@@ -297,7 +297,7 @@ generated quantities {
 
             S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
-            delta_j = scale_prox(delta_j, remaining_items2, n_targets);
+            delta_j = scale_prox(delta_j, remaining_items_j, n_targets);
             psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
               
           }
