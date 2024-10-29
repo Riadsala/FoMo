@@ -14,8 +14,8 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
 
-d <- import_data("tagu2022cog")
-m <- readRDS("scratch/tagu2022cog_train_1_0.model")
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 post <- extract_post(m, d)
 plot_model_fixed(post)
 
@@ -68,7 +68,8 @@ bind_rows(rle %>% mutate(x = "observed"),
 
 ggplot(iisv, aes(found, d2, colour = x)) + geom_point() +
   geom_abline()  +
-  facet_wrap(~condition)
+  facet_wrap(~condition) + 
+  scale_y_log10()
 
 
 
