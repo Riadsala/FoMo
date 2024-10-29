@@ -35,7 +35,7 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, rvector delta) {
+    real rho_delta, vector delta) {
 
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
@@ -116,17 +116,17 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
-  array[K] real rho_psi; // direction tuning
+
 
   ///////////////////////////////
   // random effects
   ///////////////////////////////
   // random effect variances
-  vector<lower=0>[4*K] sigma_u;
+  vector<lower=0>[3*K] sigma_u;
   // declare L_u to be the Choleski factor of a 3*Kx3*K correlation matrix
-  cholesky_factor_corr[4*K] L_u;
+  cholesky_factor_corr[3*K] L_u;
   // random effect matrix
-  matrix[4*K,L] z_u; 
+  matrix[3*K,L] z_u; 
   
 }
 
@@ -140,7 +140,7 @@ transformed parameters {
 
   // this transform random effects so that they have the correlation
   // matrix specified by the correlation matrix above
-  matrix[4*K, L] u;
+  matrix[3*K, L] u;
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // add fixed and random effects together
@@ -148,10 +148,9 @@ transformed parameters {
   array[K] vector[L] u_a, u_stick, u_delta, u_psi;
   // create!
   for (kk in 1:K) {
-    u_a[kk]     = to_vector(b_a[kk]       + u[4*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_stick[kk]   + u[4*(kk-1)+2]);
-    u_delta[kk] = to_vector(rho_delta[kk] + u[4*(kk-1)+3]);
-    u_psi[kk]   = to_vector(rho_psi[kk]   + u[4*(kk-1)+4]);
+    u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
+    u_stick[kk] = to_vector(b_stick[kk]   + u[3*(kk-1)+2]);
+    u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
   }
 }
 
@@ -171,7 +170,6 @@ model {
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(rho_psi[ii]   | prior_mu_rho_psi, prior_sd_rho_psi);
   }
 
   //////////////////////////////////////////////////
