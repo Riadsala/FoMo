@@ -12,7 +12,7 @@ functions {
 
   vector compute_weights(
     real u_a, real u_s, real u_delta
-    vector item_class, vector match_prev_item, vector delta
+    vector item_class, vector match_prev_item, vector delta,
     int n, int n_targets, vector remaining_items) {
 
     vector[n_targets] weights;
