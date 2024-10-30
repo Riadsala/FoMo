@@ -198,15 +198,15 @@ model {
     t = trial[ii];
     z = Z[t];
     x = X[t];
- 
+
+    # note, we're using delta_n here rather than delta
     weights = compute_weights(
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
-      to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
+      to_vector(item_class[t]), S[ii], delta_n[ii], psi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
 
-   
   }
 }
 
@@ -246,7 +246,7 @@ generated quantities {
 
       weights = compute_weights(
         u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
-        to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
+        to_vector(item_class[t]), S[ii], delta_n[ii], psi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
       P[ii] = categorical_rng(weights);
