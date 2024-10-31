@@ -9,47 +9,48 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores = 1, digits = 2)
+options(mc.cores =4, digits = 2)
 
 # set global ggplot theme
 theme_set(ggthemes::theme_tufte())
 
 ############################################################################
-datasets <- c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+datasets <- c("kristjansson2014plos") #, "tagu2022cog", "clarke2022qjep"
 ############################################################################
 
 # wrapper function for computing train/test accuracy
 compare_FoMo_accuracy <- function(dataset) {
   
   d <- import_data(dataset)
+  
+  dout <- tibble()
+  
+  for (modelver in c("1_0", "1_1", "1_2"))
+  {
+    
+    m <- readRDS(paste0("scratch/", dataset, "_train_", modelver, ".model"))
+    t <- readRDS(paste0("scratch/", dataset, "_test_", modelver, ".model"))
+    
+    pred <- summarise_postpred(list(training = m, testing = t), d, 
+                                 get_sim = FALSE, draw_sample_frac=0.25)
+    acc <- compute_acc(pred$acc) %>% mutate(model = paste("FoMo",  modelver))
+    
+    rm(m, t, pred) 
+    
+    dout <- bind_rows(dout, bind_rows(acc, acc) %>%
+                        mutate(data = dataset))
 
-  m10 <- readRDS(paste0("scratch/", dataset, "_train_1_0.model"))
-  t10 <- readRDS(paste0("scratch/", dataset, "_test_1_0.model"))
   
-  pred10 <- summarise_postpred(list(training = m10, testing = t10), d, 
-                               get_sim = FALSE, draw_sample_frac=0.25)
-  acc10 <- compute_acc(pred10$acc) %>% mutate(model = "FoMo 1.0")
+  }
   
-  rm(m10, t10, pred10) 
-  
-  m11 <- readRDS(paste0("scratch/", dataset, "_train_1_1.model"))
-  t11 <- readRDS(paste0("scratch/", dataset, "_test_1_1.model"))
-   
-  pred11 <- summarise_postpred(list(training = m11, testing = t11), d, 
-                               get_sim = FALSE, draw_sample_frac=0.25)
-  acc11 <- compute_acc(pred11$acc) %>% mutate(model = "FoMo 1.1")
-  
-  rm(m11, t11, pred11)
-  
-  return(bind_rows(acc10, acc11) %>%
-           mutate(data = dataset))
+  return(dout)
   
  }
 
 ############################################################################
 
-for (ds in datasets)
-{
+for (ds in datasets) {
+  
   d_acc_c2022 <- compare_FoMo_accuracy(ds)
   write_csv(d_acc_c2022, paste0("scratch/post_acc_", ds, ".csv"))
 }
@@ -58,7 +59,7 @@ for (ds in datasets)
 # compute simulated run statistics
 ############################################################################
 
-for (model_ver in c("1_0", "1_1")) {
+for (model_ver in c("1_0", "1_1", "1_2")) {
   
   rl <- tibble()
   
@@ -98,7 +99,7 @@ for (model_ver in c("1_0", "1_1")) {
 # compute simulated iisv statistics
 ############################################################################
 
-for (model_ver in c("1_0", "1_1")) {
+for (model_ver in c("1_0", "1_1", "1_2")) {
   
   iisv <- tibble()
   
