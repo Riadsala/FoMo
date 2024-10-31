@@ -199,7 +199,7 @@ model {
     z = Z[t];
     x = X[t];
 
-    # note, we're using delta_n here rather than delta
+    // note, we're using delta_n here rather than delta
     weights = compute_weights(
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
       to_vector(item_class[t]), S[ii], delta_n[ii], psi[ii],
