@@ -92,7 +92,6 @@ rm(get_acc)
 #| label: compute-all_acc
 #| cache: true
 
-
 # combine this with baseline
 d_acc %>% bind_rows(baseline) %>%
   mutate(model = factor(model),
@@ -116,10 +115,9 @@ d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
 
 # write a helpful wrapper function
 
-get_plot <- function(d, dataaset, modelver) {
+get_plot <- function(d, dataset, modelver) {
   
-    
-  m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+  m <- readRDS(paste0("scratch/", dataset, "_train_", modelver, ".model"))
   post <- extract_post(m, d)
   plt <- plot_model_fixed(post)
   
@@ -130,47 +128,19 @@ get_plot <- function(d, dataaset, modelver) {
 ```
 
 
-
 ## kristjansson2014plos
 
 ```{r}
-#| warning: false
-#| echo: false
 
-d <- import_data("kristjansson2014plos")
+dataset <- "kristjansson2014plos"
+d <- import_data(dataset)
 
+get_plot(d, "kristjansson2014plos", "1_0") / 
+  get_plot(d, "kristjansson2014plos", "1_1")  / 
+  get_plot(d, "kristjansson2014plos", "1_2") + 
+  plot_layout(guides = "collect")
 
-m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
-post <- extract_post(m, d)
-plt11 <- plot_model_fixed(post)
-
-plot_model_fixed(post)
 ```
-
-## clarke2022qjep
-
-```{r}
-#| warning: false
-#| echo: false
-
-# d <- import_data("clarke2022qjep")
-# m <- readRDS("scratch/clarke2022qjep_train_1_0.model")
-# post <- extract_post(m, d)
-# plot_model_fixed(post)
-```
-
-## tagu2022cog
-
-```{r}
-#| warning: false
-#| echo: false
-
-d <- import_data("tagu2022cog")
-m <- readRDS("scratch/tagu2022cog_train_1_0.model")
-post <- extract_post(m, d)
-plot_model_fixed(post)
-```
-
 
 
 # Posterior Predictions
@@ -195,46 +165,23 @@ bind_rows(rl10, rl11) %>%
 
 ## Inter-Item Selection Distance
 
-### FoMo 1.0
 
 ```{r}
-iisv <- read_csv("scratch/iisv_statistics1_0.csv")
+iisv <- bind_rows(
+  read_csv("scratch/iisv_statistics1_0.csv") %>% mutate(model = "1.0"),
+  read_csv("scratch/iisv_statistics1_1.csv") %>% mutate(model = "1.1"))
 
 iisv %>%
- ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
-  geom_path(aes(colour = x)) + 
-  geom_ribbon(alpha = 0.33) + 
-  facet_wrap(condition ~ dataset) +
+ ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, linetype = x, group = interaction(x, condition, .width)))  +
+  geom_path(aes(colour = condition)) + 
+  #geom_ribbon(alpha = 0.33) + 
+  facet_wrap(dataset ~ model) +
   theme(legend.title = element_blank()) + 
   scale_y_log10()
 ```
 
-
-### FoMo 1.1
-
-```{r}
-iisv <- read_csv("scratch/iisv_statistics1_1.csv")
-
-iisv %>%
- ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
-  geom_path(aes(colour = x)) + 
-  geom_ribbon(alpha = 0.33) + 
-  facet_wrap(condition ~ dataset) +
-  theme(legend.title = element_blank()) + 
-  scale_y_log10()
-```
+## Inter-Item Selection Relative Directions
 
 
-### FoMo 1.2
 
-```{r}
-iisv <- read_csv("scratch/iisv_statistics1_2.csv")
 
-iisv %>%
- ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
-  geom_path(aes(colour = x)) + 
-  geom_ribbon(alpha = 0.33) + 
-  facet_wrap(condition ~ dataset) +
-  theme(legend.title = element_blank()) + 
-  scale_y_log10()
-```
