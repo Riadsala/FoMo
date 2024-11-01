@@ -108,46 +108,43 @@ d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
 
 ## ELPD? 
 
-# Posterior Densities
+
+# Model checking
+
+Did the mcmc sampling work ok? 
 
 ```{r}
-#| warning: false
-#| echo: false
 
-# write a helpful wrapper function
-
-get_plot <- function(d, dataaset, modelver) {
-  
-    
-  m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
-  post <- extract_post(m, d)
-  plt <- plot_model_fixed(post)
-  
-  return(plt)
-  
-}
-
+#  m <- readRDS("scratch/tagu2022cog_train_1_0.model")
+# d <- import_data("tagu2022cog")
+# diagnostic checks
+# m$diagnostic_summary()
+# 
+# # traceplots
+# bayesplot::mcmc_trace(m$draws(),
+#                       pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+#                                "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+#                       facet_args = list(nrow = 2))
 ```
 
 
+# Posterior Densities
 
-## kristjansson2014plos
+## FoMo 1.0
+
+### kristjansson2014plos
 
 ```{r}
 #| warning: false
 #| echo: false
 
 d <- import_data("kristjansson2014plos")
-
-
-m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
+m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
 post <- extract_post(m, d)
-plt11 <- plot_model_fixed(post)
-
 plot_model_fixed(post)
 ```
 
-## clarke2022qjep
+### clarke2022qjep
 
 ```{r}
 #| warning: false
@@ -159,7 +156,7 @@ plot_model_fixed(post)
 # plot_model_fixed(post)
 ```
 
-## tagu2022cog
+### tagu2022cog
 
 ```{r}
 #| warning: false
@@ -172,6 +169,57 @@ plot_model_fixed(post)
 ```
 
 
+## FoMo 1.1
+
+### kristjansson2014plos
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
+
+### clarke2022qjep
+
+```{r}
+#| warning: false
+#| echo: false
+
+# d <- import_data("clarke2022qjep")
+# m <- readRDS("scratch/clarke2022qjep_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
+```
+
+### tagu2022cog
+
+```{r}
+#| warning: false
+#| echo: false
+
+# d <- import_data("tagu2022cog")
+# m <- readRDS("scratch/tagu2022cog_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
+```
+
+## FoMo 1.2
+
+### kristjansson2014plos
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_2.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
 
 # Posterior Predictions
 

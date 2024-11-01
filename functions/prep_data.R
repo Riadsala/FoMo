@@ -130,7 +130,6 @@ prep_data_for_stan <- function(df, ds, model_components = "spatial",
 
     df %>%
       filter(found != max(found)) -> df
-
   }
 
   # extract stimulus parameters
