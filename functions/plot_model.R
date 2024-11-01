@@ -1,6 +1,7 @@
 library(tidyverse)
 library(patchwork)
 library(tidybayes)
+library(hrbrthemes)
 
 # plotting our foraging model
 
@@ -14,7 +15,7 @@ library(tidybayes)
 # MORE sample_beta() to post_functions ???
 # plot_model_spatial () will need fixed at some point
 
-theme_set(theme_minimal())
+theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
@@ -139,7 +140,7 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL)
   
   # assemble the plots!
   plt <- wrap_plots(plts, nrow = 1) + 
-    plot_layout(guides = "collect")
+    plot_layout(guides = "collect", axis_titles = "collect")
   
   return(plt)
 }
@@ -178,6 +179,7 @@ plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   
   # get prior HDPI
   prior %>% 
+    as_tibble() %>%
     median_hdci(get(prior_var), .width = c(0.53, 0.97)) -> prior_hpdi
   
   post %>% 
