@@ -11,9 +11,6 @@ source("../../functions/sim_foraging_data.R")
 
 options(mc.cores =4, digits = 2)
 
-# set global ggplot theme
-theme_set(ggthemes::theme_tufte())
-
 ############################################################################
 datasets <- c("kristjansson2014plos") #, "tagu2022cog", "clarke2022qjep"
 ############################################################################
