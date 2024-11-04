@@ -108,7 +108,7 @@ for (model_ver in c("1_0", "1_1", "1_2")) {
     
     # get simulation data for model
     pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.001)
+                               get_sim = TRUE, draw_sample_frac = 0.001) 
     
     # compute empirical run statistics
     iisve <- get_iisv_over_trials(d$found) %>%
@@ -116,7 +116,9 @@ for (model_ver in c("1_0", "1_1", "1_2")) {
       median_hdci(d2)
     
     # compute simulated run statistics
-    iisvp <- get_iisv_over_trials(pred$sim) %>%
+    iisvp <- get_iisv_over_trials(pred$sim %>%
+                                    # it would be great to remove this line
+                                    filter(is.finite(x))) %>%
       group_by(condition, found) %>%
       median_hdci(d2, .width = c(0.53, 0.97))
     

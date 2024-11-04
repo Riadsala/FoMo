@@ -149,6 +149,9 @@ Compare run statistics and inter-item-selection-vectors
 ## Run Statistics
 
 ```{r}
+#| fig-height: 5
+
+
 rl10 <- read_csv("scratch/run_statistics1_0.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
 rl11 <- read_csv("scratch/run_statistics1_1.csv", 
@@ -158,7 +161,8 @@ bind_rows(rl10, rl11) %>%
  ggplot(aes(observed, predicted, colour = condition))  +
   geom_point() + 
   geom_abline(linetype = 2) + 
-  facet_wrap(model ~ dataset)
+  facet_grid(model ~ dataset) + 
+  coord_cartesian()
 ```
 
 
@@ -166,6 +170,9 @@ bind_rows(rl10, rl11) %>%
 
 
 ```{r}
+#| fig-height: 5
+#|
+
 iisv <- bind_rows(
   read_csv("scratch/iisv_statistics1_0.csv") %>% mutate(model = "1.0"),
   read_csv("scratch/iisv_statistics1_1.csv") %>% mutate(model = "1.1"))
@@ -174,7 +181,7 @@ iisv %>%
  ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, linetype = x, group = interaction(x, condition, .width)))  +
   geom_path(aes(colour = condition)) + 
   #geom_ribbon(alpha = 0.33) + 
-  facet_wrap(dataset ~ model) +
+  facet_grid(dataset ~ model) +
   theme(legend.title = element_blank()) + 
   scale_y_log10()
 ```
