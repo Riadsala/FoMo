@@ -195,8 +195,7 @@ iisv %>%
   facet_grid(dataset ~ model) +
   theme(legend.title = element_blank()) + 
   scale_y_log10()
-
 ```
 
-
+## Inter-Item Selection Absolute Directions
 
