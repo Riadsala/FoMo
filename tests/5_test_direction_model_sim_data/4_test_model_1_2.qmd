@@ -1,0 +1,120 @@
+---
+title: "4. Testing 1.2 on simulated data"
+format: html
+editor: source
+---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 1)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+```
+
+- **Model 1.2**: here we add in a component that allows for an absolute direction bias i.e. a bias for moving horizontally, or vertically. In this version, kappa is a hyperparameter.
+
+
+## Model 1.2
+
+Start with a simple model.
+
+```{r}
+
+n_trials_per_cond <- 10
+
+n_item_class <- 2
+n_item_per_class <- 20
+item_class_weights = c(0.7, 0.3, 0, 0)
+b_stick = 2
+b_memory = 0
+
+abs_dir_tuning = list(kappa = rep(20, 4), theta = c(2, 0.5, 1, 0.5))
+rho_delta = 10
+rho_psi = 5
+
+d1 <- sim_foraging_multiple_trials(person = 1, 
+                                  condition = "test",
+                                  n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
+                                  item_class_weights = item_class_weights, item_labels = item_labels,
+                                  b_stick = b_stick, 
+                                  rho_delta = rho_delta, 
+                                  rho_psi = rho_psi, 
+                                  abs_dir_tuning = abs_dir_tuning,
+                                  b_memory = b_memory,
+                                  inital_sel_params = inital_sel_params,
+                                  init_sel_lambda = init_sel_lambda)
+
+
+# add priors to list
+d1_list$prior_mu_b_a <- 0
+d1_list$prior_sd_b_a <- 0.5
+d1_list$prior_mu_b_stick <- 0
+d1_list$prior_sd_b_stick <- 1
+d1_list$prior_mu_rho_delta <- 15
+d1_list$prior_sd_rho_delta <- 5
+d1_list$prior_mu_rho_psi <- 0
+d1_list$prior_sd_rho_psi <- 1
+d1_list$n_trials_to_sim <- 10
+d1_list$prior_theta_lambda <- 10
+d1_list$kappa <- 10
+
+iter = 100
+
+```
+
+```{r}
+
+mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+                     cpp_options = list(stan_threads = TRUE), force_recompile = TRUE)
+# run model
+m_simple_1_2 <- mod$sample(data = d1_list, 
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 0, 
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3)
+
+#m_simple_1_2$save_object("scratch/simple_1_2_tmp.rds")
+
+```
+
+The data was simulated with absolute direction biases - does this mean that 1.2 is a better model for the data? According to this, yes.
+
+```{r, warning = FALSE}
+
+#m_simple_1_0 <- readRDS("scratch/simple_1_0_tmp.rds")
+#m_simple_1_1 <- readRDS("scratch/simple_1_1_tmp.rds")
+#m_simple_1_2 <- readRDS("scratch/simple_1_2_tmp.rds")
+
+#loo_1_2 <- m_simple_1_2$loo()
+#loo_1_1 <- m_simple_1_1$loo()
+#loo_1_0 <- m_simple_1_0$loo()
+
+#loo_1_2_mm <- m_simple_1_2$loo(moment_match = TRUE)
+#loo_1_1_mm <- m_simple_1_1$loo(moment_match = TRUE)
+#loo_1_0_mm <- m_simple_1_0$loo(moment_match = TRUE)
+
+#saveRDS(loo_1_2_mm, "scratch/loo_1_2_mm.rds")
+#saveRDS(loo_1_0_mm, "scratch/loo_1_0_mm.rds")
+#saveRDS(loo_1_1_mm, "scratch/loo_1_1_mm.rds")
+
+loo_1_0_mm <- readRDS("scratch/loo_1_0_mm.rds")
+loo_1_1_mm <- readRDS("scratch/loo_1_1_mm.rds")
+loo_1_2_mm <- readRDS("scratch/loo_1_2_mm.rds")
+
+loo::loo_model_weights(list(
+  "model 1.2" = loo_1_2_mm,
+  "model 1.1" = loo_1_1_mm,
+  "model 1.0" = loo_1_0_mm))
+
+```

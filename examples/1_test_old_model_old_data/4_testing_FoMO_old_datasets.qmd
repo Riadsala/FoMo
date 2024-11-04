@@ -1,0 +1,288 @@
+---
+title: "3 Results using Existing Data"
+format: 
+  html:
+    fig-height: 3
+editor: source
+---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 1, digits = 2)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+```
+
+these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
+
+We then compute accuracy for each model using script `2_`
+
+# Which model fits best 
+
+We are evaluating using the following datasets:
+
+```{r}
+datasets <- c("kristjansson2014plos")
+```
+
+## Prediction Accuracy
+
+Compute chance base-rates for each dataset
+
+- Should these calculations include initial and last selection?
+
+```{r}
+
+baseline <- tibble()
+
+for (dataset in datasets) {
+  
+  d <- import_data(dataset)
+  
+  d$stim %>% group_by(person, trial) %>%
+    summarise(n = n(), .groups = "drop") -> dn
+  
+  items <- seq(1, unique(dn$n))
+  items_left <- unique(dn$n) - items + 1
+  
+  n_conditions <- length(levels(d$stim$condition))
+  
+  d_baseline <- tibble(data = rep(dataset, n_conditions),
+                       condition = levels(d$stim$condition),
+                       accuracy = rep(mean(1/items_left), n_conditions))
+  
+  baseline <- bind_rows(baseline, d_baseline)
+}
+
+baseline <- bind_rows(baseline %>% mutate(split = "training"),
+                      baseline %>% mutate(split = "testing")) %>%
+  mutate(model = "baseline")
+
+rm(d, items, items_left)
+```
+
+Now get all the pre-computed training/test split accuracies
+
+```{r}
+get_acc <- function(dataset) {
+
+  acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
+                  show_col_types = FALSE)
+  return(acc)
+
+}
+
+d_acc <- map_df(datasets, get_acc)
+
+rm(get_acc)
+```
+
+```{r}
+#| label: compute-all_acc
+#| cache: true
+
+
+# combine this with baseline
+d_acc %>% bind_rows(baseline) %>%
+  mutate(model = factor(model),
+                split = factor(split, levels = c("training", "testing"))) -> d_acc
+
+d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
+                     ymin = .lower, ymax = .upper)) +
+  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+  geom_line(aes(x = as.numeric(as_factor(model)))) +
+  facet_grid(.~split) +
+  scale_color_viridis_d("dataset - condition")
+```
+
+## ELPD? 
+
+
+# Model checking
+
+Did the mcmc sampling work ok? 
+
+```{r}
+
+#  m <- readRDS("scratch/tagu2022cog_train_1_0.model")
+# d <- import_data("tagu2022cog")
+# diagnostic checks
+# m$diagnostic_summary()
+# 
+# # traceplots
+# bayesplot::mcmc_trace(m$draws(),
+#                       pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+#                                "rho_delta[1]", "rho_delta[2]", "rho_psi[1]", "rho_psi[2]"),
+#                       facet_args = list(nrow = 2))
+```
+
+
+# Posterior Densities
+
+## FoMo 1.0
+
+### kristjansson2014plos
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_0.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
+
+### clarke2022qjep
+
+```{r}
+#| warning: false
+#| echo: false
+
+# d <- import_data("clarke2022qjep")
+# m <- readRDS("scratch/clarke2022qjep_train_1_0.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
+```
+
+### tagu2022cog
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("tagu2022cog")
+m <- readRDS("scratch/tagu2022cog_train_1_0.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
+
+
+## FoMo 1.1
+
+### kristjansson2014plos
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_1.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
+
+### clarke2022qjep
+
+```{r}
+#| warning: false
+#| echo: false
+
+# d <- import_data("clarke2022qjep")
+# m <- readRDS("scratch/clarke2022qjep_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
+```
+
+### tagu2022cog
+
+```{r}
+#| warning: false
+#| echo: false
+
+# d <- import_data("tagu2022cog")
+# m <- readRDS("scratch/tagu2022cog_train_1_1.model")
+# post <- extract_post(m, d)
+# plot_model_fixed(post)
+```
+
+## FoMo 1.2
+
+### kristjansson2014plos
+
+```{r}
+#| warning: false
+#| echo: false
+
+d <- import_data("kristjansson2014plos")
+m <- readRDS("scratch/kristjansson2014plos_train_1_2.model")
+post <- extract_post(m, d)
+plot_model_fixed(post)
+```
+
+# Posterior Predictions
+
+Compare run statistics and inter-item-selection-vectors
+
+## Run Statistics
+
+```{r}
+rl10 <- read_csv("scratch/run_statistics1_0.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
+rl11 <- read_csv("scratch/run_statistics1_1.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.1")
+
+bind_rows(rl10, rl11) %>%
+ ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() + 
+  geom_abline(linetype = 2) + 
+  facet_wrap(model ~ dataset)
+```
+
+
+## Inter-Item Selection Distance
+
+### FoMo 1.0
+
+```{r}
+iisv <- read_csv("scratch/iisv_statistics1_0.csv")
+
+iisv %>%
+ ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
+  geom_path(aes(colour = x)) + 
+  geom_ribbon(alpha = 0.33) + 
+  facet_wrap(condition ~ dataset) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+```
+
+
+### FoMo 1.1
+
+```{r}
+iisv <- read_csv("scratch/iisv_statistics1_1.csv")
+
+iisv %>%
+ ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
+  geom_path(aes(colour = x)) + 
+  geom_ribbon(alpha = 0.33) + 
+  facet_wrap(condition ~ dataset) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+```
+
+
+### FoMo 1.2
+
+```{r}
+iisv <- read_csv("scratch/iisv_statistics1_2.csv")
+
+iisv %>%
+ ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  +
+  geom_path(aes(colour = x)) + 
+  geom_ribbon(alpha = 0.33) + 
+  facet_wrap(condition ~ dataset) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+```

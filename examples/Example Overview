@@ -1,15 +1,6 @@
 FoMo Overview
 
 
-1: Testing our simulation code
-2: Testing 1.0 and 1.1 against sim data
-3: Testing 1.0 and 1.1 against real data
-
-----------------------------------------
-
-4: Weight memory, FoMo 1.2 sim & real
-
-----------------------------------------
-
-5: Directions: Testing against sim data
-6: Directions: Testing against real data
+1: Testing FoMo 1.0 - 1.2 (multi-level) on real data
+2: Testing FoMo 1.3 - 1.x (single level) on real data
+3: Testing FoMo 1.3 - 1.x (multi-level) on real data
