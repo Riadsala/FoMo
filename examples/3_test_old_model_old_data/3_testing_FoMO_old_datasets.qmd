@@ -151,7 +151,6 @@ Compare run statistics and inter-item-selection-vectors
 ```{r}
 #| fig-height: 5
 
-
 rl10 <- read_csv("scratch/run_statistics1_0.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
 rl11 <- read_csv("scratch/run_statistics1_1.csv", 
@@ -168,7 +167,6 @@ bind_rows(rl10, rl11) %>%
 
 ## Inter-Item Selection Distance
 
-
 ```{r}
 #| fig-height: 5
 #|
@@ -178,9 +176,10 @@ iisv <- bind_rows(
   read_csv("scratch/iisv_statistics1_1.csv") %>% mutate(model = "1.1"))
 
 iisv %>%
- ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, linetype = x, group = interaction(x, condition, .width)))  +
+  group_by(condition, found, x, model, dataset) %>%
+  summarise(d2 = mean(d2)) %>%
+ ggplot(aes(found, y = d2, linetype = x, group = interaction(x, condition)))  +
   geom_path(aes(colour = condition)) + 
-  #geom_ribbon(alpha = 0.33) + 
   facet_grid(dataset ~ model) +
   theme(legend.title = element_blank()) + 
   scale_y_log10()
@@ -188,6 +187,16 @@ iisv %>%
 
 ## Inter-Item Selection Relative Directions
 
+```{r}
+
+iisv %>%
+  ggplot(aes(psi, linetype = x, group = interaction(x, condition)))  +
+  geom_density(aes(colour = condition)) + 
+  facet_grid(dataset ~ model) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+
+```
 
 
 
