@@ -33,7 +33,7 @@ We then compute accuracy for each model using script `2_`
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos")
+datasets <- c("kristjansson2014plos", "tagu2022cog")
 ```
 
 ## Prediction Accuracy
@@ -90,7 +90,6 @@ rm(get_acc)
 
 ```{r}
 #| label: compute-all_acc
-#| cache: true
 
 # combine this with baseline
 d_acc %>% bind_rows(baseline) %>%

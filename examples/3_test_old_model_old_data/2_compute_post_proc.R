@@ -12,7 +12,7 @@ source("../../functions/sim_foraging_data.R")
 options(mc.cores =4, digits = 2)
 
 ############################################################################
-datasets <- c("kristjansson2014plos") #, "tagu2022cog", "clarke2022qjep"
+datasets <- c("kristjansson2014plos", "tagu2022cog") #, "clarke2022qjep"
 ############################################################################
 
 # wrapper function for computing train/test accuracy
