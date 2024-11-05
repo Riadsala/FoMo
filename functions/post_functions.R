@@ -310,13 +310,13 @@ compute_acc <- function(acc) {
     
     acc %>% 
       filter(found != 1) %>%
-      group_by(split, condition, .draw, person, trial) -> acc
+      group_by(split, condition, found, .draw, person, trial) -> acc
     
   } else {
     
     acc %>% 
       filter(found != 1) %>%
-      group_by(condition, .draw, person, trial) -> acc
+      group_by(condition, found, .draw, person, trial) -> acc
     
   }
   
