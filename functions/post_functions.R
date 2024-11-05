@@ -222,26 +222,18 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       
       col_names <- c("person", "condition", "trial")
       
-    } else {
-      
-      col_names <- c("condition", "trial")
-      
-    }
-    
-    sim_trials %>%
-      separate(name,
-               col_names, 
-               sep = ",", convert = TRUE) %>%
-      mutate(trial = parse_number(trial),
-             condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
-    sim %>%
-      separate(name, 
-               c(col_names, "found"), 
-               sep = ",", convert = TRUE) %>%
-      mutate(found = parse_number(found),
-             condition = factor(condition, labels = unique(d$stim$condition))) -> sim
-    
-    if (multi_level == TRUE) {
+      sim_trials %>%
+        separate(name,
+                 col_names, 
+                 sep = ",", convert = TRUE) %>%
+        mutate(trial = parse_number(trial),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+      sim %>%
+        separate(name, 
+                 c(col_names, "found"), 
+                 sep = ",", convert = TRUE) %>%
+        mutate(found = parse_number(found),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
       
       sim %>% 
         mutate(person = parse_number(person)) -> sim
@@ -249,14 +241,41 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       sim_trials %>%
         mutate(person = parse_number(person)) -> sim_trials
       
+      # fix trial numbers
+      full_join(sim, sim_trials, by = col_names) %>%
+        select(-trial) %>%
+        rename(trial = "trial_id") -> sim
+      
+      rm(sim_trials)
+      
+    } else {
+      
+      col_names <- c("condition", "trial")
+      
+      sim_trials %>%
+        separate(name,
+                 col_names, 
+                 sep = ",", convert = TRUE) %>%
+        mutate(trial = parse_number(trial),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+      
+      sim %>%
+        separate(name, 
+                 c(col_names, "found"), 
+                 sep = ",", convert = TRUE) %>%
+        mutate(found = parse_number(found),
+               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+      
+      # fix trial numbers
+      full_join(sim, sim_trials, by = col_names) %>%
+        select(-trial) %>%
+        rename(trial = "trial_id") %>%
+        mutate(person = 1) -> sim
+      
+      rm(sim_trials)
+      
     }
     
-    # fix trial numbers
-    full_join(sim, sim_trials, by = col_names) %>%
-      select(-trial) %>%
-      rename(trial = "trial_id") -> sim
-    
-    rm(sim_trials)
     
     if (unique(class(m)=="list")) {
     
