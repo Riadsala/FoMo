@@ -40,16 +40,14 @@ functions {
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
     vector[n_targets] prox_weights;
-    vector[n_targets] reldir_weights;
-
+  
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
-    reldir_weights = compute_reldir_weights(n, n_targets, 
-                                 rho_psi, psi);
+
 
     // return the dot product of the weights
-    return(prox_weights + reldir_weights);
+    return(prox_weights);
 
   }
 }
