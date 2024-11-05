@@ -85,8 +85,6 @@ data {
   real prior_sd_b_stick; // prior for sd for bS
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
-  real prior_mu_rho_psi;
-  real prior_sd_rho_psi;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;

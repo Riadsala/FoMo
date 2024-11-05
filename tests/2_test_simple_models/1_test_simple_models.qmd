@@ -320,13 +320,15 @@ plot_model_human_iisv_comparison(pred, dr)
 
 ## Model 1.2
 
-We will use the `dr` dataset.
+We will use the `d1` dataset.
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
+rho_delta = 10
+
 mod <- cmdstan_model("../../models/simple/FoMo1_2.stan")
 
-m_simple_1_2 <- mod$sample(data = dr_list, 
+m_simple_1_2 <- mod$sample(data = d1_list, 
                   chains = 4, parallel_chains = 4, threads = 4,
                   refresh = 0, 
                   iter_warmup = iter, iter_sampling = iter,
@@ -346,7 +348,7 @@ We can then extract posterior samples.
 m_simple_1_2 <- readRDS("scratch/simple_1_2_tmp.rds")
 
 # extract post
-post <- extract_post(m_simple_1_2, dr, multi_level = FALSE)
+post <- extract_post(m_simple_1_2, d1, multi_level = FALSE)
 
 ```
 
@@ -369,7 +371,7 @@ We can assess model accuracy i.e. how well can it predict the next target chosen
 
 ```{r, warning = FALSE}
 
-pred <- summarise_postpred(m_simple_1_2, dr, multi_level = FALSE, draw_sample_frac = 0.1)
+pred <- summarise_postpred(m_simple_1_2, d1, multi_level = FALSE, draw_sample_frac = 0.1)
 
 plot_model_accuracy(pred)
 
@@ -382,8 +384,8 @@ plot_model_accuracy(pred)
 
 # plot comparison between a real and simulated trial
 
-pltreal <- plot_a_trial(dr$stim, dr$found, 1)
-pltsim <- plot_a_trial(dr$stim, pred$sim , trial = 1)
+pltreal <- plot_a_trial(d1$stim, d1$found, 1)
+pltsim <- plot_a_trial(d1$stim, pred$sim , trial = 1)
 
 pltreal + pltsim
 
@@ -402,7 +404,7 @@ simple_run_stat_comparison(runs_emp, pred)
 What about the inter-item selection vectors?
 
 ```{r}
-plot_model_human_iisv_comparison(pred, dr)
+plot_model_human_iisv_comparison(pred, d1)
 
 ```
 
@@ -413,11 +415,6 @@ We will use the `dr` dataset. Trials 1-5 will be used as the training dataset.
 
 Our data was generated using relative proximity and relative direction, so we expect model 1.1 to do the best job (and we see this when we use `loo_compare`).
 
-## Model comparison
-
-We will use the `dr` dataset. Trials 1-5 will be used as the training dataset.
-
-Our data was generated using relative proximity and relative direction, so we expect model 1.1 to do the best job (and we see this when we use `loo_compare`).
 
 ```{r, message = FALSE, warning = FALSE, results = "hide"}
 
