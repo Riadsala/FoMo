@@ -136,10 +136,7 @@ model {
 
   // some IDs for trial, condition, and condition
   int t, x; 
-
-  //////////////////////////////////////////////////
-  // // step through data row by row and define LLH
-  //////////////////////////////////////////////////  
+ 
   for (ii in 1:N) {
 
     t = trial[ii];
@@ -152,11 +149,11 @@ model {
 
     target += log(weights[Y[ii]]);
 
-   
   }
 }
 
 generated quantities {
+  
   // here we  can output our prior distritions
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
   real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
