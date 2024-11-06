@@ -327,6 +327,12 @@ compute_acc <- function(acc) {
     median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
     select(-.interval, -.point) -> acc
   
+  if ("split" %in% names(acc)) {
+    
+    acc %>%  mutate(split = factor(split, levels = c("training", "testing"))) -> acc
+    
+  }
+  
   return(acc)
   
   

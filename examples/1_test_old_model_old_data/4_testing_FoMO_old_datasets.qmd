@@ -38,40 +38,31 @@ dataset   <- "tagu2022cog"
 
 
 ```{r}
+# read in data
 d <- import_data(dataset)
+
+# read in model and predictions for test data
 m <- read_rds(paste0("scratch/", dataset, "_train_", model_ver, ".model"))
 t <- read_rds(paste0("scratch/", dataset, "_test_", model_ver, ".model"))
-
 ```
 
-
 # How well does the model fit?
-
-We are evaluating using the following datasets:
 
 ## Prediction Accuracy
 
 Compute chance base-rates for each dataset
 ```{r}
-
-
-
-  d <- import_data(dataset)
+d$stim %>% group_by(person, trial) %>%
+  summarise(n = n(), .groups = "drop") -> dn
   
-  d$stim %>% group_by(person, trial) %>%
-    summarise(n = n(), .groups = "drop") -> dn
+items <- seq(1, unique(dn$n))
+items_left <- unique(dn$n) - items + 1
   
-  items <- seq(1, unique(dn$n))
-  items_left <- unique(dn$n) - items + 1
+n_conditions <- length(levels(d$stim$condition))
   
-  n_conditions <- length(levels(d$stim$condition))
+baseline <- tibble(found = 1:unique(dn$n),
+                   accuracy = (1/items_left))
   
-  baseline <- tibble(data = dataset,
-                     found = 1:unique(dn$n),
-                     accuracy = (1/items_left))
-  
-
-
 rm(items, items_left)
 ```
 
@@ -82,23 +73,18 @@ rm(items, items_left)
 
 pred <- summarise_postpred(list(training = m, testing = t), d, 
                                  get_sim = FALSE, draw_sample_frac=0.25)
-acc <- compute_acc(pred$acc) %>% mutate(model = paste("FoMo",  model_ver))
+acc <- compute_acc(pred$acc)
 
-# combine this with baseline
-acc %>% 
-  mutate(model = factor(model),
-                split = factor(split, levels = c("training", "testing"))) -> d_acc
-
-d_acc %>% ggplot(aes(found, accuracy, colour = condition,
-                     ymin = .lower, ymax = .upper)) +
+acc %>% ggplot(aes(found, accuracy, fill = condition, colour = condition,
+                     ymin = .lower, ymax = .upper,
+                  group = interaction(condition, .width))) +
   geom_lineribbon(alpha = 0.5) +
-  geom_line(aes(x = as.numeric(as_factor(model)))) +
   facet_grid(.~split) +
-  scale_color_viridis_d("dataset - condition")
+  scale_color_viridis_d() + 
+  scale_fill_viridis_d()
 ```
 
 ## ELPD? 
-
 
 # Model checking
 
