@@ -33,7 +33,7 @@ Here we provide more in depth analysis on how well a particular model fits a giv
 
 ```{r}
 model_ver <- "1_2"
-dataset   <- "tagu2022cog"
+dataset   <- "kristjansson2014plos"
 ```
 
 
@@ -75,10 +75,12 @@ pred <- summarise_postpred(list(training = m, testing = t), d,
                                  get_sim = FALSE, draw_sample_frac=0.25)
 acc <- compute_acc(pred$acc)
 
-acc %>% ggplot(aes(found, accuracy, fill = condition, colour = condition,
+acc %>% ggplot(aes(found, accuracy)) +
+  geom_lineribbon(aes(fill = condition, colour = condition,
                      ymin = .lower, ymax = .upper,
-                  group = interaction(condition, .width))) +
-  geom_lineribbon(alpha = 0.5) +
+                  group = interaction(condition, .width)), 
+                  alpha = 0.5) +
+  geom_path(data = baseline, linetype = 2, colour = "black") +
   facet_grid(.~split) +
   scale_color_viridis_d() + 
   scale_fill_viridis_d()
@@ -96,10 +98,10 @@ Did the mcmc sampling work ok?
 # m$diagnostic_summary()
 # 
 # traceplots
- bayesplot::mcmc_trace(m$draws(),
-                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
-                                "rho_delta[1]", "rho_delta[2]"),  #, "rho_psi[1]", "rho_psi[2]"
-                      facet_args = list(nrow = 2))
+ # bayesplot::mcmc_trace(m$draws(),
+ #                      pars = c("b_a[1]", "b_a[2]", "b_stick[1]", "b_stick[2]", 
+ #                                "rho_delta[1]", "rho_delta[2]"),  #, "rho_psi[1]", "rho_psi[2]"
+ #                      facet_args = list(nrow = 2))
 ```
 
 
@@ -114,68 +116,38 @@ post <- extract_post(m, d)
 plot_model_fixed(post)
 ```
 
-<!-- # Posterior Predictions -->
+# Posterior Predictions
 
-<!-- Compare run statistics and inter-item-selection-vectors -->
+Compare run statistics and inter-item-selection-vectors.
 
-<!-- ## Run Statistics -->
+```{r}
+read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
+         show_col_types = FALSE) %>%
+  filter(dataset == {{dataset}}) %>%
+  ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() +
+  geom_abline(linetype = 2) +
+  scale_x_continuous("observed run length") + 
+  scale_y_continuous("predicted run length") + 
+  ggtitle("Run Statistics") -> plt_rl
+```
 
-<!-- ```{r} -->
-<!-- rl10 <- read_csv("scratch/run_statistics1_0.csv",  -->
-<!--                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.0") -->
-<!-- rl11 <- read_csv("scratch/run_statistics1_1.csv",  -->
-<!--                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.1") -->
+```{r}
+read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
+                 show_col_types = FALSE) %>%
+  filter(dataset == {{dataset}}) %>%
+  mutate(d = sqrt(d2)) %>%
+  group_by(condition, found, x) %>%
+  median_hdci(d, .width = c(0.53, 0.97)) %>%
+  ggplot(aes(found, y = d, ymin = .lower, ymax = .upper, 
+             fill = x, group = interaction(x, .width)))  +
+  geom_path(aes(colour = x)) +
+  geom_ribbon(alpha = 0.33) +
+  facet_wrap(condition ~ .) +
+  theme(legend.title = element_blank()) -> plt_iisv_delta
+```
 
-<!-- bind_rows(rl10, rl11) %>% -->
-<!--  ggplot(aes(observed, predicted, colour = condition))  + -->
-<!--   geom_point() +  -->
-<!--   geom_abline(linetype = 2) +  -->
-<!--   facet_wrap(model ~ dataset) -->
-<!-- ``` -->
+```{r}
+plt_rl + plt_iisv_delta
+```
 
-
-<!-- ## Inter-Item Selection Distance -->
-
-<!-- ### FoMo 1.0 -->
-
-<!-- ```{r} -->
-<!-- iisv <- read_csv("scratch/iisv_statistics1_0.csv") -->
-
-<!-- iisv %>% -->
-<!--  ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  + -->
-<!--   geom_path(aes(colour = x)) +  -->
-<!--   geom_ribbon(alpha = 0.33) +  -->
-<!--   facet_wrap(condition ~ dataset) + -->
-<!--   theme(legend.title = element_blank()) +  -->
-<!--   scale_y_log10() -->
-<!-- ``` -->
-
-
-<!-- ### FoMo 1.1 -->
-
-<!-- ```{r} -->
-<!-- iisv <- read_csv("scratch/iisv_statistics1_1.csv") -->
-
-<!-- iisv %>% -->
-<!--  ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  + -->
-<!--   geom_path(aes(colour = x)) +  -->
-<!--   geom_ribbon(alpha = 0.33) +  -->
-<!--   facet_wrap(condition ~ dataset) + -->
-<!--   theme(legend.title = element_blank()) +  -->
-<!--   scale_y_log10() -->
-<!-- ``` -->
-
-
-<!-- ### FoMo 1.2 -->
-
-<!-- ```{r} -->
-<!-- iisv <- read_csv("scratch/iisv_statistics1_2.csv") -->
-
-<!-- iisv %>% -->
-<!--  ggplot(aes(found, y = d2, ymin = .lower, ymax = .upper, fill = x, group = interaction(x, .width)))  + -->
-<!--   geom_path(aes(colour = x)) +  -->
-<!--   geom_ribbon(alpha = 0.33) +  -->
-<!--   facet_wrap(condition ~ dataset) + -->
-<!--   theme(legend.title = element_blank()) +  -->
-<!--   scale_y_log10() -->
-<!-- ``` -->

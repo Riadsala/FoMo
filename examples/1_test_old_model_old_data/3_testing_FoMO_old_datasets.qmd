@@ -33,7 +33,7 @@ We then compute accuracy for each model using script `2_`
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog")
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos")
 ```
 
 ## Prediction Accuracy
@@ -78,7 +78,11 @@ Now get all the pre-computed training/test split accuracies
 get_acc <- function(dataset) {
 
   acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
-                  show_col_types = FALSE)
+                  show_col_types = FALSE) %>%
+    group_by(split, condition, model, data, .draw) %>%
+    summarise(accuracy = median(accuracy), .groups = "drop_last") %>%
+    median_hdci(accuracy, .width = c(0.53, 0.97))
+  
   return(acc)
 
 }
@@ -92,16 +96,17 @@ rm(get_acc)
 #| label: compute-all_acc
 
 # combine this with baseline
-d_acc %>% bind_rows(baseline) %>%
+d_acc %>% #bind_rows(baseline) %>%
   mutate(model = factor(model),
                 split = factor(split, levels = c("training", "testing"))) -> d_acc
 
-d_acc %>% ggplot(aes(model, accuracy, colour = interaction(data, condition),
+d_acc %>% ggplot(aes(model, accuracy, colour = condition,
                      ymin = .lower, ymax = .upper)) +
   geom_interval(position = position_dodge(0.1), alpha = 0.5) +
   geom_line(aes(x = as.numeric(as_factor(model)))) +
-  facet_grid(.~split) +
-  scale_color_viridis_d("dataset - condition")
+  ggh4x::facet_grid2(split~data, scales = "free_y") +
+  scale_color_viridis_d("dataset - condition") + 
+  theme(legend.position = "none")
 ```
 
 ## ELPD? 
@@ -123,9 +128,7 @@ get_plot <- function(d, dataset, modelver) {
   return(plt)
   
 }
-
 ```
-
 
 ## kristjansson2014plos
 
@@ -141,6 +144,19 @@ get_plot(d, "kristjansson2014plos", "1_0") /
 
 ```
 
+## hughes2024rsos
+
+```{r}
+
+dataset <- "hughes2024rsos"
+d <- import_data(dataset)
+
+get_plot(d, "hughes2024rsos", "1_0") / 
+  get_plot(d, "hughes2024rsos", "1_1")  / 
+  get_plot(d, "hughes2024rsos", "1_2") + 
+  plot_layout(guides = "collect")
+
+```
 
 # Posterior Predictions
 
@@ -155,13 +171,16 @@ rl10 <- read_csv("scratch/run_statistics1_0.csv",
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
 rl11 <- read_csv("scratch/run_statistics1_1.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.1")
+rl12 <- read_csv("scratch/run_statistics1_2.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.2")
 
-bind_rows(rl10, rl11) %>%
+bind_rows(rl10, rl11, rl12) %>%
  ggplot(aes(observed, predicted, colour = condition))  +
   geom_point() + 
   geom_abline(linetype = 2) + 
   facet_grid(model ~ dataset) + 
-  coord_cartesian()
+  coord_fixed() +
+  theme(legend.position = "none")
 ```
 
 
