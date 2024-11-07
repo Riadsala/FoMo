@@ -34,7 +34,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                       refresh = 10, 
                       iter_warmup = iter, iter_sampling = iter,
                       sig_figs = 3,
-                    fixed_paarm = fxdp)
+                    fixed_param = fxdp)
     
     filename_all <- paste0("scratch/", dataset, "_all_", fomo_ver_str, ".model")
     m$save_object(filename_all)
@@ -52,7 +52,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                     refresh = 0, 
                     iter_warmup = iter, iter_sampling = iter,
                     sig_figs = 3,
-                    fixed_paarm = fxdp)
+                    fixed_param = fxdp)
     
     m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
     
