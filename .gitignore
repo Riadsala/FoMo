@@ -7,3 +7,5 @@
 *.png
 *.model
 /examples/3_test_old_model_old_data/3_testing_FoMO_old_datasets_cache
+/examples/1_test_old_model_old_data/scratch
+/examples/1_test_old_model_old_data/4_testing_FoMO_old_datasets_cache
