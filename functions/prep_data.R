@@ -17,6 +17,13 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver_str, ".stan"))
   
+  # check if we are carrying out a prior model only
+  if (fomo_ver_str == "0_0") {
+    fxdp = TRUE
+  } else {
+    fxdp = FALSE
+  }
+  
   if (mode == "all") {
     
     d_list <- prep_data_for_stan(d$found, d$stim, model_components, n_trials_to_sim = n_trials_to_sim)
@@ -26,7 +33,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                       chains = 4, parallel_chains = 4, threads = 4,
                       refresh = 10, 
                       iter_warmup = iter, iter_sampling = iter,
-                      sig_figs = 3)
+                      sig_figs = 3,
+                    fixed_paarm = fxdp)
     
     filename_all <- paste0("scratch/", dataset, "_all_", fomo_ver_str, ".model")
     m$save_object(filename_all)
@@ -43,7 +51,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                     chains = 4, parallel_chains = 4, threads = 4,
                     refresh = 0, 
                     iter_warmup = iter, iter_sampling = iter,
-                    sig_figs = 3)
+                    sig_figs = 3,
+                    fixed_paarm = fxdp)
     
     m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
     

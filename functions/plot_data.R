@@ -90,7 +90,7 @@ plot_rose <- function(ds, fll=NA, binsize = 30) {
   
   plt +
     geom_histogram(breaks = seq(-nbins/2,nbins/2)*binsize,
-                   colour = "black",
+                   colour = "darkgrey",
                    alpha = 0.5,
                    position = position_identity()) + 
     scale_x_continuous(breaks = seq(-180, 180, 90)) + 
