@@ -80,8 +80,7 @@ get_acc <- function(dataset) {
   acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
                   show_col_types = FALSE) %>%
     group_by(split, condition, model, data, .draw) %>%
-    summarise(accuracy = median(accuracy), .groups = "drop_last") %>%
-    median_hdci(accuracy, .width = c(0.53, 0.97))
+    summarise(accuracy = median(accuracy), .groups = "drop_last")
   
   return(acc)
 
@@ -95,8 +94,20 @@ rm(get_acc)
 ```{r}
 #| label: compute-all_acc
 
+
+d_acc %>% 
+  ungroup() %>%
+  group_by(data, model, split) %>%
+  summarise(accuracy = mean(accuracy)) %>%
+  select(data, model, split, accuracy) %>% 
+  filter(split == "testing") %>%
+  pivot_wider(names_from = model, values_from = accuracy) %>%
+  knitr::kable()
+
+
 # combine this with baseline
-d_acc %>% #bind_rows(baseline) %>%
+d_acc %>% 
+    median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
   mutate(model = factor(model),
                 split = factor(split, levels = c("training", "testing"))) -> d_acc
 
