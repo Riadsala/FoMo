@@ -1,8 +1,8 @@
-/* FoMo V1.2 - multi-level
+/* FoMo V1.0 - multi-level
 
-Removes relative direction:
+Includes the core parameters:
 
-b_a, b_stick, rho_delta
+b_a, b_stick, rho_delta, rho_psi
 
 */
 
@@ -11,8 +11,8 @@ functions {
   #include /../include/FoMo_functions.stan
 
   vector compute_weights(
-    real u_a, real u_s, real u_delta,
-    vector item_class, vector match_prev_item, vector delta,
+    real u_a, real u_s, real u_delta, real u_psi,
+    vector item_class, vector match_prev_item, vector delta, vector psi,
     int n, int n_targets, vector remaining_items) {
 
     vector[n_targets] weights;
@@ -25,7 +25,7 @@ functions {
 
     // calculate by spatial weights
     weights += compute_spatial_weights(
-      n, n_targets, u_delta, delta);
+      n, n_targets, u_delta, u_psi, delta, psi);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -35,19 +35,21 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, vector delta) {
+    real rho_delta, real rho_psi, vector delta, vector psi) {
 
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
     vector[n_targets] prox_weights;
-
+    vector[n_targets] reldir_weights;
 
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
-  
+    reldir_weights = compute_reldir_weights(n, n_targets, 
+                                 rho_psi, psi);
+
     // return the dot product of the weights
-    return(prox_weights);
+    return(prox_weights + reldir_weights);
 
   }
 }
@@ -88,6 +90,8 @@ data {
   real prior_sd_b_stick; // prior for sd for bS
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
+  real prior_mu_rho_psi;
+  real prior_sd_rho_psi;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
@@ -101,108 +105,24 @@ transformed data{
 }
 
 parameters {
-  // These are all the parameters we want to fit to the data
-
-  ////////////////////////////////////
-  // fixed effects
-  ////////////////////////////////////
-
-  /* in order to allow for correlations between the
-  variables, these are all stored in a list
-  these include b_a, bS (stick weight), and the two spatial 
-  sigmas, along with the floor (chance of selectin an 
-  item at random)
-  */
-  array[K] real b_a; // weights for class A compared to B  
-  array[K] real b_stick; // stick-switch rates 
-  array[K] real<lower = 0> rho_delta; // distance tuning
-
-  ///////////////////////////////
-  // random effects
-  ///////////////////////////////
-  // random effect variances
-  vector<lower=0>[3*K] sigma_u;
-  // declare L_u to be the Choleski factor of a 3*Kx3*K correlation matrix
-  cholesky_factor_corr[3*K] L_u;
-  // random effect matrix
-  matrix[3*K,L] z_u; 
   
 }
 
 transformed parameters {
 
-  /* 
-  combine fixed and random effects
-  we do this here so that the code in the model{} block
-  is easier to read
-  */
-
-  // this transform random effects so that they have the correlation
-  // matrix specified by the correlation matrix above
-  matrix[3*K, L] u;
-  u = diag_pre_multiply(sigma_u, L_u) * z_u;
-
-  // add fixed and random effects together
-  // create empty arrays for everything
-  array[K] vector[L] u_a, u_stick, u_delta, u_psi;
-  // create!
-  for (kk in 1:K) {
-    u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_stick[kk]   + u[3*(kk-1)+2]);
-    u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
-  }
 }
 
 model {
 
-  /////////////////////////////////////////////////////
-  // Define Priors
-  ////////////////////////////////////////////////////
-
-  // priors for random effects
-  sigma_u ~ exponential(1);
-  L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
-  to_vector(z_u) ~ normal(0,1);
-
-  for (ii in 1:K) {
-    // priors for fixed effects
-    target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
-    target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
-    target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-  }
-
-  //////////////////////////////////////////////////
-  // // step through data row by row and define LLH
-  //////////////////////////////////////////////////  
-  vector[n_targets] weights;
-
-  // some IDs for trial, condition, and condition
-  int t, z, x; 
-
-  //////////////////////////////////////////////////
-  // // step through data row by row and define LLH
-  //////////////////////////////////////////////////  
-  for (ii in 1:N) {
-
-    t = trial[ii];
-    z = Z[t];
-    x = X[t];
- 
-    weights = compute_weights(
-      u_a[x, z], u_stick[x, z], u_delta[x, z],
-      to_vector(item_class[t]), S[ii], delta[ii],
-      found_order[ii], n_targets, remaining_items[ii]); 
-
-    target += log(weights[Y[ii]]);
   
-  }
 }
 
 generated quantities {
   // here we  can output our prior distritions
-  real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
-  real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+  real b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
+  real b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
+  real rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+  real rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 
   array[N] int P;
   array[N] real log_lik;
@@ -231,8 +151,8 @@ generated quantities {
       x = X[t];
 
       weights = compute_weights(
-        u_a[x, z], u_stick[x, z], u_delta[x, z], 
-        to_vector(item_class[t]), S[ii], delta[ii],
+        b_a, b_stick, rho_delta, rho_psi,
+        to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
       P[ii] = categorical_rng(weights);
@@ -277,19 +197,20 @@ generated quantities {
           // delta_j: distance to previously selected item
           S_j = rep_vector(0, n_targets);
           delta_j = rep_vector(1, n_targets);
+          phi_j = rep_vector(1, n_targets);
             
           if (ii > 1) {
 
             S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
-     
+            psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
+              
           }
 
           weights = compute_weights(
-            u_a[x, z], u_stick[x, z], u_delta[x, z],
-            to_vector(item_class[t]), S_j, delta_j,
+            b_a, b_stick, rho_delta, rho_psi,
+            to_vector(item_class[t]), S_j, delta_j, psi_j,
             found_order[ii], n_targets, remaining_items_j); 
-
 
           Q[z, x, ts, ii] = categorical_rng(weights);
 

@@ -133,8 +133,15 @@ read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
 ```
 
 ```{r}
-read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
-                 show_col_types = FALSE) %>%
+
+
+iisv <- read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
+                 show_col_types = FALSE)
+
+```
+
+```{r}
+iisv %>%
   filter(dataset == {{dataset}}) %>%
   mutate(d = sqrt(d2)) %>%
   group_by(condition, found, x) %>%
@@ -150,4 +157,13 @@ read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
 ```{r}
 plt_rl + plt_iisv_delta
 ```
+
+## Absolute directions
+
+```{r}
+plot_rose(iisv, binsize = 15) + facet_wrap(~x)
+```
+
+
+
 
