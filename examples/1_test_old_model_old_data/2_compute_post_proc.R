@@ -33,7 +33,9 @@ compare_FoMo_accuracy <- function(dataset) {
     
     pred <- summarise_postpred(list(training = m, testing = t), d, 
                                  get_sim = FALSE, draw_sample_frac=0.25)
-    acc <- compute_acc(pred$acc) %>% mutate(model = paste("FoMo",  modelver))
+    
+    acc <- compute_acc(pred$acc, compute_hpdi = FALSE) %>% 
+      mutate(model = paste("FoMo",  modelver))
     
     rm(m, t, pred) 
     
