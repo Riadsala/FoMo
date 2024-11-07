@@ -323,8 +323,7 @@ compute_acc <- function(acc, compute_hpdi = TRUE) {
   acc  %>%
     summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
     summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
-    summarise(accuracy = mean(person_acc), .groups = "drop_last") %>%
-    select( -.point) -> acc
+    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
   
   if (compute_hpdi) {
     
