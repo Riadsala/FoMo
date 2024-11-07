@@ -304,7 +304,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
 }
 
 
-compute_acc <- function(acc) {
+compute_acc <- function(acc, compute_hpdi = TRUE) {
   
   if ("split" %in% names(acc)) {
     
@@ -324,8 +324,15 @@ compute_acc <- function(acc) {
     summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
     summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
     summarise(accuracy = mean(person_acc), .groups = "drop_last") %>%
-    median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
-    select(-.interval, -.point) -> acc
+    select( -.point) -> acc
+  
+  if (compute_hpdi) {
+    
+    acc %>% 
+      median_hdci(accuracy, .width = c(0.53, 0.97)) -> acc
+      
+  }
+    
   
   if ("split" %in% names(acc)) {
     

@@ -12,7 +12,10 @@ source("../../functions/sim_foraging_data.R")
 options(mc.cores =4, digits = 2)
 
 ############################################################################
-datasets <- c("kristjansson2014plos", "tagu2022cog") #, "clarke2022qjep"
+
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos") # "clarke2022qjep"
+models <- c("1_0", "1_1", "1_2")
+
 ############################################################################
 
 # wrapper function for computing train/test accuracy
@@ -22,7 +25,7 @@ compare_FoMo_accuracy <- function(dataset) {
   
   dout <- tibble()
   
-  for (modelver in c("1_0", "1_1", "1_2"))
+  for (modelver in models)
   {
     
     m <- readRDS(paste0("scratch/", dataset, "_train_", modelver, ".model"))
@@ -56,7 +59,7 @@ for (ds in datasets) {
 # compute simulated run statistics
 ############################################################################
 
-for (model_ver in c("1_0", "1_1", "1_2")) {
+for (model_ver in models) {
   
   rl <- tibble()
   
@@ -96,7 +99,7 @@ for (model_ver in c("1_0", "1_1", "1_2")) {
 # compute simulated iisv statistics
 ############################################################################
 
-for (model_ver in c("1_0", "1_1", "1_2")) {
+for (model_ver in models) {
   
   iisv <- tibble()
   
