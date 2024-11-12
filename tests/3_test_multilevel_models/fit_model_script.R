@@ -12,13 +12,11 @@ source("../../functions/compute_summary_stats.R")
 # create scratch folder if it does not yet exist
 if (!file.exists("scratch"))  dir.create("scratch")
 
-## model 1.0
-
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 
 b_stick = 1
 
-rho_delta = 20
+rho_delta = 20 #1 - set to 1 if doing relative proximity = TRUE, 20 if relative proximity = FALSE
 sd_rho_delta = 1
 
 rho_psi = 2
@@ -40,54 +38,22 @@ d <- sim_foraging_people(n_people = 16,
                          n_conditions = 1,
                          cond_lab = c("simple test"),
                          n_trials_per_cond = 10,
-                         n_item_class = 2, n_item_per_class = 10,
+                         n_item_class = 2, n_item_per_class = 20,
                          item_class_weights, sd_bA = 0.2,
                          b_stick = b_stick, sd_b_stick = 1,
                          rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
                          rho_psi = rho_psi, sd_rho_psi = 0.25,
                          abs_dir_tuning = abs_dir_tuning,
-                         inital_sel_params = inital_sel_params) 
+                         inital_sel_params = inital_sel_params,
+                         rel_proximity = FALSE) 
 
 saveRDS(d, "scratch/d_1_0.rds")
 
+# model 1.0
+
 m <- fit_model(d, fomo_ver = "1.0", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
 
-## model 1.1
-
-#item_class_weights = list(c(0.7, 0.3, 0, 0))
-
-#b_stick = 1
-
-#rho_delta = 1
-#sd_rho_delta = 0.1
-
-#rho_psi = -1
-
-#abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
-
-# initial bias params
-#inital_sel_params <- tibble(
-#  a1x = 2,
-#  b1x = 2,
-#  a2x = 1,
-#  b2x = 10,
-#  a1y = 2,
-#  b1y = 2,
-#  a2y = 10,
-#  b2y = 1) 
-
-#d2 <- sim_foraging_people(n_people = 10,
-#                          n_conditions = 1,
-#                          cond_lab = c("simple test"),
-#                          n_trials_per_cond = 4,
-#                          n_item_class = 2, n_item_per_class = 10,
-#                          item_class_weights, sd_bA = 0.2,
-#                          b_stick = b_stick, sd_b_stick = 1,
-#                          rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
-#                          rho_psi = rho_psi, sd_rho_psi = 0.5,
-#                          abs_dir_tuning = abs_dir_tuning,
-#                          inital_sel_params = inital_sel_params,
-#                          rel_proximity = TRUE) 
+# model 1.1
 
 saveRDS(d, "scratch/d_1_1.rds")
 
@@ -102,7 +68,6 @@ m <- fit_model(d, fomo_ver = "1.2", mode = "traintest",  iter = 500, n_trials_to
 # COMPUTING LOTS OF STUFF
 
 # 1.0
-
 
 d <- readRDS("scratch/d_1_0.rds")
 m <- readRDS("scratch/sim_train_1_0.model")

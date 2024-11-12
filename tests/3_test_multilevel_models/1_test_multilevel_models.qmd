@@ -30,16 +30,165 @@ theme_set(ggthemes::theme_tufte())
 - **Model 1.1**: the same as model 1.1., except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser.
 - **Model 1.2**: the same as 1.1 except it has no parameter for relative direction.
 
+# Data without relative proximity
+
 ## Compare accuracies
+
+Here, we use data simulated without relative proximity. FoMo 1.0 does better than 1.1 here. Relative direction (model 1.2) is having only a small effect.
 
 ```{r}
 
 datasets <- c("sim_1.0", "sim_1.1", "sim_1.2")
+folder <- "no_rel_prox"
 
 
 get_acc <- function(dataset) {
 
-  acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
+  acc <- read_csv(paste0("scratch/", folder, "/post_acc_", dataset, ".csv"),
+                  show_col_types = FALSE) %>%
+    group_by(split, condition, model, .draw) %>%
+    summarise(accuracy = median(accuracy), .groups = "drop_last") %>%
+    median_hdci(accuracy, .width = c(0.53, 0.97))
+  
+  return(acc)
+
+}
+
+
+d_acc <- map_df(datasets, get_acc)
+
+rm(get_acc)
+
+
+```
+
+```{r}
+
+d_acc %>% 
+  mutate(model = factor(model),
+                split = factor(split, levels = c("training", "testing"))) -> d_acc
+
+d_acc %>% ggplot(aes(model, accuracy,
+                     ymin = .lower, ymax = .upper)) +
+  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
+  geom_line(aes(x = as.numeric(as_factor(model)))) +
+  facet_grid(~split) +
+  theme(legend.position = "none")
+
+```
+
+## Posterior Density Plots
+### model 1.0
+
+```{r}
+
+m <- readRDS("scratch/no_rel_prox/sim_train_1_0.model")
+d <- readRDS("scratch/no_rel_prox/d_1_0.rds")
+
+item_class_weights = list(c(0.7, 0.3, 0, 0))
+b_stick = 1
+rho_delta = 20
+rho_psi = 2
+
+post <- extract_post(m, d)
+plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+                                  b_stick = b_stick,
+                                  rho_delta = rho_delta,
+                                  rho_psi = rho_psi))
+
+```
+
+### model 1.1
+
+```{r}
+
+m <- readRDS("scratch/no_rel_prox/sim_train_1_1.model")
+d <- readRDS("scratch/no_rel_prox/d_1_1.rds")
+
+
+post <- extract_post(m, d)
+plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+                                  b_stick = b_stick,
+                                  rho_delta = rho_delta,
+                                  rho_psi = rho_psi))
+
+```
+
+### model 1.2
+
+```{r}
+
+m <- readRDS("scratch/no_rel_prox/sim_train_1_2.model")
+d <- readRDS("scratch/no_rel_prox/d_1_2.rds")
+
+item_class_weights = list(c(0.7, 0.3, 0, 0))
+b_stick = 1
+rho_delta = 20
+rho_psi = 2
+
+post <- extract_post(m, d)
+plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
+                                  b_stick = b_stick,
+                                  rho_delta = rho_delta))
+
+
+```
+
+## Run Statistics
+
+```{r}
+#| fig-height: 5
+
+rl10 <- read_csv("scratch/no_rel_prox/run_statistics_1_0.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
+rl11 <- read_csv("scratch/no_rel_prox/run_statistics_1_1.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.1")
+rl12 <- read_csv("scratch/no_rel_prox/run_statistics_1_2.csv", 
+                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.2")
+
+bind_rows(rl10, rl11, rl12) %>%
+ ggplot(aes(observed, predicted, colour = condition))  +
+  geom_point() + 
+  geom_abline(linetype = 2) + 
+  facet_grid(~model) +
+  coord_fixed() +
+  theme(legend.position = "none")
+```
+
+## Inter-Item Selection Distance
+
+```{r}
+#| fig-height: 5
+#|
+
+iisv <- bind_rows(
+  read_csv("scratch/no_rel_prox/iisv_statistics_1_0.csv") %>% mutate(model = "1.0"),
+  read_csv("scratch/no_rel_prox/iisv_statistics_1_1.csv") %>% mutate(model = "1.1"),
+  read_csv("scratch/no_rel_prox/iisv_statistics_1_2.csv") %>% mutate(model = "1.2"))
+
+iisv %>%
+  group_by(condition, found, x, model) %>%
+  summarise(d2 = mean(d2)) %>%
+ ggplot(aes(found, y = d2, linetype = x, group = interaction(x, condition)))  +
+  geom_path(aes(colour = condition)) + 
+  facet_grid(~ model) +
+  theme(legend.title = element_blank()) + 
+  scale_y_log10()
+```
+
+# Data simulated with relative proximity
+
+Here, we use data simulated with relative proximity. As expected, we find that Model 1.1 does well. 
+
+```{r}
+
+datasets <- c("sim_1.0", "sim_1.1", "sim_1.2")
+folder <- "rel_prox"
+
+
+get_acc <- function(dataset) {
+
+  acc <- read_csv(paste0("scratch/", folder, "/post_acc_", dataset, ".csv"),
                   show_col_types = FALSE) %>%
     group_by(split, condition, model, .draw) %>%
     summarise(accuracy = median(accuracy), .groups = "drop_last") %>%
@@ -73,17 +222,17 @@ d_acc %>% ggplot(aes(model, accuracy,
 ```
 
 
-### Posterior Density Plots
-# model 1.0
+## Posterior Density Plots
+### model 1.0
 
 ```{r}
 
-m <- readRDS("scratch/sim_train_1_0.model")
-d <- readRDS("scratch/d_1_0.rds")
+m <- readRDS("scratch/rel_prox/sim_train_1_0.model")
+d <- readRDS("scratch/rel_prox/d_1_0.rds")
 
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 b_stick = 1
-rho_delta = 20
+rho_delta = 1
 rho_psi = 2
 
 post <- extract_post(m, d)
@@ -94,17 +243,12 @@ plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
 
 ```
 
-# model 1.1
+### model 1.1
 
 ```{r}
 
-m <- readRDS("scratch/sim_train_1_1.model")
-d <- readRDS("scratch/d_1_1.rds")
-
-item_class_weights = list(c(0.7, 0.3, 0, 0))
-b_stick = 1
-rho_delta = 1
-rho_psi = -1
+m <- readRDS("scratch/rel_prox/sim_train_1_1.model")
+d <- readRDS("scratch/rel_prox/d_1_1.rds")
 
 
 post <- extract_post(m, d)
@@ -115,12 +259,12 @@ plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
 
 ```
 
-# model 1.2
+### model 1.2
 
 ```{r}
 
-m <- readRDS("scratch/sim_train_1_2.model")
-d <- readRDS("scratch/d_1_2.rds")
+m <- readRDS("scratch/rel_prox/sim_train_1_2.model")
+d <- readRDS("scratch/rel_prox/d_1_2.rds")
 
 item_class_weights = list(c(0.7, 0.3, 0, 0))
 b_stick = 1
@@ -140,11 +284,11 @@ plot_model_fixed(post,gt = list(b_a = qlogis(item_class_weights[[1]][1]),
 ```{r}
 #| fig-height: 5
 
-rl10 <- read_csv("scratch/run_statistics_1_0.csv", 
+rl10 <- read_csv("scratch/rel_prox/run_statistics_1_0.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
-rl11 <- read_csv("scratch/run_statistics_1_1.csv", 
+rl11 <- read_csv("scratch/rel_prox/run_statistics_1_1.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.1")
-rl12 <- read_csv("scratch/run_statistics_1_2.csv", 
+rl12 <- read_csv("scratch/rel_prox/run_statistics_1_2.csv", 
                  show_col_types = FALSE) %>% mutate(model = "FoMo 1.2")
 
 bind_rows(rl10, rl11, rl12) %>%
@@ -162,9 +306,9 @@ bind_rows(rl10, rl11, rl12) %>%
 #|
 
 iisv <- bind_rows(
-  read_csv("scratch/iisv_statistics_1_0.csv") %>% mutate(model = "1.0"),
-  read_csv("scratch/iisv_statistics_1_1.csv") %>% mutate(model = "1.1"),
-  read_csv("scratch/iisv_statistics_1_2.csv") %>% mutate(model = "1.2"))
+  read_csv("scratch/rel_prox/iisv_statistics_1_0.csv") %>% mutate(model = "1.0"),
+  read_csv("scratch/rel_prox/iisv_statistics_1_1.csv") %>% mutate(model = "1.1"),
+  read_csv("scratch/rel_prox/iisv_statistics_1_2.csv") %>% mutate(model = "1.2"))
 
 iisv %>%
   group_by(condition, found, x, model) %>%
