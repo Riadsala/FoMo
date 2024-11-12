@@ -33,7 +33,7 @@ Here we provide more in depth analysis on how well a particular model fits a giv
 
 ```{r}
 model_ver <- "1_2"
-dataset   <- "kristjansson2014plos"
+dataset   <- "clarke2022qjep"
 ```
 
 
@@ -111,7 +111,6 @@ Did the mcmc sampling work ok?
 #| warning: false
 #| echo: false
 
-
 post <- extract_post(m, d)
 plot_model_fixed(post)
 ```
@@ -133,7 +132,6 @@ read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
 ```
 
 ```{r}
-
 
 iisv <- read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
                  show_col_types = FALSE)
@@ -164,6 +162,20 @@ plt_rl + plt_iisv_delta
 plot_rose(iisv, binsize = 15) + facet_wrap(~x)
 ```
 
+
+## Params correlate with summary statistics?
+
+```{r}
+
+post$random %>% 
+  group_by(person, condition) %>%
+  median_hdci(u_a, u_stick, u_delta, .width = 0.97) -> u_hpdi
+
+iisv %>%
+  filter(x == "model") %>%
+  select(-x, -rt, .split)
+
+```
 
 
 

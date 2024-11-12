@@ -228,6 +228,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
                  sep = ",", convert = TRUE) %>%
         mutate(trial = parse_number(trial),
                condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+      
       sim %>%
         separate(name, 
                  c(col_names, "found"), 
@@ -276,16 +277,17 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
       
     }
     
-    
     if (unique(class(m)=="list")) {
     
       sim %>%
-        left_join(training$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim
+        left_join(training$stim %>% select(-person, -condition), 
+                  by = join_by(trial, id)) -> sim
       
     } else {
       
       sim %>%
-        left_join(d$stim %>% select(-person, -condition), by = join_by(trial, id)) -> sim  
+        left_join(d$stim %>% select(-person, -condition), 
+                  by = join_by(trial, id)) -> sim  
       
     }
     

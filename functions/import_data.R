@@ -29,15 +29,19 @@ get_train_test_split <- function(d) {
   
   training <- list(
     found = d$found %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p <= split),
+                                  by = join_by(person, condition)) %>% 
+      filter(trial_p <= split) %>% select(-split),
     stim  = d$stim  %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p <= split))
+                                  by = join_by(person, condition)) %>% 
+      filter(trial_p <= split) %>% select(-split))
   
   testing <- list(
     found = d$found %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p >  split),
+                                  by = join_by(person, condition)) %>% 
+      filter(trial_p >  split) %>% select(-split),
     stim  = d$stim  %>% full_join(test_train_split, 
-                                  by = join_by(person, condition)) %>% filter(trial_p >  split))
+                                  by = join_by(person, condition)) %>% 
+      filter(trial_p >  split)  %>% select(-split))
   
   
   

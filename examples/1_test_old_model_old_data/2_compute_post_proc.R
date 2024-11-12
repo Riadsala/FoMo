@@ -126,7 +126,8 @@ for (model_ver in models) {
     # bind everything together
     bind_rows(iisve %>%  mutate(x = "human"),
               iisvp  %>% mutate(x = "model")) %>%
-      mutate(dataset = ds) %>% 
+      mutate(dataset = ds,
+             model_ver = model_ver) %>% 
       bind_rows(iisv) -> iisv
     
   }
