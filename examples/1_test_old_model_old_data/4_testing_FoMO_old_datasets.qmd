@@ -67,7 +67,6 @@ baseline <- tibble(found = 1:unique(dn$n),
 rm(items, items_left)
 ```
 
-
 ```{r}
 #| label: compute-all_acc
 #| cache: true
