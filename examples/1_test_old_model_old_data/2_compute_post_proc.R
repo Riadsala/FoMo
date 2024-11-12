@@ -13,7 +13,7 @@ options(mc.cores =4, digits = 2)
 
 ############################################################################
 
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos") # "clarke2022qjep"
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
 models <- c("1_0", "1_1", "1_2")
 
 ############################################################################
@@ -32,7 +32,7 @@ compare_FoMo_accuracy <- function(dataset) {
     t <- readRDS(paste0("scratch/", dataset, "_test_", modelver, ".model"))
     
     pred <- summarise_postpred(list(training = m, testing = t), d, 
-                                 get_sim = FALSE, draw_sample_frac=0.25)
+                                 get_sim = FALSE, draw_sample_frac = 0.01)
     
     acc <- compute_acc(pred$acc, compute_hpdi = FALSE) %>% 
       mutate(model = paste("FoMo",  modelver))
@@ -73,7 +73,7 @@ for (model_ver in models) {
     
     # get simulation data for model
     pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.001)
+                               get_sim = TRUE, draw_sample_frac = 0.01)
     
     # compute empirical run statistics
     rle <- get_run_info_over_trials(d$found) %>%
@@ -113,7 +113,7 @@ for (model_ver in models) {
     
     # get simulation data for model
     pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.001) 
+                               get_sim = TRUE, draw_sample_frac = 0.01) 
     
     # compute empirical run statistics
     iisve <- get_iisv_over_trials(d$found) 
