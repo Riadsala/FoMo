@@ -15,7 +15,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-n_trials_per_cond <- 100
+n_trials_per_cond <- 50
 
 n_item_class <- 2
 n_item_per_class <- 20
@@ -23,7 +23,7 @@ item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
 b_memory = 0
 
-abs_dir_tuning = list(kappa = rep(10, 4), theta = c(5, 0, 15, 0))
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 0, 0, 0))
 rho_delta = 10
 rho_psi = 5
 
@@ -40,7 +40,7 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   init_sel_lambda = init_sel_lambda)
 
 iter = 500
-mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+mod <- cmdstan_model("../../models/simple/FoMo1_3.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
@@ -54,10 +54,9 @@ d_list$prior_mu_rho_delta <- 15
 d_list$prior_sd_rho_delta <- 5
 d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
-d_list$prior_theta_lambda <- 0.1
 d_list$n_trials_to_sim <- 10
-
-d_list$kappa <- 10
+d_list$prior_theta_lambda <- 1
+d_list$prior_kappa_lambda <- 1
 
 # run model
 m <- mod$sample(data = d_list, 
@@ -118,10 +117,9 @@ pltsim <- plot_a_trial(d$stim, pred$sim %>% filter(.draw == 1), trial = 1)
 pltreal + pltsim
 
 
-## Let's add another condition - all we're going to change is the item class weights & abs dir
+## Let's add another condition - all we're going to change is the item class weights
 
 item_class_weights = c(0.7, 0.3, 0, 0)
-abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 0, 0, 0))
 
 d1 <- sim_foraging_multiple_trials(person = 1, 
                                   n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
@@ -136,7 +134,6 @@ d1 <- sim_foraging_multiple_trials(person = 1,
 
 
 item_class_weights = c(0.5, 0.5, 0, 0)
-abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 10, 0, 10))
 
 d2 <- sim_foraging_multiple_trials(person = 1, 
                                   n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
@@ -176,18 +173,10 @@ m <- mod$sample(data = d_list,
                 sig_figs = 3)
 
 # extract post
-post <- extract_post(m, dall, multi_level = FALSE, absdir = TRUE)
+post <- extract_post(m, d, multi_level = FALSE, absdir = TRUE)
 
 # plot model
 plot_model_fixed(post, gt = list(b_a = qlogis(0.7),
                                  b_stick = b_stick,
                                  rho_delta = rho_delta,
                                  rho_psi = rho_psi))
-
-# something not quite right here
-pred <- summarise_postpred(m, dall)
-
-pltreal <- plot_a_trial(dall$stim, dall$found, 1)
-pltsim <- plot_a_trial(dall$stim, pred$sim %>% filter(.draw == 1, trial == 1, condition.x == 1), 1)
-
-pltreal + pltsim

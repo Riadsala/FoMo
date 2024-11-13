@@ -35,18 +35,23 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, vector delta) {
+    real rho_delta, vector theta, real kappa,
+    vector delta, vector phi) {
 
     // computes spatial weights
-    // for FoMo1.0, this includes proximity and relative direction
+    // for FoMo1.3, this includes proximity and absolute direction
     vector[n_targets] prox_weights;
+    vector[n_targets] absdir_weights;
   
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
 
+    absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
+                                 theta, kappa, phi);
+
     // return the dot product of the weights
-    return(prox_weights);
+    return(prox_weights + absdir_weights);
 
   }
 }
