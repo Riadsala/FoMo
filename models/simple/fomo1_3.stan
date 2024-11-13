@@ -11,8 +11,8 @@ functions {
   #include /../include/FoMo_functions.stan
 
   vector compute_weights(
-    real b_a, real b_s, real rho_delta,
-    vector item_class, vector match_prev_item, vector delta,
+    real b_a, real b_s, real rho_delta, vector theta, real kappa,
+    vector item_class, vector match_prev_item, vector delta, vector phi,
     int n, int n_targets, vector remaining_items) {
 
     vector[n_targets] weights;
@@ -24,8 +24,9 @@ functions {
     weights += log_inv_logit(b_s * match_prev_item); 
 
     // calculate by spatial weights
-    weights += compute_spatial_weights(
-      n, n_targets, rho_delta, delta);
+    weights += compute_spatial_weights(n, n_targets, 
+      rho_delta, theta, kappa,
+      delta, phi);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -92,6 +93,9 @@ data {
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
+
+  // pass in kappa hyper-parameter
+  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -111,7 +115,9 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
-  
+
+   // theta is a 4D vector containing the mixture weights for our direction model
+  array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
 }
 
 model {
@@ -144,8 +150,8 @@ model {
     x = X[t];
  
     weights = compute_weights(
-      b_a[x], b_stick[x], rho_delta[x],
-      to_vector(item_class[t]), S[ii], delta[ii],
+      b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+      to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
@@ -165,8 +171,8 @@ generated quantities {
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
-  array[ K, n_trials_to_sim, n_targets] int Q; 
-  array[ K, n_trials_to_sim] int sim_trial_id = rep_array(0, K, n_trials_to_sim); 
+  array[K, n_trials_to_sim, n_targets] int Q; 
+  array[K, n_trials_to_sim] int sim_trial_id = rep_array(0, K, n_trials_to_sim); 
 
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -186,8 +192,8 @@ generated quantities {
       x = X[t];
 
       weights = compute_weights(
-        b_a[x], b_stick[x], rho_delta[x], 
-        to_vector(item_class[t]), S[ii], delta[ii],
+        b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+        to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
       P[ii] = categorical_rng(weights);
@@ -195,7 +201,7 @@ generated quantities {
 
     }
   }
-
+  /*
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
@@ -254,4 +260,5 @@ generated quantities {
       
     }
   } 
+  */
 }
