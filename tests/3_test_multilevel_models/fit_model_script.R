@@ -225,7 +225,7 @@ rho_psi = c(-1, -1)
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
 
-d3 <- sim_foraging_people(n_people = 12,
+d_2cond <- sim_foraging_people(n_people = 12,
                          n_conditions = 2,
                          cond_lab = c("A", "B"),
                          n_trials_per_cond = 8,
@@ -237,26 +237,24 @@ d3 <- sim_foraging_people(n_people = 12,
                          abs_dir_tuning = abs_dir_tuning,
                          inital_sel_params = inital_sel_params) 
 
-d3$found <- fix_person_and_trial(d3$found)
-d3$stim <- fix_person_and_trial(d3$stim)
 
-saveRDS(d3, "scratch/d_2cond.rds")
+saveRDS(d_2cond, "scratch/d_2cond.rds")
 
-d_list <- prep_data_for_stan(d3$found, d3$stim, c("spatial", "item_class"), n_trials_to_sim = 4)
-d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
-d_list$n_trials_to_sim <- 3
+# model 1.0
 
-iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan")
+m <- fit_model(d_2cond, fomo_ver = "1.0", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
 
-fit <- mod$sample(data = d_list, 
-                  chains = 2, parallel_chains = 4, threads = 4,
-                  refresh = 10, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
+# model 1.1
 
-fit$save_object("scratch/multi_level_2cond_1_0_tmp.rds")
+m <- fit_model(d_2cond, fomo_ver = "1.1", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
 
+# model 1.2
+
+m <- fit_model(d_2cond, fomo_ver = "1.2", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
+
+
+
+#########################################################
 ## model 1.1
 
 rho_delta = c(1,2)
