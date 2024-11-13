@@ -23,7 +23,7 @@ item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
 b_memory = 0
 
-abs_dir_tuning = list(kappa = rep(10, 4), theta = c(1, 2, 3, 4))
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 2, 1, 5))
 rho_delta = 10
 rho_psi = 5
 

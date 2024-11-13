@@ -201,7 +201,7 @@ generated quantities {
 
     }
   }
-  /*
+  
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
@@ -242,12 +242,12 @@ generated quantities {
 
             S_j     = compute_matching(item_class[t], n_targets, Q[x, ts, ], ii);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii);
-              
+             phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
           }
 
           weights = compute_weights(
-            b_a[x], b_stick[x], rho_delta[x], 
-            to_vector(item_class[t]), S_j, delta_j, 
+            b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+            to_vector(item_class[t]), S_j, delta_j, phi_j,
             found_order[ii], n_targets, remaining_items_j); 
 
           Q[x, ts, ii] = categorical_rng(weights);
@@ -260,5 +260,5 @@ generated quantities {
       
     }
   } 
-  */
+
 }
