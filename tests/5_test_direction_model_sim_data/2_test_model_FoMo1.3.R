@@ -15,7 +15,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-n_trials_per_cond <- 100
+n_trials_per_cond <- 10
 
 n_item_class <- 2
 n_item_per_class <- 20
@@ -23,7 +23,7 @@ item_class_weights = c(0.7, 0.3, 0, 0)
 b_stick = 2
 b_memory = 0
 
-abs_dir_tuning = list(kappa = rep(10, 4), theta = c(5, 0, 15, 0))
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(1, 2, 3, 4))
 rho_delta = 10
 rho_psi = 5
 
@@ -40,31 +40,12 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   init_sel_lambda = init_sel_lambda)
 
 iter = 500
-mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
+mod <- cmdstan_model("../../models/simple/FoMo1_3.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
 d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
 
-# add priors to list
-d_list$prior_mu_b_a <- 0
-d_list$prior_sd_b_a <- 0.5
-d_list$prior_mu_b_stick <- 0
-d_list$prior_sd_b_stick <- 1
-d_list$prior_mu_rho_delta <- 15
-d_list$prior_sd_rho_delta <- 5
-d_list$prior_mu_rho_psi <- 0
-d_list$prior_sd_rho_psi <- 1
-d_list$prior_theta_lambda <- 0.1
-d_list$n_trials_to_sim <- 10
 
-d_list$kappa <- 10
-
-# run model
-m <- mod$sample(data = d_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 100, 
-                  iter_warmup = iter, iter_sampling = iter,
-                  sig_figs = 3)
 
 # extract post
 post <- extract_post(m, d, multi_level = FALSE, absdir = TRUE)
