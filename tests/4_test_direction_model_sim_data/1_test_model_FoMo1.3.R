@@ -20,7 +20,7 @@ n_trials_per_cond <- 100
 n_item_class <- 2
 n_item_per_class <- 20
 item_class_weights = c(0.7, 0.3, 0, 0)
-b_stick = 2
+b_stick = 1
 b_memory = 0
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = c(0, 2, 1, 5))
