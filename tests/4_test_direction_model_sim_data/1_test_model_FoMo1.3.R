@@ -15,6 +15,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
+# simulate some data
 n_trials_per_cond <- 100
 
 n_item_class <- 2
@@ -39,6 +40,7 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   inital_sel_params = inital_sel_params,
                                   init_sel_lambda = init_sel_lambda)
 
+# fitting model 1.3 (i.e. including absolute directions)
 iter = 500
 mod <- cmdstan_model("../../models/simple/FoMo1_3.stan", 
                      cpp_options = list(stan_threads = TRUE))
@@ -78,6 +80,7 @@ ggplot(post$absdir, aes(theta, fill = factor(comp))) + geom_density(alpha = 0.4)
   geom_vline(data = tibble(comp = 1:4, x = abs_dir_tuning$theta), aes(xintercept=x, colour = factor(comp)))
 
 
+# plot von mises distribution
 compute_von_mises <- function(x, .draw, phi, theta, kappa, comp) {
   
   z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
@@ -104,13 +107,13 @@ post_weights %>%
   geom_ribbon(alpha = 0.5, fill = "purple")
 
 
-# check predictions
+# check predictions and accuracy
 pred <- summarise_postpred(m, d, draw_sample_frac = 0.1, multi_level = FALSE, get_sim = TRUE)
 
 plot_model_accuracy(pred)
 
 
-# model 1.2
+# model 1.2 (i.e. no absolute directions)
 mod <- cmdstan_model("../../models/simple/FoMo1_2.stan", 
                      cpp_options = list(stan_threads = TRUE))
 
@@ -132,15 +135,10 @@ plot_model_fixed(post2, gt = list(b_a = plogis(item_class_weights[[1]]),
                                   b_stick = b_stick,
                                   rho_delta = rho_delta,
                                   rho_psi = rho_psi))
-# check predictions
+
+# check predictions and accuracy
 pred2 <- summarise_postpred(m2, d, draw_sample_frac = 0.1, multi_level = FALSE, get_sim = TRUE)
 
 plot_model_accuracy(pred2)
 
 
-# plot comparison between a real and simulated trial
-
-#pltreal <- plot_a_trial(d$stim, d$found, 1)
-#pltsim <- plot_a_trial(d$stim, pred$sim %>% filter(.draw == 1), trial = 1)
-
-#pltreal + pltsim
