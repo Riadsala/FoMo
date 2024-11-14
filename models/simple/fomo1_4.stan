@@ -91,12 +91,10 @@ data {
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
   real prior_theta_lambda;
+  real prior_kappa_lambda;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
-
-  // pass in kappa hyper-parameter
-  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -119,6 +117,7 @@ parameters {
 
    // theta is a 4D vector containing the mixture weights for our direction model
   array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
+  array[K] real<lower = 0, upper = 100> kappa;
 }
 
 model {
@@ -133,6 +132,7 @@ model {
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += exponential_lpdf(theta[ii]| prior_theta_lambda);
+    target += exponential_lpdf(kappa[ii]| prior_kappa_lambda); 
   }
 
   //////////////////////////////////////////////////
@@ -152,7 +152,7 @@ model {
     x = X[t];
  
     weights = compute_weights(
-      b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+      b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
@@ -194,7 +194,7 @@ generated quantities {
       x = X[t];
 
       weights = compute_weights(
-        b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+        b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
         to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
@@ -248,7 +248,7 @@ generated quantities {
           }
 
           weights = compute_weights(
-            b_a[x], b_stick[x], rho_delta[x], theta[x], kappa,
+            b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
             to_vector(item_class[t]), S_j, delta_j, phi_j,
             found_order[ii], n_targets, remaining_items_j); 
 

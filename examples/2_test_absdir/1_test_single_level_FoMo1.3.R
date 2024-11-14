@@ -14,7 +14,7 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-d <- import_data("hughes2024rsos")
+d <- import_data("clarke2022qjep")
 
 person <- 2
 
@@ -34,13 +34,14 @@ d_list$prior_mu_rho_delta <- 15
 d_list$prior_sd_rho_delta <- 5
 d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
-d_list$prior_theta_lambda <- 0.1
+d_list$prior_theta_lambda <- 0.5
+d_list$prior_kappa_lambda <- 1
 d_list$n_trials_to_sim <- 3
+
 
 d_list$kappa <- 10
 
 iter = 500
-
 
 run_FoMo <- function(sl, model_ver) { 
   
@@ -60,6 +61,7 @@ run_FoMo <- function(sl, model_ver) {
 }
 
 # run model
+m14 <- run_FoMo(d_list, "1_4")
 m13 <- run_FoMo(d_list, "1_3")
 m12 <- run_FoMo(d_list, "1_2")
 
@@ -101,10 +103,11 @@ post_weights %>%
 # check predictions
 pred12 <- summarise_postpred(m12, d,  multi_level = FALSE)
 pred13 <- summarise_postpred(m13, d,  multi_level = FALSE)
+pred14 <- summarise_postpred(m13, d,  multi_level = FALSE)
 
 bind_rows(pred12$acc %>% mutate(model = "1.2"),
-          pred13$acc %>% mutate(model = "1.3")) -> pred
-
+          pred13$acc %>% mutate(model = "1.3"),
+          pred14$acc %>% mutate(model = "1.4")) -> pred
 
 n_targets <- max((pred$found))
 
@@ -116,7 +119,6 @@ pred %>%
   median_hdci(accuracy) %>%
   ggplot(aes(found, accuracy)) + 
   geom_ribbon(aes(ymin = .lower, ymax = .upper, fill = model), alpha = 0.5) + 
-  geom_path() + 
   geom_path(data = baseline, linetype = 2) +
   facet_wrap(~condition)
 
