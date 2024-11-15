@@ -14,9 +14,9 @@ source("../../functions/plot_model.R")
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 
-d <- import_data("clarke2022qjep")
+d <- import_data("hughes2024rsos")
 
-person <- 2
+person <- 1
 
 d$stim  %>% filter(person == {{person}}) -> d$stim
 d$found %>% filter(person == {{person}}) -> d$found
@@ -34,10 +34,9 @@ d_list$prior_mu_rho_delta <- 15
 d_list$prior_sd_rho_delta <- 5
 d_list$prior_mu_rho_psi <- 0
 d_list$prior_sd_rho_psi <- 1
-d_list$prior_theta_lambda <- 0.5
+d_list$prior_theta_lambda <- 0.1
 d_list$prior_kappa_lambda <- 1
 d_list$n_trials_to_sim <- 3
-
 
 d_list$kappa <- 10
 
@@ -103,7 +102,7 @@ post_weights %>%
 # check predictions
 pred12 <- summarise_postpred(m12, d,  multi_level = FALSE)
 pred13 <- summarise_postpred(m13, d,  multi_level = FALSE)
-pred14 <- summarise_postpred(m13, d,  multi_level = FALSE)
+pred14 <- summarise_postpred(m14, d,  multi_level = FALSE)
 
 bind_rows(pred12$acc %>% mutate(model = "1.2"),
           pred13$acc %>% mutate(model = "1.3"),
