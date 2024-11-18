@@ -25,7 +25,7 @@ functions {
 
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
-      rho_delta, theta, kappa,
+      u_delta, theta, kappa,
       delta, phi);
         
     // remove already-selected items, and standarise to sum = 1 
@@ -93,9 +93,13 @@ data {
   real prior_sd_b_stick; // prior for sd for bS
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
+  real prior_theta_lambda;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
+
+  // pass in kappa hyper-parameter
+  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -291,7 +295,7 @@ generated quantities {
 
             S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
-            phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
+            phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
           }
 
           weights = compute_weights(
