@@ -11,7 +11,7 @@ functions {
   #include /../include/FoMo_functions.stan
 
   vector compute_weights(
-    real u_a, real u_s, real u_delta, vector theta, real kappa,
+    real u_a, real u_s, real u_delta, vector log_theta, real kappa,
     vector item_class, vector match_prev_item, vector delta, vector phi,
     int n, int n_targets, vector remaining_items) {
 
@@ -25,7 +25,7 @@ functions {
 
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
-      u_delta, theta, kappa,
+      u_delta, log_theta, kappa,
       delta, phi);
         
     // remove already-selected items, and standarise to sum = 1 
@@ -36,7 +36,7 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, vector theta, real kappa,
+    real rho_delta, vector log_theta, real kappa,
     vector delta, vector phi) {
 
     // computes spatial weights
@@ -49,7 +49,7 @@ functions {
                                  rho_delta, delta);
 
     absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
-                                 theta, kappa, phi);
+                                 log_theta, kappa, phi);
 
     // return the dot product of the weights
     return(prox_weights + absdir_weights);
@@ -127,7 +127,7 @@ parameters {
   array[K] real<lower = 0> rho_delta; // distance tuning
 
   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
+  array[K] simplex[4] theta; // mixing proportions for abs directions
 
   ///////////////////////////////
   // random effects
@@ -138,6 +138,9 @@ parameters {
   cholesky_factor_corr[3*K] L_u;
   // random effect matrix
   matrix[3*K,L] z_u; 
+
+  // theta random effects 
+  array[K, L] vector[4] u_std; 
   
 }
 
@@ -163,6 +166,19 @@ transformed parameters {
     u_stick[kk] = to_vector(b_stick[kk]   + u[3*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
   }
+
+  // create a vector for each participant's theta values
+  array[K, L] vector[4] log_theta_u;
+
+
+  for (k in 1:K) {
+
+    for (l in 1:L) {
+
+      log_theta_u[k, l] = log_softmax(log(theta[k]) + u_std[k, l] .* sigma_u[k]);
+
+    }
+  }  
 }
 
 model {
@@ -202,7 +218,7 @@ model {
     x = X[t];
  
     weights = compute_weights(
-      u_a[x, z], u_stick[x, z], u_delta[x, z], theta[x], kappa,
+      u_a[x, z], u_stick[x, z], u_delta[x, z], log_theta_u[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
