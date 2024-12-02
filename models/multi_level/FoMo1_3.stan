@@ -175,7 +175,7 @@ transformed parameters {
 
     for (l in 1:L) {
 
-      log_theta_u[k, l] = log_softmax(log(theta[k]) + u_std[k, l] .* sigma_u[k]);
+      log_theta_u[k, l] = (log(theta[k]) + u_std[k, l] .* sigma_u[k]);
 
     }
   }  

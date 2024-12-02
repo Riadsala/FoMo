@@ -40,7 +40,7 @@ extract_post <- function(m, d, multi_level = TRUE) {
   }
   
   # if theta is in model fit, extract
-  if (sum(str_detect(names(m$draws(format = "df")), "theta")) >1) {
+  if (sum(str_detect(names(m$draws(format = "df")), "log_theta")) >1) {
     
     post_theta <- extrat_post_absdir(m, cl)
     post_list <- append(post_list, list(absdir = post_theta))
@@ -53,13 +53,15 @@ extract_post <- function(m, d, multi_level = TRUE) {
 
 extrat_post_absdir <- function(m, cl) {
   
-  post_absdir <- m$draws("theta", format = "df") %>%
+  post_absdir <- m$draws("log_theta", format = "df") %>%
     as_tibble() %>%
-    pivot_longer(starts_with("theta"), names_to = "comp", values_to = "theta") %>%
+    pivot_longer(starts_with("log_theta"), names_to = "comp", values_to = "log_theta") %>%
+    mutate(theta = exp(log_theta), .keep = "unused") %>%
     separate(comp, c("condition", "comp"), sep = ",") %>%  
     mutate(condition = factor(condition, labels = cl),
-           comp = factor(parse_number(comp)),
-           phi = (comp-1) * pi/2)
+           comp = (parse_number(comp)),
+           phi = (comp-1) * pi/2,
+           comp = factor(comp))
   
   return(post_absdir)
   
