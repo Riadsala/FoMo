@@ -79,7 +79,6 @@ plot_model_fixed(post, gt = list(b_a = plogis(item_class_weights[[1]]),
 ggplot(post$absdir, aes(theta, fill = factor(comp))) + geom_density(alpha = 0.4) +
   geom_vline(data = tibble(comp = 1:4, x = abs_dir_tuning$theta), aes(xintercept=x, colour = factor(comp)))
 
-
 # plot von mises distribution
 compute_von_mises <- function(x, .draw, phi, theta, kappa, comp) {
   
