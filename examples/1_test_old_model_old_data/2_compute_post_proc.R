@@ -32,7 +32,7 @@ compare_FoMo_accuracy <- function(dataset) {
     t <- readRDS(paste0("scratch/", dataset, "_test_", modelver, ".model"))
     
     pred <- summarise_postpred(list(training = m, testing = t), d, 
-                                 get_sim = FALSE, draw_sample_frac = 0.01)
+                                 get_sim = FALSE, draw_sample_frac = 1)
     
     acc <- compute_acc(pred$acc, compute_hpdi = FALSE) %>% 
       mutate(model = paste("FoMo",  modelver))
