@@ -47,6 +47,22 @@ vector scale_prox(vector p, vector ri, int n_targets) {
 
 }
 
+vector compute_absdir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
+
+  vector[n_targets] phi = rep_vector(1, n_targets);
+
+  if (jj > 1) {
+
+    phi = atan2((y - y[Q[jj-1]]), (x - x[Q[jj-1]])) * 180 / pi();
+                    
+    
+  }
+
+  return(phi);
+
+}
+
+
 vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
 
   vector[n_targets] psi = rep_vector(1, n_targets);
@@ -100,9 +116,10 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
   }
 
 vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
-  vector theta, real kappa, vector phi) {
+  vector log_theta, real kappa, vector phi) {
 
   vector[n_targets] w;
+  vector[4] theta = exp(log_theta);
 
   w = rep_vector(1, n_targets); 
 

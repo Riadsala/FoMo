@@ -1,0 +1,9 @@
+﻿param,mu,sd
+b_a,0,1.5
+b_stick,0,1.5
+rho_delta,15,5
+uA,0,0.5
+u_stick,0,1
+u_delta,0,0.5
+theta,0.1,NA
+kappa,10,NA

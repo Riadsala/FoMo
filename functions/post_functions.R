@@ -2,7 +2,7 @@
 
 # cl contains the condition labels
 
-extract_post <- function(m, d, multi_level = TRUE, absdir = FALSE) {
+extract_post <- function(m, d, multi_level = TRUE) {
   
   # extract ALL parameters and collect into a list
   # to ensure that we have the same draws for each part,
@@ -39,9 +39,10 @@ extract_post <- function(m, d, multi_level = TRUE, absdir = FALSE) {
                                           post_random, variances = post_var))
   }
   
-  if (absdir) {
+  # if theta is in model fit, extract
+  if (sum(str_detect(names(m$draws(format = "df")), "log_theta")) >1) {
     
-    post_theta <- extrat_post_absdir(m)
+    post_theta <- extrat_post_absdir(m, cl)
     post_list <- append(post_list, list(absdir = post_theta))
     
     
@@ -50,13 +51,17 @@ extract_post <- function(m, d, multi_level = TRUE, absdir = FALSE) {
   return(post_list)
 }
 
-extrat_post_absdir <- function(m) {
+extrat_post_absdir <- function(m, cl) {
   
-  post_absdir <- m$draws("theta", format = "df") %>%
+  post_absdir <- m$draws("log_theta", format = "df") %>%
     as_tibble() %>%
-    pivot_longer(starts_with("theta"), names_to = "comp", values_to = "theta") %>%
-    mutate(comp = parse_number(comp),
-           phi = (comp-1) * pi/2)
+    pivot_longer(starts_with("log_theta"), names_to = "comp", values_to = "log_theta") %>%
+    mutate(theta = exp(log_theta), .keep = "unused") %>%
+    separate(comp, c("condition", "comp"), sep = ",") %>%  
+    mutate(condition = factor(condition, labels = cl),
+           comp = (parse_number(comp)),
+           phi = (comp-1) * pi/2,
+           comp = factor(comp))
   
   return(post_absdir)
   

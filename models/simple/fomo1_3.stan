@@ -1,4 +1,4 @@
-/* FoMo V1.2 - single-level
+/* FoMo V1.3 - single-level
 
 Includes the core parameters:
 
@@ -11,7 +11,7 @@ functions {
   #include /../include/FoMo_functions.stan
 
   vector compute_weights(
-    real b_a, real b_s, real rho_delta, vector theta, real kappa,
+    real b_a, real b_s, real rho_delta, vector log_theta, real kappa,
     vector item_class, vector match_prev_item, vector delta, vector phi,
     int n, int n_targets, vector remaining_items) {
 
@@ -25,7 +25,7 @@ functions {
 
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
-      rho_delta, theta, kappa,
+      rho_delta, log_theta, kappa,
       delta, phi);
         
     // remove already-selected items, and standarise to sum = 1 
@@ -36,7 +36,7 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, vector theta, real kappa,
+    real rho_delta, vector log_theta, real kappa,
     vector delta, vector phi) {
 
     // computes spatial weights
@@ -49,7 +49,7 @@ functions {
                                  rho_delta, delta);
 
     absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
-                                 theta, kappa, phi);
+                                 log_theta, kappa, phi);
 
     // return the dot product of the weights
     return(prox_weights + absdir_weights);
@@ -91,10 +91,12 @@ data {
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
   real prior_theta_lambda;
-  real prior_kappa_lambda;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
+
+  // pass in kappa hyper-parameter
+  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -116,8 +118,7 @@ parameters {
   array[K] real<lower = 0> rho_delta; // distance tuning
 
    // theta is a 4D vector containing the mixture weights for our direction model
-  array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
-  array[K] real<lower = 0, upper = 100> kappa;
+  array[K] vector[4] log_theta; // mixing proportions for abs directions
 }
 
 model {
@@ -131,8 +132,7 @@ model {
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += exponential_lpdf(theta[ii]| prior_theta_lambda);
-    target += exponential_lpdf(kappa[ii]| prior_kappa_lambda); 
+    target += normal_lpdf(log_theta[ii]| 0, 2);
   }
 
   //////////////////////////////////////////////////
@@ -152,12 +152,11 @@ model {
     x = X[t];
  
     weights = compute_weights(
-      b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+      b_a[x], b_stick[x], rho_delta[x], log_theta[x], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
-
    
   }
 }
@@ -194,7 +193,7 @@ generated quantities {
       x = X[t];
 
       weights = compute_weights(
-        b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+        b_a[x], b_stick[x], rho_delta[x], log_theta[x], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
@@ -244,11 +243,11 @@ generated quantities {
 
             S_j     = compute_matching(item_class[t], n_targets, Q[x, ts, ], ii);
             delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii);
-             phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
+            phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
           }
 
           weights = compute_weights(
-            b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+            b_a[x], b_stick[x], rho_delta[x], log_theta[x], kappa,
             to_vector(item_class[t]), S_j, delta_j, phi_j,
             found_order[ii], n_targets, remaining_items_j); 
 

@@ -51,6 +51,7 @@ t <- read_rds(paste0("scratch/", dataset, "_test_", model_ver, ".model"))
 ## Prediction Accuracy
 
 Compute chance base-rates for each dataset
+
 ```{r}
 d$stim %>% group_by(person, trial) %>%
   summarise(n = n(), .groups = "drop") -> dn
@@ -65,7 +66,6 @@ baseline <- tibble(found = 1:unique(dn$n),
   
 rm(items, items_left)
 ```
-
 
 ```{r}
 #| label: compute-all_acc
@@ -165,17 +165,125 @@ plot_rose(iisv, binsize = 15) + facet_wrap(~x)
 
 ## Params correlate with summary statistics?
 
+### IISV delta2
+
 ```{r}
 
 post$random %>% 
-  group_by(person, condition) %>%
-  median_hdci(u_a, u_stick, u_delta, .width = 0.97) -> u_hpdi
+  select(-.draw) %>%
+  pivot_longer(-c(person, condition), names_to = "param", values_to = "value") %>%
+  group_by(person, condition, param) %>%
+  median_hdci(value, .width = 0.97) %>%
+  select(-.point, -.interval) -> u_hpdi
 
 iisv %>%
-  filter(x == "model") %>%
-  select(-x, -rt, .split)
+  filter(x == "human", dataset == {{dataset}}) %>%
+  group_by(person, condition, .draw) %>%
+  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
+  median_hdci(d2, .width = 0.97)%>%
+  select(-.point, -.interval) -> d2_hpdi
+
+right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
+
+d2_hpdi %>% 
+  filter(param == "u_delta" ) %>%
+  ggplot(aes(value, y = d2,
+                       xmin = .lower.x, xmax = .upper.x, 
+                       ymin = .lower.y, ymax = .upper.y, 
+                       colour = condition)) + 
+  geom_point() +
+  geom_errorbar(alpha = 0.5) + 
+  geom_errorbarh(alpha = 0.5) +
+  scale_x_continuous("rho_delta") + 
+  scale_y_continuous("mean delta^2: iisv (human)") -> plt_human
+
+
+
+iisv %>%
+  filter(x == "model", dataset == {{dataset}}) %>%
+  group_by(person, condition, .draw) %>%
+  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
+  median_hdci(d2, .width = 0.97)%>%
+  select(-.point, -.interval) -> d2_hpdi
+
+right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
+
+d2_hpdi %>% 
+  filter(param == "u_delta" ) %>%
+  ggplot(aes(value, y = d2,
+                       xmin = .lower.x, xmax = .upper.x, 
+                       ymin = .lower.y, ymax = .upper.y, 
+                       colour = condition)) + 
+  geom_point() +
+  geom_errorbar(alpha = 0.5) + 
+  geom_errorbarh(alpha = 0.5) +
+  scale_x_continuous("rho_delta") + 
+  scale_y_continuous("mean delta^2: iisv (model)") -> plt_model
+
+plt_human + plt_model
 
 ```
+
+### Run statistics
+
+not yet finished
+
+
+```{r}
+
+rl <- read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
+         show_col_types = FALSE)
+
+
+rl %>%
+  filter(x == "human", dataset == {{dataset}}) %>%
+  group_by(person, condition, .draw) %>%
+  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
+  median_hdci(d2, .width = 0.97)%>%
+  select(-.point, -.interval) -> d2_hpdi
+
+right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
+
+d2_hpdi %>% 
+  filter(param == "u_delta" ) %>%
+  ggplot(aes(value, y = d2,
+                       xmin = .lower.x, xmax = .upper.x, 
+                       ymin = .lower.y, ymax = .upper.y, 
+                       colour = condition)) + 
+  geom_point() +
+  geom_errorbar(alpha = 0.5) + 
+  geom_errorbarh(alpha = 0.5) +
+  scale_x_continuous("rho_delta") + 
+  scale_y_continuous("mean delta^2: iisv (human)") -> plt_human
+
+
+
+iisv %>%
+  filter(x == "model", dataset == {{dataset}}) %>%
+  group_by(person, condition, .draw) %>%
+  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
+  median_hdci(d2, .width = 0.97)%>%
+  select(-.point, -.interval) -> d2_hpdi
+
+right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
+
+d2_hpdi %>% 
+  filter(param == "u_delta" ) %>%
+  ggplot(aes(value, y = d2,
+                       xmin = .lower.x, xmax = .upper.x, 
+                       ymin = .lower.y, ymax = .upper.y, 
+                       colour = condition)) + 
+  geom_point() +
+  geom_errorbar(alpha = 0.5) + 
+  geom_errorbarh(alpha = 0.5) +
+  scale_x_continuous("rho_delta") + 
+  scale_y_continuous("mean delta^2: iisv (model)") -> plt_model
+
+plt_human + plt_model
+
+```
+
+
 
 
 

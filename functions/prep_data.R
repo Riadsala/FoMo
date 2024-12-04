@@ -105,7 +105,13 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   priors <- read_csv(paste0("../../models/multi_level/", filename), show_col_types = FALSE) %>%
     pivot_longer(-param, names_to = "stat", values_to = "value") %>%
     mutate(param = paste("prior", stat, param, sep="_")) %>%
-    select(-stat)
+    select(-stat) %>%
+    filter(is.finite(value))
+  
+  # fix prior names for theta and kappa
+  priors %>% mutate(
+    param = if_else(str_detect(param, "kappa"), "kappa", param),
+    param = if_else(str_detect(param, "theta"), "prior_theta_lambda", param)) -> priors
   
   dl <- append(dl, priors %>% group_by(param) %>% deframe())
   

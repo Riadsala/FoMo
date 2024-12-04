@@ -1,6 +1,6 @@
-/* FoMo V1.2 - single-level
+/* FoMo V1.3 - multi-level
 
-Includes the core parameters:
+Removes relative direction:
 
 b_a, b_stick, rho_delta
 
@@ -11,21 +11,21 @@ functions {
   #include /../include/FoMo_functions.stan
 
   vector compute_weights(
-    real b_a, real b_s, real rho_delta, vector theta, real kappa,
+    real u_a, real u_s, real u_delta, vector log_theta, real kappa,
     vector item_class, vector match_prev_item, vector delta, vector phi,
     int n, int n_targets, vector remaining_items) {
 
     vector[n_targets] weights;
     
     // set the weight of each target to be its class weight
-    weights = log_inv_logit(b_a * to_vector(item_class));
+    weights = log_inv_logit(u_a * to_vector(item_class));
 
     // multiply weights by stick/switch preference
-    weights += log_inv_logit(b_s * match_prev_item); 
+    weights += log_inv_logit(u_s * match_prev_item); 
 
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
-      rho_delta, theta, kappa,
+      u_delta, log_theta, kappa,
       delta, phi);
         
     // remove already-selected items, and standarise to sum = 1 
@@ -36,7 +36,7 @@ functions {
   }
 
   vector compute_spatial_weights(int n, int n_targets, 
-    real rho_delta, vector theta, real kappa,
+    real rho_delta, vector log_theta, real kappa,
     vector delta, vector phi) {
 
     // computes spatial weights
@@ -49,7 +49,7 @@ functions {
                                  rho_delta, delta);
 
     absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
-                                 theta, kappa, phi);
+                                 log_theta, kappa, phi);
 
     // return the dot product of the weights
     return(prox_weights + absdir_weights);
@@ -57,8 +57,10 @@ functions {
   }
 }
 
+
 data {
   int <lower = 1> N; // total number of selected targets over the whole experiment
+  int <lower = 1> L; // number of participant levels 
   int <lower = 1> K; // number of experimental conditions  
 
   int <lower = 1> n_trials;  // total number of trials (overall)
@@ -77,6 +79,7 @@ data {
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
   array[n_trials] int <lower = 1, upper = K> X; // trial features (ie, which condition are we in)
+  array[n_trials] int <lower = 1, upper = L> Z; // random effect levels
 
   array[n_trials, n_targets] int <lower = -1, upper = 1> item_class; // target class, one row per trial
   array[N] vector<lower = -1, upper = 1>[n_targets] S; // stick/switch (does this targ match prev targ) 
@@ -91,10 +94,12 @@ data {
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
   real prior_theta_lambda;
-  real prior_kappa_lambda;
 
   // parameters for simulation (generated quantities)
   int<lower = 0> n_trials_to_sim;
+
+  // pass in kappa hyper-parameter
+  real<lower = 0> kappa;
 }
 
 transformed data{
@@ -105,19 +110,78 @@ transformed data{
 }
 
 parameters {
+
   // These are all the parameters we want to fit to the data
 
   ////////////////////////////////////
   // fixed effects
   ////////////////////////////////////
 
+  /* in order to allow for correlations between the
+  variables, these are all stored in a list
+  these include b_a, bS (stick weight), and the two spatial 
+  sigmas, along with the floor (chance of selectin an 
+  item at random)
+  */
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_stick; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
 
-   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K] vector<lower = 0> [4] theta; // mixing proportions for abs directions
-  array[K] real<lower = 0, upper = 100> kappa;
+  // theta is a 4D vector containing the mixture weights for our direction model
+  array[K, 4] real log_theta; // mixing values for abs directions
+
+  ///////////////////////////////
+  // random effects
+  ///////////////////////////////
+
+  // random effect variances
+  vector<lower=0>[3*K] sigma_u;
+  vector<lower=0>[4*K] sigma_w;
+  // declare L_u to be the Choleski factor of a 3*K x 3*K correlation matrix
+  cholesky_factor_corr[3*K] L_u;
+  cholesky_factor_corr[4*K] L_w;
+
+  // random effect matrix
+  matrix[3*K, L] z_u; // 3*K as we have three params
+  matrix[4*K, L] z_w; // 4*K as we have four directions
+  
+}
+
+transformed parameters {
+
+  /* 
+  combine fixed and random effects
+  we do this here so that the code in the model{} block
+  is easier to read
+  */
+
+  // this transform random effects so that they have the correlation
+  // matrix specified by the correlation matrix above
+  matrix[3*K, L] u = diag_pre_multiply(sigma_u, L_u) * z_u;
+  matrix[4*K, L] w = diag_pre_multiply(sigma_w, L_w) * z_w;
+
+  // add fixed and random effects together
+  // create empty arrays for everything
+  array[K] vector[L] u_a, u_stick, u_delta, u_psi;
+
+  for (k in 1:K) {
+    u_a[k]     = to_vector(b_a[k]       + u[3*(k-1)+1]);
+    u_stick[k] = to_vector(b_stick[k]   + u[3*(k-1)+2]);
+    u_delta[k] = to_vector(rho_delta[k] + u[3*(k-1)+3]);
+  }
+
+  // now work out thet u_log_theta
+  array[K, L] vector[4] u_log_theta;
+
+  for (k in 1:K) {
+    for (l in 1:L) {
+
+      u_log_theta[k, l, 1] = (log_theta[k, 1] + w[4*(k-1)+1, l]);
+      u_log_theta[k, l, 2] = (log_theta[k, 2] + w[4*(k-1)+2, l]);
+      u_log_theta[k, l, 3] = (log_theta[k, 3] + w[4*(k-1)+3, l]);
+      u_log_theta[k, l, 4] = (log_theta[k, 4] + w[4*(k-1)+4, l]);
+    }  
+  }
 }
 
 model {
@@ -126,13 +190,23 @@ model {
   // Define Priors
   ////////////////////////////////////////////////////
 
+  // priors for random effects
+  sigma_u ~ exponential(1);
+  sigma_w ~ exponential(1);
+
+  // LKJ prior for the correlation matrix
+  L_u~ lkj_corr_cholesky(1.5); 
+  L_w ~ lkj_corr_cholesky(1.5);
+
+  to_vector(z_u) ~ normal(0,1);
+  to_vector(z_w) ~ normal(0,1);
+
   for (ii in 1:K) {
     // priors for fixed effects
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += exponential_lpdf(theta[ii]| prior_theta_lambda);
-    target += exponential_lpdf(kappa[ii]| prior_kappa_lambda); 
+    target += normal_lpdf(log_theta[ii]| 0, 2);
   }
 
   //////////////////////////////////////////////////
@@ -140,8 +214,8 @@ model {
   //////////////////////////////////////////////////  
   vector[n_targets] weights;
 
-  // some IDs for trial, condition, and condition
-  int t, x; 
+  // some IDs for trial, participant, and condition
+  int t, z, x; 
 
   //////////////////////////////////////////////////
   // // step through data row by row and define LLH
@@ -149,16 +223,16 @@ model {
   for (ii in 1:N) {
 
     t = trial[ii];
+    z = Z[t];
     x = X[t];
  
     weights = compute_weights(
-      b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+      u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
-
-   
+  
   }
 }
 
@@ -173,8 +247,8 @@ generated quantities {
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
-  array[K, n_trials_to_sim, n_targets] int Q; 
-  array[K, n_trials_to_sim] int sim_trial_id = rep_array(0, K, n_trials_to_sim); 
+  array[L, K, n_trials_to_sim, n_targets] int Q; 
+  array[L, K, n_trials_to_sim] int sim_trial_id = rep_array(0, L, K, n_trials_to_sim); 
 
   //////////////////////////////////////////////////////////////////////////////
   // first, step through data and compare model selections to human participants
@@ -183,7 +257,7 @@ generated quantities {
     vector[n_targets] weights;  // class weight for teach target
     
     // some IDs for trial, condition, and condition
-    int t, x; 
+    int t, z, x; 
 
     //////////////////////////////////////////////////
     // // step through data row by row and define LLH
@@ -191,10 +265,11 @@ generated quantities {
    for (ii in 1:N) {
 
       t = trial[ii];
+      z = Z[t];
       x = X[t];
 
       weights = compute_weights(
-        b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+        u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
@@ -203,7 +278,7 @@ generated quantities {
 
     }
   }
-  
+
   //////////////////////////////////////////////////////////////////////////////
   // now allow the model to do a whole trial on its own
   {
@@ -214,11 +289,12 @@ generated quantities {
 
     vector[n_targets] psi_j, phi_j, delta_j;
 
-    array[ K] int n_trials_simmed = rep_array(0, K);
+    array[L, K] int n_trials_simmed = rep_array(0, L, K);
 
     //for each trial
     for (t in 1:n_trials) {
 
+      int z = Z[t];
       int x = X[t];
       int ts; // trial number, in terms of number simulated
 
@@ -226,12 +302,12 @@ generated quantities {
       remaining_items_j = rep_vector(1, n_targets);
 
       // check that we haven't done enoguh trials already
-      if (n_trials_simmed[x] < n_trials_to_sim) {
+      if (n_trials_simmed[z, x] < n_trials_to_sim) {
 
         // simulate another trial!
-        n_trials_simmed[x] += 1;
-        ts = n_trials_simmed[x];
-        sim_trial_id[x, n_trials_simmed[x]] = t;
+        n_trials_simmed[z, x] += 1;
+        ts = n_trials_simmed[z, x];
+        sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
 
         // simulate a trial!
         for (ii in 1:n_targets) {
@@ -242,25 +318,25 @@ generated quantities {
             
           if (ii > 1) {
 
-            S_j     = compute_matching(item_class[t], n_targets, Q[x, ts, ], ii);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii);
-             phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[x, ts, ], ii); 
+            S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
+            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
+            phi_j  = compute_absdir(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii); 
           }
 
           weights = compute_weights(
-            b_a[x], b_stick[x], rho_delta[x], theta[x], kappa[x],
+            u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
             to_vector(item_class[t]), S_j, delta_j, phi_j,
             found_order[ii], n_targets, remaining_items_j); 
 
-          Q[x, ts, ii] = categorical_rng(weights);
+
+          Q[z, x, ts, ii] = categorical_rng(weights);
 
           // update remaining_items2
-          remaining_items_j[Q[x, ts, ii]] = 0;
+          remaining_items_j[Q[z, x, ts, ii]] = 0;
  
         }
       }
       
     }
   } 
-
 }

@@ -45,7 +45,6 @@ functions {
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
 
-
     // return the dot product of the weights
     return(prox_weights);
 

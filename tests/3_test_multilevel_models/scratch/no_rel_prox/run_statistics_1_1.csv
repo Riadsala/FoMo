@@ -1,0 +1,17 @@
+person,condition,observed,predicted
+1,simple test,8.7,9.833333333333334
+2,simple test,4.7,4.666666666666667
+3,simple test,6,4.333333333333333
+4,simple test,5.1,4.333333333333333
+5,simple test,6.2,7.5
+6,simple test,12,10
+7,simple test,8.2,7.833333333333333
+8,simple test,6.8,6
+9,simple test,6.7,5.666666666666667
+10,simple test,5.4,7.666666666666667
+11,simple test,8.1,7.666666666666667
+12,simple test,6.6,5.166666666666667
+13,simple test,8.4,7.166666666666667
+14,simple test,7.4,7.833333333333333
+15,simple test,9.6,7.166666666666667
+16,simple test,5.9,5.5
