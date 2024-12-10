@@ -18,6 +18,12 @@ import_data <- function(dataset, small_test=FALSE) {
               "kristjansson2014plos" = import_kristjansson2014plos(small_test),
               "hughes2024rsos" = import_hughes2024rsos(small_test),
               "unknown dataset")
+  
+  return(list(
+    dataset = dataset,
+    stim = d$stim, 
+    found = d$found
+  ))
 }
 
 get_train_test_split <- function(d) {
@@ -42,16 +48,16 @@ get_train_test_split <- function(d) {
     stim  = d$stim  %>% full_join(test_train_split, 
                                   by = join_by(person, condition)) %>% 
       filter(trial_p >  split)  %>% select(-split))
-  
-  
-  
+ 
   testing$found <- fix_person_and_trial(testing$found)
   testing$stim <- fix_person_and_trial(testing$stim)
   training$found <- fix_person_and_trial(training$found)
   training$stim <- fix_person_and_trial(training$stim)
   
   
-  return(list(training = training, testing = testing))
+  return(list(
+    training = training, 
+    testing = testing))
 }
 
 filter_one_person <- function(d, pp) {

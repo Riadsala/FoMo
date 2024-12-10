@@ -24,7 +24,7 @@ d$found %>% filter(person == {{person}}) -> d$found
 d$stim <- fix_person_and_trial(d$stim)
 d$found <- fix_person_and_trial(d$found)
 
-d_list <- prep_data_for_stan(d$found, d$stim, c("spatial", "item_class"))
+d_list <- prep_data_for_stan(d, c("spatial", "item_class"))
 
 d_list$prior_mu_b_a <- 0
 d_list$prior_sd_b_a <- 0.5

@@ -11,7 +11,6 @@ plot_model_fixed(post, gt = list(b_a = qlogis(item_class_weights[[1]][1]),
 pred <- summarise_postpred(fit, d, 
                              get_sim = TRUE, draw_sample_frac=0.002)
 
-
 acc <- compute_acc(pred$acc) %>% mutate(model = "FoMo 1.0")
 
 # compute empirical run statistics
