@@ -21,7 +21,7 @@ sd_rho_delta = 1
 
 rho_psi = 2
 
-abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
+abs_dir_tuning = list(kappa = rep(10, 4), theta = c(2, 0.5, 1, 0.1))
 
 # initial bias params
 inital_sel_params <- tibble(
@@ -46,7 +46,6 @@ d <- sim_foraging_people(n_people = 8,
                          abs_dir_tuning = abs_dir_tuning,
                          inital_sel_params = inital_sel_params,
                          rel_proximity = FALSE) 
-
 
 d_list <- prep_data_for_stan(d$found, d$stim, model_components = c("spatial", "item_class"), n_trials_to_sim = 2)
 d_list <- add_priors_to_d_list(d_list, modelver = "1.3")

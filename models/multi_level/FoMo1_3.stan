@@ -139,7 +139,7 @@ parameters {
   vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a 3*K x 3*K correlation matrix
   cholesky_factor_corr[3*K] L_u;
-  cholesky_factor_corr[4*K] L_w;
+  //cholesky_factor_corr[4*K] L_w; // skip var-cov matrix for now
 
   // random effect matrix
   matrix[3*K, L] z_u; // 3*K as we have three params
@@ -158,7 +158,7 @@ transformed parameters {
   // this transform random effects so that they have the correlation
   // matrix specified by the correlation matrix above
   matrix[3*K, L] u = diag_pre_multiply(sigma_u, L_u) * z_u;
-  matrix[4*K, L] w = diag_pre_multiply(sigma_w, L_w) * z_w;
+  //matrix[4*K, L] w = diag_pre_multiply(sigma_w, L_w) * z_w;
 
   // add fixed and random effects together
   // create empty arrays for everything
@@ -175,11 +175,17 @@ transformed parameters {
 
   for (k in 1:K) {
     for (l in 1:L) {
-
+      /*
       u_log_theta[k, l, 1] = (log_theta[k, 1] + w[4*(k-1)+1, l]);
       u_log_theta[k, l, 2] = (log_theta[k, 2] + w[4*(k-1)+2, l]);
       u_log_theta[k, l, 3] = (log_theta[k, 3] + w[4*(k-1)+3, l]);
       u_log_theta[k, l, 4] = (log_theta[k, 4] + w[4*(k-1)+4, l]);
+      */
+      u_log_theta[k, l, 1] = (log_theta[k, 1] + z_w[4*(k-1)+1, l] .* sigma_w[k]);
+      u_log_theta[k, l, 2] = (log_theta[k, 2] + z_w[4*(k-1)+2, l] .* sigma_w[k]);
+      u_log_theta[k, l, 3] = (log_theta[k, 3] + z_w[4*(k-1)+3, l] .* sigma_w[k]);
+      u_log_theta[k, l, 4] = (log_theta[k, 4] + z_w[4*(k-1)+4, l] .* sigma_w[k]);
+
     }  
   }
 }
@@ -196,7 +202,7 @@ model {
 
   // LKJ prior for the correlation matrix
   L_u~ lkj_corr_cholesky(1.5); 
-  L_w ~ lkj_corr_cholesky(1.5);
+  //L_w ~ lkj_corr_cholesky(1.5);
 
   to_vector(z_u) ~ normal(0,1);
   to_vector(z_w) ~ normal(0,1);
@@ -206,7 +212,7 @@ model {
     target += normal_lpdf(b_a[ii]       | 0, prior_sd_b_a);
     target += normal_lpdf(b_stick[ii]   | 0, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[ii] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(log_theta[ii]| 0, 2);
+    target += normal_lpdf(log_theta[ii] | 0, 2);
   }
 
   //////////////////////////////////////////////////
