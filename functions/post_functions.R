@@ -40,18 +40,41 @@ extract_post <- function(m, d, multi_level = TRUE) {
   }
   
   # if theta is in model fit, extract
-  if (sum(str_detect(names(m$draws(format = "df")), "log_theta")) >1) {
+  if (sum(str_detect(names(m$draws(format = "df")), "log_theta")) > 1) {
     
-    post_theta <- extrat_post_absdir(m, cl)
-    post_list <- append(post_list, list(absdir = post_theta))
+    post_theta <- extrat_post_theta(m, cl)
+    post_list <- append(post_list, list(theta = post_theta))
     
-    
+    # if required, also get the individual differences for theta
+    if (multi_level) {
+      
+      post_theta_u <- extrat_post_theta_u(m, cl)
+      post_list <- append(post_list, list(utheta = post_theta_u))
+      
+    }
+  
   }
   
   return(post_list)
 }
 
-extrat_post_absdir <- function(m, cl) {
+extrat_post_theta_u <- function(m, cl) {
+  
+  post_absdir <- m$draws("u_log_theta", format = "df") %>%
+    as_tibble() %>%
+    pivot_longer(starts_with("u_log_theta"), names_to = "comp", values_to = "log_theta") %>%
+    mutate(theta = exp(log_theta), .keep = "unused") %>%
+    separate(comp, c("condition", "person", "comp"), sep = ",") %>%  
+    mutate(condition = factor(condition, labels = cl),
+           comp = (parse_number(comp)),
+           phi = (comp-1) * pi/2,
+           comp = factor(comp))
+  
+  return(post_absdir)
+  
+}
+
+extrat_post_theta <- function(m, cl) {
   
   post_absdir <- m$draws("log_theta", format = "df") %>%
     as_tibble() %>%

@@ -16,8 +16,6 @@ fit_model("tagu2022cog", fomo_ver = "1.1", mode = "traintest",  iter = iter)
 fit_model("tagu2022cog", fomo_ver = "1.2", mode = "traintest",  iter = iter) 
 
 
-
-
 fit_model("hughes2024rsos", fomo_ver = "1.0", mode = "traintest",  iter = iter) 
 fit_model("hughes2024rsos", fomo_ver = "1.1", mode = "traintest",  iter = iter) 
 fit_model("hughes2024rsos", fomo_ver = "1.2", mode = "traintest",  iter = iter) 

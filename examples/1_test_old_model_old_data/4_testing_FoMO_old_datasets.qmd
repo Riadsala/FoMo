@@ -33,7 +33,7 @@ Here we provide more in depth analysis on how well a particular model fits a giv
 
 ```{r}
 model_ver <- "1_2"
-dataset   <- "clarke2022qjep"
+dataset   <- "hughes2024rsos"
 ```
 
 
