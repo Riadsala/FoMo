@@ -17,10 +17,6 @@ post$utheta %>% ggplot(aes(factor(phi), theta), colour = factor(person)) +
                 position = position_dodge())
 
 
-
-
-
-
 compute_von_mises <- function(x, .draw, person, condition, phi, theta, kappa, comp) {
   
   z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
@@ -73,17 +69,14 @@ m12 <- readRDS("../1_test_old_model_old_data/scratch/hughes2024rsos_test_1_2.mod
 pred12 <- summarise_postpred(m12, d,  multi_level = FALSE, get_sim = FALSE)
 
 
-bind_rows(pred13$acc %>% mutate(model = "1.3"),
-          pred12$acc %>% mutate(model = "1.2") %>%
-            filter(is.finite(model_correct))) %>%
-  group_by(model, found, .draw) %>% 
+pred13$acc %>%
+  group_by(found, condition, .draw) %>% 
   summarise(acc = mean(model_correct)) %>%
-  group_by(model) %>%
   median_hdci(acc) -> acc95
 
 
 ggplot(acc95, aes(found, 
-                  ymin = .lower, y = acc, ymax = .upper,
-                  fill = factor(model))) + 
-  geom_lineribbon(alpha = 0.5)
+                  ymin = .lower, y = acc, ymax = .upper, fill = condition)) + 
+  geom_lineribbon(alpha = 0.5) +
+  coord_cartesian(ylim = c(0.4, 0.55))
 
