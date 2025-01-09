@@ -32,8 +32,9 @@ Here we provide more in depth analysis on how well a particular model fits a giv
 
 
 ```{r}
-model_ver <- "1_2"
-dataset   <- "hughes2024rsos"
+model_ver <- "1_0"
+dataset   <- "kristjansson2014plos"
+
 ```
 
 
@@ -124,42 +125,55 @@ read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
          show_col_types = FALSE) %>%
   filter(dataset == {{dataset}}) %>%
   ggplot(aes(observed, predicted, colour = condition))  +
-  geom_point() +
+  geom_point(alpha = 0.5) +
   geom_abline(linetype = 2) +
-  scale_x_continuous("observed run length") + 
-  scale_y_continuous("predicted run length") + 
-  ggtitle("Run Statistics") -> plt_rl
+  scale_x_continuous("observed longest run") + 
+  scale_y_continuous("predicted longest run")+
+  ggthemes::scale_color_ptol() -> plt_rl
 ```
 
 ```{r}
 
 iisv <- read_csv(paste0("scratch/iisv_statistics", model_ver, ".csv"),
-                 show_col_types = FALSE)
+                 show_col_types = FALSE) %>%
+  filter(dataset == {{dataset}})
 
 ```
 
 ```{r}
-iisv %>%
-  filter(dataset == {{dataset}}) %>%
+iisv  %>%
   mutate(d = sqrt(d2)) %>%
   group_by(condition, found, x) %>%
-  median_hdci(d, .width = c(0.53, 0.97)) %>%
-  ggplot(aes(found, y = d, ymin = .lower, ymax = .upper, 
-             fill = x, group = interaction(x, .width)))  +
-  geom_path(aes(colour = x)) +
-  geom_ribbon(alpha = 0.33) +
+  # median_hdci(d, .width = c(0.53, 0.97)) %>%
+  ggplot(aes(d,
+             fill = x))  +
+  # geom_path(aes(colour = x)) +
+  geom_histogram(position = position_identity(), alpha = 0.5) + 
+  # geom_ribbon(alpha = 0.33) +
   facet_wrap(condition ~ .) +
+  scale_fill_viridis_d(option = "cividis") + 
   theme(legend.title = element_blank()) -> plt_iisv_delta
 ```
 
-```{r}
-plt_rl + plt_iisv_delta
-```
+
 
 ## Absolute directions
 
 ```{r}
-plot_rose(iisv, binsize = 15) + facet_wrap(~x)
+plot_rose(iisv, fl = "x", binsize = 15) + facet_wrap(~condition) +
+  theme(legend.position = "none") -> plt_rose
+
+plt_rose
+```
+
+Glue figures together
+
+```{r}
+plt_rl <- plt_rl + plt_rl + plot_layout(guides = "collect")
+
+plt_prox <-  plt_iisv_delta / plt_rose + plot_layout(guides = "collect", heights = c(1, 2))
+
+ggsave( "post_pred_summary.pdf", (plt_rl / plt_prox) + plot_layout(heights = c(1, 3)), width = 5, height = 6)
 ```
 
 
@@ -197,8 +211,6 @@ d2_hpdi %>%
   scale_x_continuous("rho_delta") + 
   scale_y_continuous("mean delta^2: iisv (human)") -> plt_human
 
-
-
 iisv %>%
   filter(x == "model", dataset == {{dataset}}) %>%
   group_by(person, condition, .draw) %>%
@@ -226,60 +238,7 @@ plt_human + plt_model
 
 ### Run statistics
 
-not yet finished
-
-
 ```{r}
-
-rl <- read_csv(paste0("scratch/run_statistics", model_ver, ".csv"),
-         show_col_types = FALSE)
-
-
-rl %>%
-  filter(x == "human", dataset == {{dataset}}) %>%
-  group_by(person, condition, .draw) %>%
-  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
-  median_hdci(d2, .width = 0.97)%>%
-  select(-.point, -.interval) -> d2_hpdi
-
-right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
-
-d2_hpdi %>% 
-  filter(param == "u_delta" ) %>%
-  ggplot(aes(value, y = d2,
-                       xmin = .lower.x, xmax = .upper.x, 
-                       ymin = .lower.y, ymax = .upper.y, 
-                       colour = condition)) + 
-  geom_point() +
-  geom_errorbar(alpha = 0.5) + 
-  geom_errorbarh(alpha = 0.5) +
-  scale_x_continuous("rho_delta") + 
-  scale_y_continuous("mean delta^2: iisv (human)") -> plt_human
-
-
-
-iisv %>%
-  filter(x == "model", dataset == {{dataset}}) %>%
-  group_by(person, condition, .draw) %>%
-  summarise(d2 = mean(d2, na.rm = T), .groups = "drop_last") %>%
-  median_hdci(d2, .width = 0.97)%>%
-  select(-.point, -.interval) -> d2_hpdi
-
-right_join(u_hpdi, d2_hpdi, by = join_by(person, condition, .width)) -> d2_hpdi
-
-d2_hpdi %>% 
-  filter(param == "u_delta" ) %>%
-  ggplot(aes(value, y = d2,
-                       xmin = .lower.x, xmax = .upper.x, 
-                       ymin = .lower.y, ymax = .upper.y, 
-                       colour = condition)) + 
-  geom_point() +
-  geom_errorbar(alpha = 0.5) + 
-  geom_errorbarh(alpha = 0.5) +
-  scale_x_continuous("rho_delta") + 
-  scale_y_continuous("mean delta^2: iisv (model)") -> plt_model
-
-plt_human + plt_model
 
 ```
 

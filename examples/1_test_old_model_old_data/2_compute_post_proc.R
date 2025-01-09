@@ -9,7 +9,7 @@ source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
 
-options(mc.cores =4, digits = 2)
+options(mc.cores = 4, digits = 2)
 
 ############################################################################
 
@@ -41,8 +41,7 @@ compare_FoMo_accuracy <- function(dataset) {
     
     dout <- bind_rows(dout, bind_rows(acc, acc) %>%
                         mutate(data = dataset))
-
-  
+    
   }
   
   return(dout)

@@ -90,13 +90,13 @@ plot_rose <- function(ds, fll=NA, binsize = 30) {
   
   plt +
     geom_histogram(breaks = seq(-nbins/2,nbins/2)*binsize,
-                   colour = "darkgrey",
+                   # colour = "darkgrey",
                    alpha = 0.5,
                    position = position_identity()) + 
     scale_x_continuous(breaks = seq(-180, 180, 90)) + 
     scale_y_continuous(breaks = NULL) + 
     coord_polar(start = pi/2, direction = -1) + 
-    theme_bw() + 
+    scale_fill_viridis_d(option = "cividis") + 
     theme(axis.title = element_blank(),
           axis.text.x = element_blank()) -> plt
   
