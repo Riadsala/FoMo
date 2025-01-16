@@ -52,7 +52,7 @@ extract_post <- function(m, d, multi_level = TRUE) {
       post_list <- append(post_list, list(utheta = post_theta_u))
       
     }
-  
+    
   }
   
   return(post_list)
@@ -197,9 +197,13 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     mtr <- m$training
     mte <- m$testing
     
+    mode <- "train_test"
+    
   } else {
     
     mtr <- m
+    
+    mode <- "all"
     
   }
   
@@ -208,7 +212,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   # all fixed effects should start with "rho_" or "b_"
   pvars <- vars[str_detect(vars, "^[PW]")]
   
-  if (unique(class(m)=="list")) {
+  if (mode == "train_test") {
     
     # get the training/test data split
     dtt <- get_train_test_split(d)
@@ -234,90 +238,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   
   if (get_sim) {
     
-    sim <- mtr$draws("Q", format = "df")  %>%
-      sample_frac(draw_sample_frac) %>%
-      as_tibble() %>%
-      select(-.chain, -.iteration) %>%
-      pivot_longer(-.draw, values_to = "id") 
-    
-    sim_trials <- mtr$draws("sim_trial_id", format = "df") %>%
-      as_tibble() %>%
-      filter(row_number() == 1) %>%
-      select(-.chain, -.iteration, -.draw) %>%
-      pivot_longer(everything(), values_to = "trial_id")
-    
-    if (multi_level) {
-      
-      col_names <- c("person", "condition", "trial")
-      
-      sim_trials %>%
-        separate(name,
-                 col_names, 
-                 sep = ",", convert = TRUE) %>%
-        mutate(trial = parse_number(trial),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
-      
-      sim %>%
-        separate(name, 
-                 c(col_names, "found"), 
-                 sep = ",", convert = TRUE) %>%
-        mutate(found = parse_number(found),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
-      
-      sim %>% 
-        mutate(person = parse_number(person)) -> sim
-      
-      sim_trials %>%
-        mutate(person = parse_number(person)) -> sim_trials
-      
-      # fix trial numbers
-      full_join(sim, sim_trials, by = col_names) %>%
-        select(-trial) %>%
-        rename(trial = "trial_id") -> sim
-      
-      rm(sim_trials)
-      
-    } else {
-      
-      col_names <- c("condition", "trial")
-      
-      sim_trials %>%
-        separate(name,
-                 col_names, 
-                 sep = ",", convert = TRUE) %>%
-        mutate(trial = parse_number(trial),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
-      
-      sim %>%
-        separate(name, 
-                 c(col_names, "found"), 
-                 sep = ",", convert = TRUE) %>%
-        mutate(found = parse_number(found),
-               condition = factor(condition, labels = unique(d$stim$condition))) -> sim
-      
-      # fix trial numbers
-      full_join(sim, sim_trials, by = col_names) %>%
-        select(-trial) %>%
-        rename(trial = "trial_id") %>%
-        mutate(person = 1) -> sim
-      
-      rm(sim_trials)
-      
-    }
-    
-    if (unique(class(m)=="list")) {
-    
-      sim %>%
-        left_join(training$stim %>% select(-person, -condition), 
-                  by = join_by(trial, id)) -> sim
-      
-    } else {
-      
-      sim %>%
-        left_join(d$stim %>% select(-person, -condition), 
-                  by = join_by(trial, id)) -> sim  
-      
-    }
+    sim <- extract_simulations(mtr, training$stim, mode, draw_sample_frac, multi_level)
     
     # define output list
     list_out <- list(acc = pred, sim = sim)
@@ -328,9 +249,78 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     list_out <- list(acc = pred)
   }
   
-  
   return(list_out)
   
+}
+
+extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level) {
+  
+  # do not call directly..
+  # this is run by summarise_postpred()
+  
+  sim <- mod$draws("Q", format = "df")  %>%
+    sample_frac(draw_sample_frac) %>%
+    as_tibble() %>%
+    select(-.chain, -.iteration) %>%
+    pivot_longer(-.draw, values_to = "id") 
+  
+  sim_trials <- mod$draws("sim_trial_id", format = "df") %>%
+    as_tibble() %>%
+    filter(row_number() == 1) %>%
+    select(-.chain, -.iteration, -.draw) %>%
+    pivot_longer(everything(), values_to = "trial_id")
+  
+  if (multi_level) {
+    
+    col_names <- c("person", "condition", "trial")
+    
+  } else {
+    
+    col_names <- c("condition", "trial")
+    
+  }
+  
+  sim_trials %>%
+    separate(name,
+             col_names, 
+             sep = ",", convert = TRUE) %>%
+    mutate(trial = parse_number(trial),
+           condition = factor(condition, labels = unique(d$stim$condition))) -> sim_trials
+  
+  sim %>%
+    separate(name, 
+             c(col_names, "found"), 
+             sep = ",", convert = TRUE) %>%
+    mutate(found = parse_number(found),
+           condition = factor(condition, labels = unique(d$stim$condition))) -> sim
+  
+  if (multi_level) {
+    
+    sim %>% 
+      mutate(person = parse_number(person)) -> sim
+    
+    sim_trials %>%
+      mutate(person = parse_number(person)) -> sim_trials
+    
+  }
+  
+  # fix trial numbers
+  full_join(sim, sim_trials, by = col_names) %>%
+    select(-trial) %>%
+    rename(trial = "trial_id") -> sim
+  
+  if (multi_level == FALSE){
+    # do I need this?
+    sim %>% mutate(person = 1) -> sim
+  }
+  
+  rm(sim_trials)
+  
+  # sim %>%
+  #   left_join(d_stim %>% select(-person, -condition), 
+  #             by = join_by(trial, id)) -> sim  
+  
+  return(sim)
 }
 
 
@@ -359,9 +349,9 @@ compute_acc <- function(acc, compute_hpdi = TRUE) {
     
     acc %>% 
       median_hdci(accuracy, .width = c(0.53, 0.97)) -> acc
-      
-  }
     
+  }
+  
   
   if ("split" %in% names(acc)) {
     
