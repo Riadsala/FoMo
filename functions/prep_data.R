@@ -1,11 +1,11 @@
 fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
-                      iter = 1000, n_trials_to_sim = 10) {
+                      iter = 1000) {
   
   if (class(dataset) != "list") {
-  
-  d <- import_data(dataset)
-  
+    
+    d <- import_data(dataset)
+    
   } else {
     d <- dataset
     dataset <- "unknown"
@@ -26,14 +26,16 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   if (mode == "all") {
     
-    d_list <- prep_data_for_stan(d$found, d$stim, model_components, n_trials_to_sim = n_trials_to_sim)
+    # check if we have already computed and saved this
+    
+    d_list <- prep_data_for_stan(d$found, d$stim, model_components)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
     m <- mod$sample(data = d_list, 
-                      chains = 4, parallel_chains = 4, threads = 4,
-                      refresh = 10, 
-                      iter_warmup = iter, iter_sampling = iter,
-                      sig_figs = 3,
+                    chains = 4, parallel_chains = 4, threads = 4,
+                    refresh = 10, 
+                    iter_warmup = iter, iter_sampling = iter,
+                    sig_figs = 3,
                     fixed_param = fxdp)
     
     filename_all <- paste0("scratch/", dataset, "_all_", fomo_ver_str, ".model")
@@ -48,11 +50,11 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
     # run model
     m_train <- mod$sample(data = d_list$training, 
-                    chains = 4, parallel_chains = 4, threads = 4,
-                    refresh = 0, 
-                    iter_warmup = iter, iter_sampling = iter,
-                    sig_figs = 3,
-                    fixed_param = fxdp)
+                          chains = 4, parallel_chains = 4, threads = 4,
+                          refresh = 0, 
+                          iter_warmup = iter, iter_sampling = iter,
+                          sig_figs = 3,
+                          fixed_param = fxdp)
     
     m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
     
@@ -69,26 +71,22 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 
 prep_train_test_data_for_stan <- function(d, 
                                           model_components = c("spatial", "item_class"), 
-                                          remove_last_found = FALSE,
-                                          n_trials_to_sim = 10) {
+                                          remove_last_found = FALSE) {
   
   # runs the same as prep_data_for_stan, but outputs a list of lists
   # ie, training set and test set
- d <- get_train_test_split(d)
- training <- d$training
- testing <- d$testing
- 
- training_list <- prep_data_for_stan(training$found, training$stim, 
-                                      model_components, remove_last_found,
-                                      n_trials_to_sim) 
- 
- testing_list <- prep_data_for_stan(testing$found, testing$stim, 
-                                      model_components, remove_last_found,
-                                      n_trials_to_sim) 
+  d <- get_train_test_split(d)
+  training <- d$training
+  testing <- d$testing
+  
+  training_list <- prep_data_for_stan(training$found, training$stim, 
+                                      model_components, remove_last_found) 
+  
+  testing_list <- prep_data_for_stan(testing$found, testing$stim, 
+                                     model_components, remove_last_found) 
   
   return(list(training = training_list,
               testing  = testing_list))
-  
   
 }
 
@@ -119,14 +117,13 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
 }
 
 prep_data_for_stan <- function(d, model_components = "spatial", 
-                               remove_last_found = FALSE,
-                               n_trials_to_sim = 10) {
+                               remove_last_found = FALSE) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
   
   # first check to see if we have a cached version. 
-
+  
   if (file.exists(paste0("scratch/", d$dataset, ".rds"))) {
     
     # if we do, let us just use that
@@ -138,7 +135,6 @@ prep_data_for_stan <- function(d, model_components = "spatial",
     df = d$found
     ds = d$stim
     rm(d)
-    
     
     if (class(remove_last_found) != "logical") {
       
@@ -197,7 +193,6 @@ prep_data_for_stan <- function(d, model_components = "spatial",
       found_order = df$found)  
     
     rm(d_trl, X)
-    
     
     if ("spatial" %in% model_components) {
       
@@ -276,11 +271,7 @@ prep_data_for_stan <- function(d, model_components = "spatial",
     
     d_list$trial = df$trial
     
-    d_list$n_trials_to_sim <- n_trials_to_sim
-    
   }
-
-  
   
   return(d_list)
   
@@ -309,7 +300,7 @@ compute_inter_item_directions_and_distances <- function(Y, df, ds) {
       
       x <- trl_dat$x - trl_dat$x[Y[ii-1]]
       y <- trl_dat$y - trl_dat$y[Y[ii-1]]
-    
+      
       distances <- rbind(distances, sqrt(x^2 + y^2))
       directions <- rbind(directions, atan2(y, x))
     }
@@ -317,7 +308,7 @@ compute_inter_item_directions_and_distances <- function(Y, df, ds) {
   
   directions <-  directions[-1,]
   distances <-  distances[-1,]
-
+  
   return(list(directions = directions, 
               distances  = distances))
 }
@@ -350,16 +341,16 @@ compute_inter_sel_direction <- function(Y, df, ds) {
       #   phi <- rep(0, nrow(trl_dat))
       #   
       # } else {
-        d_prev_targ <- filter(df, 
-                              person == df$person[ii],
-                              trial == df$trial[ii],
-                              found == df$found[ii] - 2)
-        
-        phi = atan2((d_targ$y -  d_prev_targ$y), (d_targ$x -  d_prev_targ$x)) * 180/pi
-        phi = (atan2((trl_dat$y - d_targ$y), (trl_dat$x - d_targ$x)) * 180/pi) - phi 
-        phi = pmin(abs((phi %% 360)), abs((-phi %% 360)))
-        phi = phi/180
-        #phi[ii] = 1
+      d_prev_targ <- filter(df, 
+                            person == df$person[ii],
+                            trial == df$trial[ii],
+                            found == df$found[ii] - 2)
+      
+      phi = atan2((d_targ$y -  d_prev_targ$y), (d_targ$x -  d_prev_targ$x)) * 180/pi
+      phi = (atan2((trl_dat$y - d_targ$y), (trl_dat$x - d_targ$x)) * 180/pi) - phi 
+      phi = pmin(abs((phi %% 360)), abs((-phi %% 360)))
+      phi = phi/180
+      #phi[ii] = 1
       # }
     }
     theta <- rbind(theta, phi[trl_dat$id])
@@ -372,29 +363,29 @@ compute_inter_sel_direction <- function(Y, df, ds) {
 }
 
 does_item_match_prev_target <- function(Y, df, item_class, n_item_per_class, n_item_class) {
-
+  
   matching = array()
   trl <- 1
-
+  
   for (ii in 2:length(Y)) {
     if (df$found[ii]==1) {trl = trl + 1}
-
+    
     if (df$item_class[ii-1]== 0) {
       found_class <- rep(0, n_item_per_class*n_item_class)
-
+      
     } else {
       found_class <- item_class[trl, Y[ii-1]]
-
+      
     }
-
+    
     matching <- rbind(matching, as.numeric(item_class[trl,] == found_class))
-
+    
   }
-
+  
   matching[which(matching == 0 )] = -1
   matching[which(is.na(matching))] = 0
-
+  
   return(matching)
-
+  
 }
 

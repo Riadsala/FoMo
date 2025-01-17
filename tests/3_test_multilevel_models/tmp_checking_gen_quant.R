@@ -27,11 +27,11 @@ rho_psi = c(-1, -1)
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
 
-d <- sim_foraging_people(n_people = 10,
+d <- sim_foraging_people(n_people = 8,
                           n_conditions = 2,
                           cond_lab = c("A", "B"),
                           n_trials_per_cond = 4,
-                          n_item_class = 2, n_item_per_class = 10,
+                          n_item_class = 2, n_item_per_class = 9,
                           item_class_weights, sd_bA = 0.2,
                           b_stick = b_stick, sd_b_stick = 1,
                           rho_delta = rho_delta, sd_rho_delta = sd_rho_delta,
@@ -44,13 +44,12 @@ d$stim <- fix_person_and_trial(d$stim)
 
 d_list <- prep_data_for_stan(d, c("spatial", "item_class"))
 d_list <- add_priors_to_d_list(d_list, modelver = "1.0")
-d_list$n_trials_to_sim <- 1
 
-iter = 200
+iter = 100
 mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan")
 
 fit <- mod$sample(data = d_list, 
-                  chains = 4, parallel_chains = 4, threads = 4,
+                  chains = 1, parallel_chains = 4, threads = 4,
                   refresh = 10, 
                   iter_warmup = iter, iter_sampling = iter,
                   sig_figs = 3)
