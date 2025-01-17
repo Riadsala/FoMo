@@ -237,20 +237,17 @@ import_hughes2024rsos <- function(small_test){
     condition = str_remove(condition, "cond_"),
     condition = str_replace(condition, "conj", "conjunction"),
     condition = str_replace(condition, "_", "_scarce"),
-    condition = str_replace(condition, "scarceAB", "equal"),
-    condition = as_factor(condition)) %>%
-    separate(condition, c("condition",  "scarcity"), "_") -> d_found
+    condition = str_replace(condition, "scarceAB", "equal")) %>%
+    separate(condition, c("condition",  "scarcity"), "_") %>%
+    mutate(condition = as_factor(condition)) -> d_found
   
   d_stim %>% mutate(
     condition = str_remove(condition, "cond_"),
     condition = str_replace(condition, "conj", "conjunction"),
     condition = str_replace(condition, "_", "_scarce"),
-    condition = str_replace(condition, "scarceAB", "equal"),
-    condition = as_factor(condition)) %>%
-    separate(condition, c("condition",  "scarcity"), "_") -> d_stim
-  
-
-
+    condition = str_replace(condition, "scarceAB", "equal")) %>%
+    separate(condition, c("condition",  "scarcity"), "_") %>%
+    mutate(condition = as_factor(condition)) -> d_stim
   
   return(list(stim = d_stim,
               found = d_found))

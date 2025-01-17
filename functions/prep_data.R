@@ -9,21 +9,22 @@ fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class
   # first, import dataset
   d <- import_data(dataset)
   
-  fn <- paste0("scratch/d_list/", dataset)
+  folder <- paste0("scratch/d_list/", dataset, "/")
+  dir.create(folder)
   
   # compute d_list on ALL the data
-  d_list <- prep_data_for_stan(d$found, d$stim, model_components)
-  saveRDS(d_list, paste0(fn, "_all.rds"))
+  d_list <- prep_data_for_stan(d, model_components)
+  saveRDS(d_list, paste0(folder, "all.rds"))
   rm(d_list)
   
   
   # now compute for training/testing split
-  d_list <- prep_train_test_data_for_stan(d, n_trials_to_sim = n_trials_to_sim)
-  saveRDS(d_list$training, paste0(fn, "_train.rds"))
-  saveRDS(d_list$testing, paste0(fn, "_test.rds"))
+  d_list <- prep_train_test_data_for_stan(d, model_components)
+  saveRDS(d_list$training, paste0(folder, "train.rds"))
+  saveRDS(d_list$testing, paste0(folder, "test.rds"))
   rm(d_list)
   
-  rm(d, fn)
+  rm(d, folder)
 }
 
 fit_model <- function(dataset, fomo_ver, mode = "all",
@@ -71,7 +72,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
   } else if (mode == "traintest") {
     
-    d_list <- prep_train_test_data_for_stan(d, n_trials_to_sim = n_trials_to_sim)
+    d_list <- prep_train_test_data_for_stan(d)
     
     d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
     d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
@@ -107,10 +108,10 @@ prep_train_test_data_for_stan <- function(d,
   training <- d$training
   testing <- d$testing
   
-  training_list <- prep_data_for_stan(training$found, training$stim, 
+  training_list <- prep_data_for_stan(training,
                                       model_components, remove_last_found) 
   
-  testing_list <- prep_data_for_stan(testing$found, testing$stim, 
+  testing_list <- prep_data_for_stan(testing, 
                                      model_components, remove_last_found) 
   
   return(list(training = training_list,
@@ -182,7 +183,7 @@ prep_data_for_stan <- function(d, model_components = "spatial",
   n_trials <- length(unique(df$trial))
   
   # we will be trying to predict the item IDs, so lets save them as Y
-  Y = as.numeric(df$id)
+  Y <- as.numeric(df$id)
   
   # get condition info
   # this is a little more complicated than it looks as we may have some missing data
@@ -195,7 +196,7 @@ prep_data_for_stan <- function(d, model_components = "spatial",
   d_trl <- filter(d_trl, trial %in% (df %>% group_by(trial) %>% 
                                        summarise(n=n(), .groups = "drop"))$trial)
   
-  n_targets = unique(d_trl$n_items)
+  n_targets <- unique(d_trl$n_items)
   
   X <- as.numeric(d_trl$condition)
   
