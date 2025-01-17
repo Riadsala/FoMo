@@ -1,3 +1,31 @@
+fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
+  
+  # this file creates the d_list input data for FoMo.
+  # it will do this three times,
+  #   i) all data
+  #  ii) training data
+  # iii) test data
+  
+  # first, import dataset
+  d <- import_data(dataset)
+  
+  fn <- paste0("scratch/d_list/", dataset)
+  
+  # compute d_list on ALL the data
+  d_list <- prep_data_for_stan(d$found, d$stim, model_components)
+  saveRDS(d_list, paste0(fn, "_all.rds"))
+  rm(d_list)
+  
+  
+  # now compute for training/testing split
+  d_list <- prep_train_test_data_for_stan(d, n_trials_to_sim = n_trials_to_sim)
+  saveRDS(d_list$training, paste0(fn, "_train.rds"))
+  saveRDS(d_list$testing, paste0(fn, "_test.rds"))
+  rm(d_list)
+  
+  rm(d, fn)
+}
+
 fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
                       iter = 1000) {
@@ -122,156 +150,147 @@ prep_data_for_stan <- function(d, model_components = "spatial",
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
   
-  # first check to see if we have a cached version. 
   
-  if (file.exists(paste0("scratch/", d$dataset, ".rds"))) {
+  
+  # if we don't, lets compute it
+  df = d$found
+  ds = d$stim
+  rm(d)
+  
+  if (class(remove_last_found) != "logical") {
     
-    # if we do, let us just use that
-    d_list = readRDS(paste0("scratch/", d$dataset, ".rds"))
+    print("error")
+    break 
+  }
+  
+  ###################################################
+  # first, do some processing that everything requires
+  
+  # unsure where to put this... 
+  # remove distracters, as current model ignores them
+  ds %>% 
+    filter(item_class %in% c(1, 2)) -> ds
+  
+  if (remove_last_found) {
     
-  } else {
+    df %>%
+      filter(found != max(found)) -> df
+  }
+  
+  # extract stimulus parameters
+  n_people <- length(unique(df$person))
+  n_trials <- length(unique(df$trial))
+  
+  # we will be trying to predict the item IDs, so lets save them as Y
+  Y = as.numeric(df$id)
+  
+  # get condition info
+  # this is a little more complicated than it looks as we may have some missing data
+  d_trl <- ds %>% group_by(person, trial) %>% 
+    summarise(condition = unique(condition), 
+              n_items = n(),
+              .groups = "drop")
+  
+  # remove trials in which no targets were found
+  d_trl <- filter(d_trl, trial %in% (df %>% group_by(trial) %>% 
+                                       summarise(n=n(), .groups = "drop"))$trial)
+  
+  n_targets = unique(d_trl$n_items)
+  
+  X <- as.numeric(d_trl$condition)
+  
+  Z <- (ds %>% group_by(trial) %>% summarise(person = unique(person)))$person
+  
+  # add  these to list
+  d_list <- list(
+    N = nrow(df),
+    L = n_people,
+    K = length(unique(ds$condition)),
+    n_trials = n_trials,
+    n_targets = n_targets,
+    Y = Y,
+    X = array(X),
+    Z = Z,
+    found_order = df$found)  
+  
+  rm(d_trl, X)
+  
+  if ("spatial" %in% model_components) {
     
-    # if we don't, lets compute it
-    df = d$found
-    ds = d$stim
-    rm(d)
+    # We are assuming (x, y) are already on some sensible scale
     
-    if (class(remove_last_found) != "logical") {
-      
-      print("error")
-      break 
-    }
+    # pre-compute direction and distance data
+    spatial <- compute_inter_item_directions_and_distances(Y, df, ds)
     
-    ###################################################
-    # first, do some processing that everything requires
+    # pre-compute relative direction data
+    rel_direction <- compute_inter_sel_direction(Y, df, ds) 
     
-    # unsure where to put this... 
-    # remove distracters, as current model ignores them
-    ds %>% 
-      filter(item_class %in% c(1, 2)) -> ds
+    # rescale x and y to be both in the (0, 1) range
+    ds %>% mutate(x = as.vector(scales::rescale(x, to = c(0.01, 0.99))),
+                  y = as.vector(scales::rescale(y, to = c(0.01, 0.99)))) -> ds
     
-    if (remove_last_found) {
-      
-      df %>%
-        filter(found != max(found)) -> df
-    }
+    # get x y coords of all items
+    ds %>% ungroup() %>% select(person, trial, id, x) %>%  
+      pivot_wider(names_from = "id", values_from = "x") %>%
+      select(-person, -trial) -> itemX
     
-    # extract stimulus parameters
-    n_people <- length(unique(df$person))
-    n_trials <- length(unique(df$trial))
+    ds %>% ungroup() %>% select(person, trial, id, y) %>%  
+      pivot_wider(names_from = "id", values_from = "y") %>%
+      select(-person, -trial) -> itemY
     
-    # we will be trying to predict the item IDs, so lets save them as Y
-    Y = as.numeric(df$id)
+    d_list <- append(d_list, list(item_x = itemX,
+                                  item_y = itemY,
+                                  delta = spatial$distances,
+                                  phi = spatial$directions,
+                                  psi = rel_direction))
     
-    # get condition info
-    # this is a little more complicated than it looks as we may have some missing data
-    d_trl <- ds %>% group_by(person, trial) %>% 
-      summarise(condition = unique(condition), 
-                n_items = n(),
-                .groups = "drop")
+    rm(spatial, rel_direction)
+  }
+  
+  if ("item_class" %in% model_components) { 
     
-    # remove trials in which no targets were found
-    d_trl <- filter(d_trl, trial %in% (df %>% group_by(trial) %>% 
-                                         summarise(n=n(), .groups = "drop"))$trial)
+    # Used for categorical model_components, i.e., items are of one class or another
+    # We want to extract the number of classes, the number of targets per class, 
+    # class ID of each item, and whether the ith selected item matches the i-1 selected item
     
-    n_targets = unique(d_trl$n_items)
+    n_item_class <- length(unique(ds$item_class))
+    n_item_per_class <- length(unique(ds$id))/n_item_class
     
-    X <- as.numeric(d_trl$condition)
+    item_class = t(array(as.numeric(ds$item_class), dim = c(n_item_per_class*n_item_class, n_trials)))
+    item_class[which(item_class==2)] =  -1
     
-    Z <- (ds %>% group_by(trial) %>% summarise(person = unique(person)))$person
+    # work out which targets match previous target
+    matching <- does_item_match_prev_target(Y, df, item_class, n_item_per_class, n_item_class)
     
-    # add  these to list
-    d_list <- list(
-      N = nrow(df),
-      L = n_people,
-      K = length(unique(ds$condition)),
-      n_trials = n_trials,
-      n_targets = n_targets,
-      Y = Y,
-      X = array(X),
-      Z = Z,
-      found_order = df$found)  
+    d_list <- append(d_list, list(n_classes = n_item_class,
+                                  item_class = item_class,
+                                  S = matching))
+  }
+  
+  if ("cts" %in% model_components) {
     
-    rm(d_trl, X)
+    # Used when we have continuous model_components, i.e, the items have model_components vectors that take on a range of values
+    # special exception: circular model_components (colour, orientation) are dealt with separately 
     
-    if ("spatial" %in% model_components) {
-      
-      # We are assuming (x, y) are already on some sensible scale
-      
-      # pre-compute direction and distance data
-      spatial <- compute_inter_item_directions_and_distances(Y, df, ds)
-      
-      # pre-compute relative direction data
-      rel_direction <- compute_inter_sel_direction(Y, df, ds) 
-      
-      # rescale x and y to be both in the (0, 1) range
-      ds %>% mutate(x = as.vector(scales::rescale(x, to = c(0.01, 0.99))),
-                    y = as.vector(scales::rescale(y, to = c(0.01, 0.99)))) -> ds
-      
-      # get x y coords of all items
-      ds %>% ungroup() %>% select(person, trial, id, x) %>%  
-        pivot_wider(names_from = "id", values_from = "x") %>%
-        select(-person, -trial) -> itemX
-      
-      ds %>% ungroup() %>% select(person, trial, id, y) %>%  
-        pivot_wider(names_from = "id", values_from = "y") %>%
-        select(-person, -trial) -> itemY
-      
-      d_list <- append(d_list, list(item_x = itemX,
-                                    item_y = itemY,
-                                    delta = spatial$distances,
-                                    phi = spatial$directions,
-                                    psi = rel_direction))
-      
-      rm(spatial, rel_direction)
-    }
+    # we need to think asbout variable names
     
-    if ("item_class" %in% model_components) { 
-      
-      # Used for categorical model_components, i.e., items are of one class or another
-      # We want to extract the number of classes, the number of targets per class, 
-      # class ID of each item, and whether the ith selected item matches the i-1 selected item
-      
-      n_item_class <- length(unique(ds$item_class))
-      n_item_per_class <- length(unique(ds$id))/n_item_class
-      
-      item_class = t(array(as.numeric(ds$item_class), dim = c(n_item_per_class*n_item_class, n_trials)))
-      item_class[which(item_class==2)] =  -1
-      
-      # work out which targets match previous target
-      matching <- does_item_match_prev_target(Y, df, item_class, n_item_per_class, n_item_class)
-      
-      d_list <- append(d_list, list(n_classes = n_item_class,
-                                    item_class = item_class,
-                                    S = matching))
-    }
+    item_cols <- t(array(as.numeric(ds$col), dim = c(n_targets, n_trials)))
     
-    if ("cts" %in% model_components) {
-      
-      # Used when we have continuous model_components, i.e, the items have model_components vectors that take on a range of values
-      # special exception: circular model_components (colour, orientation) are dealt with separately 
-      
-      # we need to think asbout variable names
-      
-      item_cols <- t(array(as.numeric(ds$col), dim = c(n_targets, n_trials)))
-      
-      d_list <- append(d_list, list(item_colour = item_cols))
-      
-    }
-    
-    if ("circ" %in% model_components) {
-      
-      # Used when we have continuous circular model_components, i.e, values on a colour wheel, orientations
-      # For now, we extract the distance matrix for such model_components
-      
-      col_dist <- compute_inter_item_colour_dist(Y, df, ds)
-      
-      d_list <- append(d_list, list(col_dist = col_dist))
-    }
-    
-    d_list$trial = df$trial
+    d_list <- append(d_list, list(item_colour = item_cols))
     
   }
+  
+  if ("circ" %in% model_components) {
+    
+    # Used when we have continuous circular model_components, i.e, values on a colour wheel, orientations
+    # For now, we extract the distance matrix for such model_components
+    
+    col_dist <- compute_inter_item_colour_dist(Y, df, ds)
+    
+    d_list <- append(d_list, list(col_dist = col_dist))
+  }
+  
+  d_list$trial = df$trial
   
   return(d_list)
   
