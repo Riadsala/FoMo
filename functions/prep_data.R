@@ -56,7 +56,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
     # check if we have already computed and saved this
     
-    d_list <- prep_data_for_stan(d$found, d$stim, model_components)
+    d_list <- prep_data_for_stan(d, model_components)
     d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
     m <- mod$sample(data = d_list, 
@@ -71,7 +71,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     
   } else if (mode == "traintest") {
     
-    d_list <- prep_train_test_data_for_stan(d, n_trials_to_sim = n_trials_to_sim)
+    d_list <- prep_train_test_data_for_stan(d)
     
     d_list$training <- add_priors_to_d_list(d_list$training, modelver = fomo_ver)
     d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
@@ -98,8 +98,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 }
 
 prep_train_test_data_for_stan <- function(d, 
-                                          model_components = c("spatial", "item_class"), 
-                                          remove_last_found = FALSE) {
+                                          model_components = c("spatial", "item_class", remove_last_found = FALSE)) {
   
   # runs the same as prep_data_for_stan, but outputs a list of lists
   # ie, training set and test set
@@ -107,11 +106,11 @@ prep_train_test_data_for_stan <- function(d,
   training <- d$training
   testing <- d$testing
   
-  training_list <- prep_data_for_stan(training$found, training$stim, 
-                                      model_components, remove_last_found) 
+  training_list <- prep_data_for_stan(training, 
+                                      model_components) 
   
-  testing_list <- prep_data_for_stan(testing$found, testing$stim, 
-                                     model_components, remove_last_found) 
+  testing_list <- prep_data_for_stan(testing, 
+                                     model_components)
   
   return(list(training = training_list,
               testing  = testing_list))
@@ -144,8 +143,7 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   
 }
 
-prep_data_for_stan <- function(d, model_components = "spatial", 
-                               remove_last_found = FALSE) {
+prep_data_for_stan <- function(d, model_components = "spatial", remove_last_found = FALSE) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include

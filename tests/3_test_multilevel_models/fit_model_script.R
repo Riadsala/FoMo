@@ -51,25 +51,25 @@ saveRDS(d, "scratch/d_1_0.rds")
 
 # model 1.0
 
-m <- fit_model(d, fomo_ver = "1.0", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
+m <- fit_model(d, fomo_ver = "1.0", mode = "traintest", iter = 500) 
 
 # model 1.1
 
 saveRDS(d, "scratch/d_1_1.rds")
 
-m <- fit_model(d, fomo_ver = "1.1", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
+m <- fit_model(d, fomo_ver = "1.1", mode = "traintest",  iter = 500) 
 
 # model 1.2
 
 saveRDS(d, "scratch/d_1_2.rds")
 
-m <- fit_model(d, fomo_ver = "1.2", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
+m <- fit_model(d, fomo_ver = "1.2", mode = "traintest",  iter = 500) 
 
 # model 1.3
 
 saveRDS(d, "scratch/d_1_3.rds")
 
-m <- fit_model(d, fomo_ver = "1.3", mode = "traintest",  iter = 500, n_trials_to_sim = 3) 
+m <- fit_model(d, fomo_ver = "1.3", mode = "traintest",  iter = 500) 
 
 
 # COMPUTING LOTS OF STUFF
