@@ -63,7 +63,6 @@ plot_model_fixed(post)
 
 pred <- summarise_postpred(fit, d, draw_sample_frac = 0.1)
 
-
 pred$sim %>% group_by(.draw, person, trial) %>%
   summarise(n = n()) %>%
   summary
