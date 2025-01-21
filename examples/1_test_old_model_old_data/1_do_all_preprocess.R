@@ -8,11 +8,15 @@ dir.create("scratch")
 dir.create("scratch/d_list/")
 
 
-datasets <- c("hughes2024rsos", "clarke2022qjep")
+datasets <- c("hughes2024rsos", "clarke2022qjep", "kristjansson2014plos", "tagu2022cog")
 
-dataset <- "hughes2024rsos"
+for (i in 1:length(datasets)){
+  
+  dataset <- datasets[i]
+  print(paste0("currently processing ", dataset))
+  
+  fomo_preprocess(dataset)
+  
+}
 
-
-
-fomo_preprocess(dataset)
 
