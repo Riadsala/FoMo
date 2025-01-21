@@ -33,8 +33,8 @@ Here we provide more in depth analysis on how well a particular model fits a giv
 
 ```{r}
 model_ver <- "1_0"
-dataset   <- "kristjansson2014plos"
-
+# dataset   <- "kristjansson2014plos"
+dataset <- "clarke2022qjep"
 ```
 
 
@@ -73,7 +73,7 @@ rm(items, items_left)
 #| cache: true
 
 pred <- summarise_postpred(list(training = m, testing = t), d, 
-                                 get_sim = FALSE, draw_sample_frac=0.25)
+                                 get_sim = FALSE, draw_sample_frac=0.025)
 acc <- compute_acc(pred$acc)
 
 acc %>% ggplot(aes(found, accuracy)) +
@@ -160,7 +160,7 @@ iisv  %>%
 ## Absolute directions
 
 ```{r}
-plot_rose(iisv, fl = "x", binsize = 15) + facet_wrap(~condition) +
+plot_rose(iisv, fl = "x", binsize = 7.5) + facet_wrap(~condition) +
   theme(legend.position = "none") -> plt_rose
 
 plt_rose
