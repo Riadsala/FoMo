@@ -258,11 +258,8 @@ generated quantities {
   //////////////////////////////////////////////////////////////////////////////
   {
     vector[n_targets] remaining_items_j;
-    vector[n_targets] S_j;
-    // some counters and index variables, etc.
-    vector[n_targets] weights;  // class weight for teach target
-
-    vector[n_targets] psi_j, phi_j, delta_j;
+    vector[n_targets] S_j, psi_j, delta_j;
+    vector[n_targets] weights;  // class weight for each target
 
     //for each trial
     for (t in 1:n_trials) {
@@ -277,9 +274,8 @@ generated quantities {
       for (ii in 1:n_targets) {
 
         // create empty vectors to store our features in
-        S_j = rep_vector(0, n_targets);
-        delta_j = rep_vector(1, n_targets);
-        phi_j = rep_vector(1, n_targets);
+        //S_j = rep_vector(0, n_targets);
+        //delta_j = rep_vector(1, n_targets);
           
         // if we're not on the first item.... calculate feature vectors  
         if (ii > 1) 
@@ -287,7 +283,6 @@ generated quantities {
           S_j     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
           delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
           psi_j   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
-
         }
 
         weights = compute_weights(

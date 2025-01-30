@@ -26,7 +26,7 @@ functions {
     // calculate by spatial weights
     weights += compute_spatial_weights(
       n, n_targets, u_delta, delta);
-        
+
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
 
@@ -44,8 +44,8 @@ functions {
 
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta);
-  
+     rho_delta, delta);
+
     // return the dot product of the weights
     return(prox_weights);
 
@@ -89,8 +89,6 @@ data {
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
 
-  // parameters for simulation (generated quantities)
-  int<lower = 0> n_trials_to_sim;
 }
 
 transformed data{
@@ -187,14 +185,14 @@ model {
     t = trial[ii];
     z = Z[t];
     x = X[t];
- 
+
     weights = compute_weights(
       u_a[x, z], u_stick[x, z], u_delta[x, z],
       to_vector(item_class[t]), S[ii], delta[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     target += log(weights[Y[ii]]);
-  
+
   }
 }
 
@@ -209,11 +207,14 @@ generated quantities {
 
   // for trial level predictions, we have to remember that we do not have a stopping rule yet
   // so we will simply collect all of the targets
-  array[L, K, n_trials_to_sim, n_targets] int Q; 
-  array[L, K, n_trials_to_sim] int sim_trial_id = rep_array(0, L, K, n_trials_to_sim); 
+  array[n_trials, n_targets] int Q;
 
   //////////////////////////////////////////////////////////////////////////////
-  // first, step through data and compare model selections to human participants
+  /* 
+  i) Step through data item-selection at a time and compute which item the 
+  model selects next. This allows us to compute accuracy
+  */
+  //////////////////////////////////////////////////////////////////////////////
   {
     // some counters and index variables, etc.
     vector[n_targets] weights;  // class weight for teach target
@@ -224,7 +225,7 @@ generated quantities {
     //////////////////////////////////////////////////
     // // step through data row by row and define LLH
     //////////////////////////////////////////////////
-   for (ii in 1:N) {
+    for (ii in 1:N) {
 
       t = trial[ii];
       z = Z[t];
@@ -242,63 +243,51 @@ generated quantities {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  // now allow the model to do a whole trial on its own
+  /* 
+  ii) Simulate each trial, start to finish. This allows us to compuare the model
+  to human participants in terms of run statistics and selection vectors
+  */
+  //////////////////////////////////////////////////////////////////////////////
   {
     vector[n_targets] remaining_items_j;
-    vector[n_targets] S_j;
-    // some counters and index variables, etc.
-    vector[n_targets] weights;  // class weight for teach target
-
-    vector[n_targets] psi_j, phi_j, delta_j;
-
-    array[L, K] int n_trials_simmed = rep_array(0, L, K);
+    vector[n_targets] S_j, psi_j, delta_j;
+    vector[n_targets] weights;  // 
 
     //for each trial
     for (t in 1:n_trials) {
 
       int z = Z[t];
       int x = X[t];
-      int ts; // trial number, in terms of number simulated
 
       // first, set things up!
       remaining_items_j = rep_vector(1, n_targets);
 
-      // check that we haven't done enoguh trials already
-      if (n_trials_simmed[z, x] < n_trials_to_sim) {
 
-        // simulate another trial!
-        n_trials_simmed[z, x] += 1;
-        ts = n_trials_simmed[z, x];
-        sim_trial_id[z, x, n_trials_simmed[z, x]] = t;
+      // simulate a trial!
+      for (ii in 1:n_targets) {
 
-        // simulate a trial!
-        for (ii in 1:n_targets) {
+        // delta_j: distance to previously selected item
+        //S_j = rep_vector(0, n_targets);
+        // delta_j = rep_vector(1, n_targets);
 
-          // delta_j: distance to previously selected item
-          S_j = rep_vector(0, n_targets);
-          delta_j = rep_vector(1, n_targets);
-            
-          if (ii > 1) {
-
-            S_j     = compute_matching(item_class[t], n_targets, Q[z, x, ts, ], ii);
-            delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[z, x, ts, ], ii);
-     
-          }
-
-          weights = compute_weights(
-            u_a[x, z], u_stick[x, z], u_delta[x, z],
-            to_vector(item_class[t]), S_j, delta_j,
-            found_order[ii], n_targets, remaining_items_j); 
-
-
-          Q[z, x, ts, ii] = categorical_rng(weights);
-
-          // update remaining_items2
-          remaining_items_j[Q[z, x, ts, ii]] = 0;
- 
+        if (ii > 1) 
+        {
+          S_j     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
+          delta_j = compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
         }
+
+        weights = compute_weights(
+          u_a[x, z], u_stick[x, z], u_delta[x, z],
+          to_vector(item_class[t]), S_j, delta_j,
+          found_order[ii], n_targets, remaining_items_j); 
+
+        Q[t, ii] = categorical_rng(weights);
+
+        // update remaining_items2
+        remaining_items_j[Q[t, ii]] = 0;
+
       }
-      
     }
-  } 
-}
+
+  }
+} 

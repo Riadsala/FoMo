@@ -1,20 +1,24 @@
 library(tidyverse)
-library(cmdstanr)
+# library(cmdstanr)
+
+# This script reads evaluates model accuracy and computes summaries
+# allowing us to compare human and model run statistics and inter-
+# item selection vectors. 
 
 source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 source("../../functions/compute_summary_stats.R")
-source("../../functions/plot_model.R")
-source("../../functions/plot_data.R")
+# source("../../functions/plot_model.R")
+# source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
-source("../../functions/sim_foraging_data.R")
+# source("../../functions/sim_foraging_data.R")
 
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
 
 datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
-models <- c("1_0", "1_1", "1_2")
+models <- "1_0" #c("1_0", "1_1", "1_2")
 
 ############################################################################
 
@@ -28,7 +32,7 @@ compare_FoMo_accuracy <- function(dataset) {
   for (modelver in models)
   {
     
-    m <- readRDS(paste0("scratch/", dataset, "_train_", modelver, ".model"))
+    m <- readRDS(paste0("scratch/models/", dataset, "/train", modelver, ".model"))
     t <- readRDS(paste0("scratch/", dataset, "_test_", modelver, ".model"))
     
     pred <- summarise_postpred(list(training = m, testing = t), d, 
