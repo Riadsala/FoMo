@@ -73,7 +73,8 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   
 }
 
-prep_data_for_stan <- function(d, model_components = "spatial", remove_last_found = FALSE) {
+prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"), 
+                               remove_last_found = FALSE) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include

@@ -19,8 +19,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   # either "all" or "training"
   
   # get d_list
-  d_list <- get_list(dataset, mode)
-
+  d_list <- get_list(dataset, mode, "training")
+ 
   # add priors to d_list
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
   
@@ -40,7 +40,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   if (mode == "traintest") {
     
     # now get generated quantities for test data
-    d_list <- readRDS(paste0(dlist_folder, "test.rds"))
+    d_list <- get_list(dataset, mode, "testing")
     #d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
     
     m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
@@ -52,20 +52,25 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
 }
 
-get_list <- function(dataset, mode) {
-  
+get_list <- function(dataset, mode, stage) {
   
   if (class(dataset) == "character") {
     
     # if we provide a dataset label, load a precomputed d_list
-
     dlist_folder <- paste0("scratch/d_list/", dataset, "/")
     
     if (mode == "all") {
       d_list <- readRDS(paste0(dlist_folder, "all.rds"))
     } else {
-      d_list <- readRDS(paste0(dlist_folder, "train.rds"))
+      
+      # load either training or testing dlist
+      if (stage == "training") {
+        d_list <- readRDS(paste0(dlist_folder, "train.rds"))
+      } else {
+        d_list <- readRDS(paste0(dlist_folder, "test.rds"))
+      }
     }
+    
   } else {
     # otherwise... compute d_list from scratch
     
@@ -73,8 +78,12 @@ get_list <- function(dataset, mode) {
       d_list <- prep_data_for_stan(d)
     } else {
       d_list <- prep_train_test_data_for_stan(d)
+      
+      if (stage == "training") {
+        d_list = d_list$training
+      } else {
+        d_list = d_list$testing
+      }
     }
-    
   }
-  
 }
