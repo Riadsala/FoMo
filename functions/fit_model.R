@@ -18,14 +18,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   # fit model to data 
   # either "all" or "training"
   
-  # load d_list
-  dlist_folder <- paste0("scratch/d_list/", dataset, "/")
-  
-  if (mode == "all") {
-    d_list <- readRDS(paste0(dlist_folder, "all.rds"))
-  } else {
-    d_list <- readRDS(paste0(dlist_folder, "train.rds"))
-  }
+  # get d_list
+  d_list <- get_list(dataset, mode)
 
   # add priors to d_list
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
@@ -54,6 +48,33 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     filename <- paste0("scratch/models", dataset, "test", fomo_ver_str, ".model")
     m_test$save_object(filename)
 
+  }
+  
+}
+
+get_list <- function(dataset, mode) {
+  
+  
+  if (class(dataset) == "character") {
+    
+    # if we provide a dataset label, load a precomputed d_list
+
+    dlist_folder <- paste0("scratch/d_list/", dataset, "/")
+    
+    if (mode == "all") {
+      d_list <- readRDS(paste0(dlist_folder, "all.rds"))
+    } else {
+      d_list <- readRDS(paste0(dlist_folder, "train.rds"))
+    }
+  } else {
+    # otherwise... compute d_list from scratch
+    
+    if (mode == "all") {
+      d_list <- prep_data_for_stan(d)
+    } else {
+      d_list <- prep_train_test_data_for_stan(d)
+    }
+    
   }
   
 }
