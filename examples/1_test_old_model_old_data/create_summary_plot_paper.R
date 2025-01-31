@@ -30,30 +30,31 @@ pred <- summarise_postpred(list(training = m, testing = t), d,
                            get_sim = TRUE, draw_sample_frac = 0.01)
 
 # sanity check we have correct number of items per trial etc
-
 pred$sim %>% group_by(person, condition, .draw, trial) %>%
   summarise(n = n())  -> tmp
-
 
 pred$acc %>% group_by(.draw) %>%
   summarise(n = n()) %>%
   summarise(n = unique(n))
 
-
- tmp %>% filter(n > 40) -> tmp2
+tmp %>% filter(n > 40) -> tmp2
  
- summary(tmp2)
+summary(tmp2)
  
- filter(pred$acc, .draw == 1397) %>% group_by(person, trial, condition) %>%
+filter(pred$acc, .draw == 1397) %>% group_by(person, trial, condition) %>%
    summarise(n=n()) -> tmp3
 
 rm(m, t)
 
 
-
+#############################################################################
+# plot accuracy
 #############################################################################
 
+
+#############################################################################
 # compute empirical run statistics
+#############################################################################
 rle <- get_run_info_over_trials(d$found) %>%
   group_by(person, condition) %>%
   summarise(max_run_length = mean(max_run_length),

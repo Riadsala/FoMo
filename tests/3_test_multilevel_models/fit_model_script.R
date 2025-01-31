@@ -47,11 +47,11 @@ d <- sim_foraging_people(n_people = 16,
                          inital_sel_params = inital_sel_params,
                          rel_proximity = FALSE) 
 
-# saveRDS(d, "scratch/d_1_0.rds")
+saveRDS(d, "scratch/d_1_0.rds")
 
 # model 1.0
 
-m <- fit_model(d, fomo_ver = "1.0", mode = "traintest", iter = 500) 
+m <- fit_model(d, fomo_ver = "1.0", mode = "all", iter = 500) 
 
 # model 1.1
 
