@@ -9,39 +9,29 @@ source("../../functions/plot_data.R")
 
 d <- import_data("clarke2022qjep")
 
-m13te <- readRDS("scratch/clarke2022qjep_test_1_3.model")
-m13tr <- readRDS("scratch/clarke2022qjep_train_1_3.model")
 
-pred13 <- summarise_postpred(list(training = m13tr, testing = m13te), 
+mte <- readRDS("scratch/clarke2022qjep_test_1_0.model")
+mtr <- readRDS("scratch/clarke2022qjep_train_1_0.model")
+
+pred <- summarise_postpred(list(training = mtr, testing = mte), 
                              d,  multi_level = TRUE, get_sim = FALSE)
 
-rm(m13te, m13tr)
 
-m12te <- readRDS("scratch/clarke2022qjep_test_1_2.model")
-m12tr <- readRDS("scratch/clarke2022qjep_train_1_2.model")
 
-pred12 <- summarise_postpred(list(training = m12tr, testing = m12te), 
-                             d,  multi_level = TRUE, get_sim = FALSE)
-
-rm(m12te, m12tr)
-
-acc12 <- compute_acc(pred12$acc)
-acc13 <- compute_acc(pred13$acc)
-
-rm(pred10, pred13)
-
+acc <- compute_acc(pred$acc)
 
 chance  = tibble(found = 1:40,
                  accuracy = 1/(41-found))
 
-bind_rows(acc12 %>% mutate(model = "1.2"),
-          acc13 %>% mutate(model = "1.3")) %>%
+acc %>%
   ggplot(aes(x = found, y = accuracy)) +
-  geom_lineribbon(alpha = 0.75, aes(fill = model, colour = model,
-                                    ymin = .lower, ymax = .upper, group = interaction(model, .width))) + 
-  facet_grid(condition~split) + 
+  geom_lineribbon(alpha = 0.75, aes(fill = condition, colour = condition,
+                                    ymin = .lower, ymax = .upper, group = interaction(condition, .width))) + 
+  facet_grid(.~split) + 
   geom_path(data = chance, aes(found, accuracy), linetype = 2) +
-  theme_bw()
+  theme_bw() + 
+  ggthemes::scale_fill_ptol() + 
+  ggthemes::scale_colour_ptol()
 
 ggsave("acc.png", width = 4,  height = 3)
 
