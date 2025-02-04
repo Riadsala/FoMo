@@ -17,8 +17,203 @@ pred <- summarise_postpred(list(training = mtr, testing = mte),
                              d,  multi_level = TRUE, get_sim = FALSE)
 
 
+# plot an example trial predictions
 
+
+trl <- 5
+i <- 8
+
+
+ds <- filter(d$stim, trial == trl)
+df <- filter(d$found, trial == trl)
+
+
+ds %>% mutate(item_class = factor(item_class)) -> ds
+
+# plot basic trial
+plt <- ggplot(data = ds, aes(x, y)) + 
+  geom_path(data = filter(df, found<i), colour = "black", group = 1, linewidth = 2)  +
+  geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
+  ggrepel::geom_label_repel(data = df %>% filter(found < i), aes(label = found), size = 3) + 
+  scale_colour_manual(values = c(18, 15, 3, 4)) + 
+  scale_shape_manual(values = c(15, 19, 3, 4))
+
+plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example1.png", width = 5, height = 5)
+
+
+# plot basic trial
+plt <- ggplot(data = filter(ds, id >= i-1), aes(x, y)) + 
+  geom_path(data = filter(df, found<i), colour = "black", group = 1, linewidth = 2)  +
+  geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
+   scale_colour_manual(values = c(18, 15, 3, 4)) + 
+  scale_shape_manual(values = c(15, 19, 3, 4))
+
+plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example2.png", width = 5, height = 5)
+
+pred$acc %>% filter(trial == trl, found == i) -> p
+summary(p)
+
+
+d$stim %>% filter(trial == trl,
+                  id %in% p$P) %>%
+  rename(x2 = "x", y2 = "y") %>%
+  mutate(x = filter(d$stim, trial ==trl, id == i-1)$x,
+         y = filter(d$stim, trial ==trl, id == i-1)$y)  -> pp
+
+p %>% group_by(P) %>%
+  summarise(w = n()) %>%
+  rename(id = P) %>%
+  full_join(pp) -> p
+
+p$w = p$w - min(p$w)
+p$w = p$w / max(p$w)
+plt + 
+  geom_segment(data = p, aes(x = x, y = y, xend = x2, yend = y2, linewidth = w),
+               alpha = 0.75, colour = "dodgerblue",
+             arrow = arrow()) -> plt
+
+
+plt <- plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example3.png", width = 5, height = 5)
+
+
+i <- 9
+
+
+# plot basic trial
+plt <- ggplot(data = filter(ds, id >= i-1), aes(x, y)) + 
+  geom_path(data = filter(df, found<i), colour = "black", group = 1, linewidth = 2)  +
+  geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
+  scale_colour_manual(values = c(18, 15, 3, 4)) + 
+  scale_shape_manual(values = c(15, 19, 3, 4))
+
+plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example4.png", width = 5, height = 5)
+
+pred$acc %>% filter(trial == trl, found == i) -> p
+summary(p)
+
+
+d$stim %>% filter(trial == trl,
+                  id %in% p$P) %>%
+  rename(x2 = "x", y2 = "y") %>%
+  mutate(x = filter(d$stim, trial ==trl, id == i-1)$x,
+         y = filter(d$stim, trial ==trl, id == i-1)$y)  -> pp
+
+p %>% group_by(P) %>%
+  summarise(w = n()) %>%
+  rename(id = P) %>%
+  full_join(pp) -> p
+
+p$w = p$w - min(p$w)
+p$w = p$w / max(p$w)
+plt + 
+  geom_segment(data = p, aes(x = x, y = y, xend = x2, yend = y2, linewidth = w),
+               alpha = 0.75, colour = "dodgerblue",
+               arrow = arrow()) -> plt
+
+
+plt <- plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example5.png", width = 5, height = 5)
+
+
+
+i <- 10
+
+
+# plot basic trial
+plt <- ggplot(data = filter(ds, id >= i-1), aes(x, y)) + 
+  geom_path(data = filter(df, found<i), colour = "black", group = 1, linewidth = 2)  +
+  geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
+  scale_colour_manual(values = c(18, 15, 3, 4)) + 
+  scale_shape_manual(values = c(15, 19, 3, 4))
+
+plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example6.png", width = 5, height = 5)
+
+pred$acc %>% filter(trial == trl, found == i) -> p
+summary(p)
+
+
+d$stim %>% filter(trial == trl,
+                  id %in% p$P) %>%
+  rename(x2 = "x", y2 = "y") %>%
+  mutate(x = filter(d$stim, trial ==trl, id == i-1)$x,
+         y = filter(d$stim, trial ==trl, id == i-1)$y)  -> pp
+
+p %>% group_by(P) %>%
+  summarise(w = n()) %>%
+  rename(id = P) %>%
+  full_join(pp) -> p
+
+p$w = p$w - min(p$w)
+p$w = p$w / max(p$w)
+plt + 
+  geom_segment(data = p, aes(x = x, y = y, xend = x2, yend = y2, linewidth = w),
+               alpha = 0.75, colour = "dodgerblue",
+               arrow = arrow()) -> plt
+
+
+plt <- plt + coord_equal() + 
+  theme(axis.title = element_blank(),
+        axis.ticks  = element_blank(),
+        axis.text = element_blank(),
+        legend.position = "none",
+        plot.background = element_rect(fill='darkgrey', colour='black'),
+        panel.grid = element_blank())
+
+ggsave("example7.png", width = 5, height = 5)
+
+
+
+
+# more general accuracy plots
 acc <- compute_acc(pred$acc)
+
 
 chance  = tibble(found = 1:40,
                  accuracy = 1/(41-found))
