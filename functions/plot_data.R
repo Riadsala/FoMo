@@ -66,7 +66,8 @@ plot_a_trial <- function(ds, df,
           axis.ticks  = element_blank(),
           axis.text = element_blank(),
           legend.position = "none",
-          plot.background = element_rect(fill='darkgrey', colour='black'))
+          plot.background = element_rect(fill='darkgrey', colour='black'),
+          panel.grid = element_blank())
   
   if (!is.na(filename)) {
     ggsave(filename)
