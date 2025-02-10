@@ -274,8 +274,8 @@ generated quantities {
       for (ii in 1:n_targets) {
 
         // create empty vectors to store our features in
-        //S_j = rep_vector(0, n_targets);
-        //delta_j = rep_vector(1, n_targets);
+        S_j = rep_vector(0, n_targets);
+        delta_j = rep_vector(1, n_targets);
           
         // if we're not on the first item.... calculate feature vectors  
         if (ii > 1) 
@@ -289,6 +289,7 @@ generated quantities {
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
           to_vector(item_class[t]), S_j, delta_j, psi_j,
           found_order[ii], n_targets, remaining_items_j); 
+
 
         Q[t, ii] = categorical_rng(weights);
 

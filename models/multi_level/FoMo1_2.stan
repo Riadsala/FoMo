@@ -267,8 +267,8 @@ generated quantities {
       for (ii in 1:n_targets) {
 
         // delta_j: distance to previously selected item
-        //S_j = rep_vector(0, n_targets);
-        // delta_j = rep_vector(1, n_targets);
+        S_j = rep_vector(0, n_targets);
+        delta_j = rep_vector(1, n_targets);
 
         if (ii > 1) 
         {

@@ -3,6 +3,14 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
                       iter = 1000) {
   
+  # check that if dataset is a list, did we provide a name?
+  if (class(dataset) == "list") {
+    if (is.null(dataset$name)) {
+      print("ERROR: please provide a dataset name in d")
+      return()
+    }
+ }
+  
   # first, load in the Stan model
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver_str, ".stan"))
@@ -23,7 +31,6 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
  
   # add priors to d_list
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
-  
 
   m <- mod$sample(data = d_list, 
                     chains = 4, parallel_chains = 4, threads = 4,
@@ -34,7 +41,14 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   # now save
   dir.create("scratch/models")
-  filename <- paste0("scratch/models", dataset, mode, fomo_ver_str, ".model")
+  
+  if (class(dataset) == "list") {
+    filename <- paste0("scratch/models", dataset$name, mode, fomo_ver_str, ".model")
+    
+  } else {
+    filename <- paste0("scratch/models", dataset, mode, fomo_ver_str, ".model")
+  } 
+   print(filename)
   m$save_object(filename)
     
   if (mode == "traintest") {
@@ -49,7 +63,6 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     m_test$save_object(filename)
 
   }
-  
 }
 
 get_list <- function(dataset, mode, stage) {
