@@ -14,7 +14,8 @@ sim_foraging_people <- function(n_people = 4,
                                 rho_psi = 0, sd_rho_psi = 5,
                                 abs_dir_tuning = abs_dir_tuning,
                                 inital_sel_params,
-                                rel_proximity = FALSE) {
+                                rel_proximity = FALSE,
+                                filename = "sim") {
   
   ## if some params have been specified as a constant, replicate over conditions.
   # b_stick <- check_and_rep_param(b_stick, n_conditions)
@@ -59,8 +60,15 @@ sim_foraging_people <- function(n_people = 4,
            trial = as.numeric(trial))
   
   d <- list(stim = ds, found = df,
-            name = "simulation",
+            name = filename,
             dp = dpeeps)
+  
+  # create save folder if it doesn't yet exist
+  if(!dir.exists("scratch/data")) {
+    dir.create("scratch/data")
+  }
+  
+  saveRDS(d, paste0("scratch/data/", d$name, ".RDS"))
   
   return(d)
   
