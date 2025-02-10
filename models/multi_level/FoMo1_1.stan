@@ -282,7 +282,7 @@ generated quantities {
         // delta_j: distance to previously selected item
         S_j = rep_vector(0, n_targets);
         delta_j = rep_vector(1, n_targets);
-        phi_j = rep_vector(1, n_targets);
+        psi_j = rep_vector(1, n_targets);
             
         if (ii > 1) 
         {

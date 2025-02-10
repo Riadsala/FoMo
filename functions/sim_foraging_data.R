@@ -58,7 +58,9 @@ sim_foraging_people <- function(n_people = 4,
            trial = as_factor(trial),
            trial = as.numeric(trial))
   
-  d <- list(stim = ds, found = df, dp = dpeeps)
+  d <- list(stim = ds, found = df,
+            name = "simulation",
+            dp = dpeeps)
   
   return(d)
   

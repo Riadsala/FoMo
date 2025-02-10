@@ -9,9 +9,17 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
       print("ERROR: please provide a dataset name in d")
       return()
     }
- }
+  }
   
-  # first, load in the Stan model
+  # create save folder if it doesn't yet exist
+  if(!dir.exists("scratch/models")) {
+    dir.create("scratch/models")
+  }
+  
+  # get dataset name
+  dataset_name <- get_dataset_name(dataset)
+  
+  # load in the Stan model
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver_str, ".stan"))
   
@@ -40,26 +48,27 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                     fixed_param = fxdp)
   
   # now save
-  dir.create("scratch/models")
-  
-  if (class(dataset) == "list") {
-    filename <- paste0("scratch/models", dataset$name, mode, fomo_ver_str, ".model")
-    
+  if (mode == "all") {
+    filename <- paste0("scratch/models/", dataset_name, "all", fomo_ver_str, ".model")
   } else {
-    filename <- paste0("scratch/models", dataset, mode, fomo_ver_str, ".model")
-  } 
-   print(filename)
+    filename <- paste0("scratch/models/", dataset_name, "train", fomo_ver_str, ".model")
+  }
   m$save_object(filename)
-    
+  
+  ###########################################################################
+  # If we are in train-test model, we should now 
+  # compute generated quantities for the test data
+  ###########################################################################
   if (mode == "traintest") {
     
-    # now get generated quantities for test data
     d_list <- get_list(dataset, mode, "testing")
-    #d_list$testing  <- add_priors_to_d_list(d_list$testing,  modelver = fomo_ver)
+    # although we aren't using the priors, the model still
+    # expects them to be in the input
+    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver)
     
-    m_test <- mod$generate_quantities(m_train, data = d_list$testing, seed = 123)
+    m_test <- mod$generate_quantities(m, data = d_list, seed = 123)
     
-    filename <- paste0("scratch/models", dataset, "test", fomo_ver_str, ".model")
+    filename <- paste0("scratch/models/", dataset_name, "test", fomo_ver_str, ".model")
     m_test$save_object(filename)
 
   }
@@ -99,4 +108,20 @@ get_list <- function(dataset, mode, stage) {
       }
     }
   }
+}
+
+get_dataset_name <- function(ds) {
+  
+  # as ds can either be a string (pointing to a dataset name) or
+  # an actual list-dataset, we better sort that out
+  
+  if (class(ds) == "list") {
+    ds_name <- ds$name
+    
+  } else {
+    ds_name <- ds 
+  }
+  
+  return(ds_name)
+  
 }

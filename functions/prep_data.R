@@ -1,31 +1,31 @@
-fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
-  
-  # this file creates the d_list input data for FoMo.
-  # it will do this three times,
-  #   i) all data
-  #  ii) training data
-  # iii) test data
-  
-  # first, import dataset
-  d <- import_data(dataset)
-  
-  folder <- paste0("scratch/d_list/", dataset, "/")
-  dir.create(folder)
-  
-  # compute d_list on ALL the data
-  d_list <- prep_data_for_stan(d, model_components)
-  saveRDS(d_list, paste0(folder, "all.rds"))
-  rm(d_list)
-  
-  
-  # now compute for training/testing split
-  d_list <- prep_train_test_data_for_stan(d, model_components)
-  saveRDS(d_list$training, paste0(folder, "train.rds"))
-  saveRDS(d_list$testing, paste0(folder, "test.rds"))
-  rm(d_list)
-  
-  rm(d, folder)
-}
+# fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
+#   
+#   # this file creates the d_list input data for FoMo.
+#   # it will do this three times,
+#   #   i) all data
+#   #  ii) training data
+#   # iii) test data
+#   
+#   # first, import dataset
+#   d <- import_data(dataset)
+#   
+#   folder <- paste0("scratch/d_list/", dataset, "/")
+#   dir.create(folder)
+#   
+#   # compute d_list on ALL the data
+#   d_list <- prep_data_for_stan(d, model_components)
+#   saveRDS(d_list, paste0(folder, "all.rds"))
+#   rm(d_list)
+#   
+#   
+#   # now compute for training/testing split
+#   d_list <- prep_train_test_data_for_stan(d, model_components)
+#   saveRDS(d_list$training, paste0(folder, "train.rds"))
+#   saveRDS(d_list$testing, paste0(folder, "test.rds"))
+#   rm(d_list)
+#   
+#   rm(d, folder)
+# }
 
 prep_train_test_data_for_stan <- function(d, 
                                           model_components = c("spatial", "item_class"), 
@@ -34,6 +34,14 @@ prep_train_test_data_for_stan <- function(d,
   # runs the same as prep_data_for_stan, but outputs a list of lists
   # ie, training set and test set
   d <- get_train_test_split(d)
+  
+  # check that there is data in the test set! 
+  # ie, the number of trials wasn't too small
+  if (nrow(d$testing$found) == 0) {
+    print("ERROR: no test data. Have you set n_trials to 1?")
+    return()
+  }
+  
   training <- d$training
   testing <- d$testing
   
