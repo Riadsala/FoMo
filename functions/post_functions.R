@@ -154,6 +154,8 @@ extract_post_random <- function(m, cl) {
   vars <- m$metadata()$stan_variables
   # all fixed effects should start with "u"
   pvars <- vars[str_detect(vars, "^u_")]
+  # we don't want to deal with any theta parameters here
+  pvars <- pvars[!str_detect(pvars, "u_log_theta")]
   
   post <- m$draws(pvars, format = "df") %>%
     as_tibble() %>%

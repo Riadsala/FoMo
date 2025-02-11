@@ -13,7 +13,6 @@ source("../../functions/fit_model.R")
 d <- readRDS("scratch/data/test_anna.RDS")
 
 dataset <- "test_anna"
-model_ver <- "1_0"
 mode <- "all"
 
 get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
@@ -95,7 +94,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
 # compute interesting stuff
 #################################################################################
 
-post <- get_post_and_pred_from_saved_model(d, "1_0", "traintest")
+post <- get_post_and_pred_from_saved_model(d, "1_3", "traintest")
 stats <- get_rl_and_iisv_statistics(d, post$sim)
 
 #################################################################################
@@ -103,9 +102,7 @@ stats <- get_rl_and_iisv_statistics(d, post$sim)
 #################################################################################
 
 # accuracy
-post$acc %>%
-  ggplot(aes(found, accuracy)) +
-  stat_lineribbon(alpha = 0.5)
+### tidy up plot_model_accuracy() in plot_models
 
 # posterior densities
 plot_model_fixed(post, gt = d$params)
