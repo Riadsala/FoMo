@@ -3,17 +3,7 @@
 # the main function is sim_foraging_trial() which does what is says.
 # sim_foraging_people() allows us to simulate a whole dataset (multiple people, conditions and trials)
 
-sim_foraging_people <- function(n_people = 4,
-                                n_conditions = 2,
-                                cond_lab = c("A", "B"),
-                                n_trials_per_cond = 3,
-                                n_item_class = 3, n_item_per_class = 2,
-                                item_class_weights, sd_bA,
-                                b_stick = 0, sd_b_stick = 1,
-                                rho_delta = 10, sd_rho_delta = 2,
-                                rho_psi = 0, sd_rho_psi = 5,
-                                abs_dir_tuning = abs_dir_tuning,
-                                inital_sel_params,
+sim_foraging_people <- function(params,
                                 rel_proximity = FALSE,
                                 filename = "sim") {
   
@@ -23,10 +13,29 @@ sim_foraging_people <- function(n_people = 4,
   # sig_theta <- check_and_rep_param(sig_theta, n_conditions)
   # n_trials_per_cond <- check_and_rep_param(n_trials_per_cond, n_conditions)
   
+  n_people <- params$exp$n_people
+  n_conditions <- params$exp$n_conditions
+  cond_lab <- params$exp$condition_name
+  n_trials_per_cond <- params$exp$n_trials_per_cond
+  n_item_class <- params$exp$n_item_class
+  n_item_per_class <- params$exp$n_item_per_class
+  
+  mu_cw <- filter(params$foragaging, param == "bA")$mu
+  sd_bA <- filter(params$foragaging, param == "bA")$sd[[1]]
+  
+  b_stick <- filter(params$foragaging, param == "bS")$mu[[1]]
+  sd_b_stick <- filter(params$foragaging, param == "bS")$sd[[1]]
+  
+  rho_delta <- filter(params$foragaging, param == "rho_delta")$mu[[1]]
+  sd_rho_delta <- filter(params$foragaging, param == "rho_delta")$sd[[1]]
+  
+  rho_psi <- filter(params$foragaging, param == "rho_psi")$mu[[1]]
+  sd_rho_psi <- filter(params$foragaging, param == "rho_psi")$sd[[1]]
+  
   # generate random effects
   dpeeps <- tibble(person = rep(1:n_people, n_conditions),
                    condition  = rep(cond_lab, each = n_people),
-                   mu_cw = rep(item_class_weights, each = n_people),
+                   mu_cw = rep(mu_cw, each = n_people),
                    sd_bA = sd_bA,
                    b_stick = rep(b_stick, each = n_people),
                    sd_b_stick = sd_b_stick,
@@ -61,7 +70,8 @@ sim_foraging_people <- function(n_people = 4,
   
   d <- list(stim = ds, found = df,
             name = filename,
-            dp = dpeeps)
+            dp = dpeeps,
+            params = params)
   
   # create save folder if it doesn't yet exist
   if(!dir.exists("scratch/data")) {
