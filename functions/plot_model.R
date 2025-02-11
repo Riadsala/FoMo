@@ -19,7 +19,6 @@ theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
-
 plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
   
   # Create a plot to compare our model to human/training data
