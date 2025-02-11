@@ -56,7 +56,7 @@ m <- fit_model(d, fomo_ver = "1.1", mode = "traintest",  iter = 500)
 m <- fit_model(d, fomo_ver = "1.2", mode = "traintest",  iter = 500) 
 m <- fit_model(d, fomo_ver = "1.3", mode = "traintest",  iter = 500) 
 m <- fit_model(d, fomo_ver = "1.4", mode = "traintest",  iter = 500) 
-
+m <- fit_model(d, fomo_ver = "1.5", mode = "traintest",  iter = 500) 
 
 # COMPUTING LOTS OF STUFF
 
