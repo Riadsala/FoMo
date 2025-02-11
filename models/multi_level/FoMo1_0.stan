@@ -45,6 +45,7 @@ functions {
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
+    
     reldir_weights = compute_reldir_weights(n, n_targets, 
                                  rho_psi, psi);
 
@@ -276,6 +277,7 @@ generated quantities {
         // create empty vectors to store our features in
         S_j = rep_vector(0, n_targets);
         delta_j = rep_vector(1, n_targets);
+        psi_j = rep_vector(1, n_targets);
           
         // if we're not on the first item.... calculate feature vectors  
         if (ii > 1) 

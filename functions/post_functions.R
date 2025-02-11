@@ -15,18 +15,19 @@ extract_post <- function(m, d) {
   # get condition labels from the data
   cl <- unique(d$stim$condition)
   
+  # extract the main fixed effect components
   post_fixed <- extract_post_fixed(m, cl)
-  
-  # are we super confident these come out in the right order?
-  # they should, assuming the Stan code is consistent, right?
   param_names <- unique(post_fixed$param)
   
   # post_fixed now wants to be in wide format
   post_fixed %>%
-    pivot_wider(names_from = "param", values_from = "value") -> post_fixed
+    pivot_wider(names_from = "param", 
+                values_from = "value") -> post_fixed
   
+  # extract prior
   prior <- extract_prior(m)
   
+  # collect in a list
   post_list <- list(params = param_names,
                     fixed = post_fixed,
                     prior = prior)
@@ -34,6 +35,7 @@ extract_post <- function(m, d) {
   # if we have a multi-level model, extract all the variance parameters
   # and per-person fits
   if (multi_level) {
+    
     post_random <- extract_post_random(m, cl)
     post_var <- extract_var(m, cl, param_names)
     
@@ -42,7 +44,7 @@ extract_post <- function(m, d) {
   }
   
   # if theta is in model fit, extract
-  if (sum(str_detect(names(m$draws(format = "df")), "log_theta")) > 1) {
+  if (sum(str_detect(vars, "log_theta")) > 1) {
     
     post_theta <- extrat_post_theta(m, cl)
     post_list <- append(post_list, list(theta = post_theta))
@@ -54,10 +56,10 @@ extract_post <- function(m, d) {
       post_list <- append(post_list, list(utheta = post_theta_u))
       
     }
-    
   }
   
   return(post_list)
+  
 }
 
 extrat_post_theta_u <- function(m, cl) {
