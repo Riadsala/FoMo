@@ -2,14 +2,16 @@
 
 # cl contains the condition labels
 
-extract_post <- function(m, d, multi_level = TRUE) {
+extract_post <- function(m, d) {
   
   # extract ALL parameters and collect into a list
   # to ensure that we have the same draws for each part,
   # extract everything and then filter
   
-  # set multi_level = FALSE if we are running a simple version of the model
-  
+  # First of all, are we dealing with a multi-level model?
+  vars <- m$metadata()$stan_variables
+  multi_level <- if_else(sum(str_detect(vars, "z_u")) == 1, TRUE, FALSE)
+
   # get condition labels from the data
   cl <- unique(d$stim$condition)
   
