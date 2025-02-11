@@ -49,6 +49,8 @@ d <- sim_foraging_people(n_people = 8,
                          rel_proximity = FALSE,
                          filename = "test_anna") 
 
+
+m <- fit_model(d, fomo_ver = "1.0", mode = "all", iter = 500) 
 m <- fit_model(d, fomo_ver = "1.0", mode = "traintest", iter = 500) 
 m <- fit_model(d, fomo_ver = "1.1", mode = "traintest", iter = 500) 
 m <- fit_model(d, fomo_ver = "1.2", mode = "traintest", iter = 500) 

@@ -32,30 +32,53 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-d <- readRDS("scratch/data/sim.RDS")
+d <- readRDS("scratch/data/test_anna.RDS")
 
-model_ver <- "1_5"
-mode <- "traintest"
+dataset <- "test_anna"
+model_ver <- "1_0"
+mode <- "all"
 
-# COMPUTING LOTS OF STUFF
+get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
+  
+  if (mode == "all") {
+  
+    m <- readRDS(paste0("scratch/models/", d$name, mode, model_ver, ".model"))
+    post <- extract_post(m, d)
+    
+  } else {
+    
+    m <- readRDS(paste0("scratch/models/", d$name, "train", model_ver, ".model"))
+    t <- readRDS(paste0("scratch/models/", d$name, "test", model_ver, ".model"))
+    
+    # get model posteriors
+    post <- extract_post(m, d)
+    
+    # combine training and testing models
+    m <- list(training = m, testing = t)
+  }
+  
+  # get post prediction accuracy
+  pred <- summarise_postpred(m, d, 
+                             get_sim = TRUE, draw_sample_frac = 0.25)
+  
+  # add the post predictions into the post list
+  post$acc <- pred$acc
+  post$acc <- summarise_acc(post, compute_hpdi = FALSE) 
+  post$sim <- pred$sim
+  
+  # further summarise accuracy data
+  
+  # add metadata
+  post$dataset <- d$name
+  post$model_ver <- paste0("FoMo", model_ver)
+  
+  return(post)
+  
+}
 
-# 1.0
 
-d <- readRDS("scratch/d_1_0.rds")
-m <- readRDS("scratch/sim_train_1_0.model")
-t <- readRDS("scratch/sim_test_1_0.model")
+post <- get_post_and_pred_from_saved_model(d, "1_0", "traintest")
 
-# train test accuracy
-pred <- summarise_postpred(list(training = m, testing = t), d, 
-                           get_sim = FALSE, draw_sample_frac=0.25)
-
-acc <- compute_acc(pred$acc, compute_hpdi = FALSE) %>% mutate(model = paste("FoMo1.0"))
-
-write_csv(acc, "scratch/post_acc_sim_1.0.csv")
-
-# run length statistics
-pred <- summarise_postpred(list(training = m, testing = m), d, 
-                           get_sim = TRUE, draw_sample_frac = 0.001)
 
 # compute empirical run statistics
 rle <- get_run_info_over_trials(d$found) %>%

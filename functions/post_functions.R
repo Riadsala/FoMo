@@ -281,17 +281,17 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
 }
 
 
-compute_acc <- function(acc, compute_hpdi = TRUE) {
+summarise_acc <- function(post, compute_hpdi = TRUE) {
   
   if ("split" %in% names(acc)) {
     
-    acc %>% 
+    post$acc %>% 
       filter(found != 1) %>%
       group_by(split, condition, found, .draw, person, trial) -> acc
     
   } else {
     
-    acc %>% 
+    post$acc %>% 
       filter(found != 1) %>%
       group_by(condition, found, .draw, person, trial) -> acc
     
@@ -309,6 +309,9 @@ compute_acc <- function(acc, compute_hpdi = TRUE) {
     
   }
   
+  # add meta data
+  acc %>% mutate(model = post$model_ver,
+                 dataset = post$dataset) -> acc
   
   if ("split" %in% names(acc)) {
     
