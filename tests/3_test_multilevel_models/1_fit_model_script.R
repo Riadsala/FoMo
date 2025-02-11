@@ -15,7 +15,7 @@ if (!file.exists("scratch"))  dir.create("scratch")
 
 
 # create parameters for simulation
-experiment <- tibble(
+exp <- tibble(
   n_people = 8,
   n_conditions = 1,
   condition_name = "simple test",
@@ -24,14 +24,13 @@ experiment <- tibble(
   n_item_per_class = 5
 )
 
-foraging_params <- tribble(
+foraging <- tribble(
   ~param, ~mu, ~sd,
   "bA", c(0.7, 0.3, 0, 0), 0.2,
   "bS", 1, 1,
   "rho_delta", 20, 2,
   "rho_psi", 1, 1
 )
-
 
 abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
 
@@ -46,10 +45,10 @@ inital_sel_params <- tibble(
   a2y = 10,
   b2y = 1) 
 
-params <- list(experiment, 
-               foraging, 
-               abs_dir_tuning, 
-               inital_sel_params)
+params <- list(exp = exp, 
+               foragaging = foraging, 
+               abs_dir_tuning = abs_dir_tuning, 
+               inital_sel_params = inital_sel_params)
 
 # now simulate data
 d <- sim_foraging_people(params,
