@@ -119,7 +119,7 @@ vector compute_absdir_weights_fixed_kappa(int n, int n_targets,
   vector log_theta, real kappa, vector phi) {
 
   vector[n_targets] w;
-  vector[4] theta = exp(log_theta);
+  vector[8] theta = exp(log_theta);
 
   w = rep_vector(1, n_targets); 
 
@@ -127,9 +127,13 @@ vector compute_absdir_weights_fixed_kappa(int n, int n_targets,
 
     w = w 
           .* (theta[1]*exp(kappa * cos(phi           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[2]*exp(kappa * cos(phi - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[3]*exp(kappa * cos(phi - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[4]*exp(kappa * cos(phi - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[2]*exp(kappa * cos(phi - 1*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[3]*exp(kappa * cos(phi - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[4]*exp(kappa * cos(phi - 3*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[5]*exp(kappa * cos(phi - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[6]*exp(kappa * cos(phi - 5*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[7]*exp(kappa * cos(phi - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[8]*exp(kappa * cos(phi - 7*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
            +  1);
   }
 
