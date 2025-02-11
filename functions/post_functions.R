@@ -283,43 +283,43 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
 
 summarise_acc <- function(post, compute_hpdi = TRUE) {
   
-  if ("split" %in% names(acc)) {
+  if ("split" %in% names(post$acc)) {
     
     post$acc %>% 
       filter(found != 1) %>%
-      group_by(split, condition, found, .draw, person, trial) -> acc
+      group_by(split, condition, found, .draw, person, trial) -> post$acc
     
   } else {
     
     post$acc %>% 
       filter(found != 1) %>%
-      group_by(condition, found, .draw, person, trial) -> acc
+      group_by(condition, found, .draw, person, trial) -> post$acc
     
   }
   
-  acc  %>%
+  post$acc  %>%
     summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
     summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
-    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
+    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> post$acc
   
   if (compute_hpdi) {
     
-    acc %>% 
-      median_hdci(accuracy, .width = c(0.53, 0.97)) -> acc
+    post$acc %>% 
+      median_hdci(accuracy, .width = c(0.53, 0.97)) -> post$acc
     
   }
   
   # add meta data
-  acc %>% mutate(model = post$model_ver,
-                 dataset = post$dataset) -> acc
+  post$acc %>% mutate(model = post$model_ver,
+                 dataset = post$dataset) -> post$acc
   
-  if ("split" %in% names(acc)) {
+  if ("split" %in% names(post$acc)) {
     
-    acc %>%  mutate(split = factor(split, levels = c("training", "testing"))) -> acc
+    post$acc %>%  mutate(split = factor(split, levels = c("training", "testing"))) -> post$acc
     
   }
   
-  return(acc)
+  return(post$acc)
   
   
 }

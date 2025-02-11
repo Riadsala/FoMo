@@ -45,7 +45,7 @@ get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
   post$sim <- pred$sim
   
   # further summarise accuracy data
-  post$acc <- summarise_acc(post, compute_hpdi = FALSE) 
+  post$acc <- summarise_acc(post$acc, compute_hpdi = FALSE) 
   
   # add metadata
   post$dataset <- d$name
@@ -95,6 +95,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
 #################################################################################
 # compute interesting stuff
 #################################################################################
+
 post <- get_post_and_pred_from_saved_model(d, "1_0", "traintest")
 stats <- get_rl_and_iisv_statistics(d, post$sim)
 
