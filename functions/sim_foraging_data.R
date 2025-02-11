@@ -20,17 +20,17 @@ sim_foraging_people <- function(params,
   n_item_class <- params$exp$n_item_class
   n_item_per_class <- params$exp$n_item_per_class
   
-  mu_cw <- filter(params$foragaging, param == "bA")$mu
-  sd_bA <- filter(params$foragaging, param == "bA")$sd[[1]]
+  mu_cw <- filter(params$foraging, param == "bA")$mu
+  sd_bA <- filter(params$foraging, param == "bA")$sd[[1]]
   
-  b_stick <- filter(params$foragaging, param == "bS")$mu[[1]]
-  sd_b_stick <- filter(params$foragaging, param == "bS")$sd[[1]]
+  b_stick <- filter(params$foraging, param == "bS")$mu[[1]]
+  sd_b_stick <- filter(params$foraging, param == "bS")$sd[[1]]
   
-  rho_delta <- filter(params$foragaging, param == "rho_delta")$mu[[1]]
-  sd_rho_delta <- filter(params$foragaging, param == "rho_delta")$sd[[1]]
+  rho_delta <- filter(params$foraging, param == "rho_delta")$mu[[1]]
+  sd_rho_delta <- filter(params$foraging, param == "rho_delta")$sd[[1]]
   
-  rho_psi <- filter(params$foragaging, param == "rho_psi")$mu[[1]]
-  sd_rho_psi <- filter(params$foragaging, param == "rho_psi")$sd[[1]]
+  rho_psi <- filter(params$foraging, param == "rho_psi")$mu[[1]]
+  sd_rho_psi <- filter(params$foraging, param == "rho_psi")$sd[[1]]
   
   # generate random effects
   dpeeps <- tibble(person = rep(1:n_people, n_conditions),

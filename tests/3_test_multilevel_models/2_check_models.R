@@ -10,28 +10,6 @@ source("../../functions/import_data.R")
 source("../../functions/compute_summary_stats.R")
 source("../../functions/fit_model.R")
 
-item_class_weights = list(c(0.7, 0.3, 0, 0))
-
-b_stick = 1
-
-rho_delta = 20 #1 - set to 1 if doing relative proximity = TRUE, 20 if relative proximity = FALSE
-sd_rho_delta = 1
-
-rho_psi = 2
-
-abs_dir_tuning = list(kappa = rep(10, 4), theta = rep(1, 4))
-
-# initial bias params
-inital_sel_params <- tibble(
-  a1x = 2,
-  b1x = 2,
-  a2x = 1,
-  b2x = 10,
-  a1y = 2,
-  b1y = 2,
-  a2y = 10,
-  b2y = 1) 
-
 d <- readRDS("scratch/data/test_anna.RDS")
 
 dataset <- "test_anna"
@@ -59,14 +37,15 @@ get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
   
   # get post prediction accuracy
   pred <- summarise_postpred(m, d, 
-                             get_sim = TRUE, draw_sample_frac = 0.25)
+                             get_sim = TRUE, draw_sample_frac = 0.01)
   
   # add the post predictions into the post list
   post$acc <- pred$acc
-  post$acc <- summarise_acc(post, compute_hpdi = FALSE) 
+  
   post$sim <- pred$sim
   
   # further summarise accuracy data
+  post$acc <- summarise_acc(post, compute_hpdi = FALSE) 
   
   # add metadata
   post$dataset <- d$name
@@ -76,39 +55,63 @@ get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
   
 }
 
+get_rl_and_iisv_statistics <- function(d, sim) {
+  
+  # compute empirical run statistics
+  rle <- get_run_info_over_trials(d$found) %>%
+    group_by(person, condition) %>%
+    summarise(max_run_length = mean(max_run_length), 
+              n_runs         = mean(n_runs),     
+              .groups = "drop") %>% 
+    mutate(data = "observed")
+  
+  # compute simulated run statistics
+  rlp <- get_run_info_over_trials(sim) %>%
+    group_by(person, condition) %>%
+    summarise(max_run_length = mean(max_run_length),
+              n_runs         = mean(n_runs),    
+              .groups = "drop") %>% 
+    mutate(data = "simulated")
+  
+  # bind everything together
+  rl <- bind_rows(rle ,rlp )
+  
+  # compute empirical run statistics
+  iisve <- get_iisv_over_trials(d$found) %>% 
+    mutate(data = "observed")
+  
+  # compute simulated run statistics
+  iisvp <- get_iisv_over_trials(sim) %>%
+    mutate(data = "simulated")
+  
+  # bind everything together
+  iisv <- bind_rows(iisve, iisvp) 
+  
+  return(list(run_statistics = rl, 
+              inter_item_statistics = iisv))
+  
+}
 
+#################################################################################
+# compute interesting stuff
+#################################################################################
 post <- get_post_and_pred_from_saved_model(d, "1_0", "traintest")
+stats <- get_rl_and_iisv_statistics(d, post$sim)
+
+#################################################################################
+# some plots
+#################################################################################
+
+# accuracy
+post$acc %>%
+  ggplot(aes(found, accuracy)) +
+  stat_lineribbon(alpha = 0.5)
+
+# posterior densities
+plot_model_fixed(post, gt = d$params)
 
 
-# compute empirical run statistics
-rle <- get_run_info_over_trials(d$found) %>%
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length))
 
-# compute simulated run statistics
-rlp <- get_run_info_over_trials(pred$sim) %>%
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length))
-
-# bind everything together
-bind_rows(rle %>% mutate(x = "observed"),
-          rlp %>% mutate(x = "predicted")) %>%
-  pivot_wider(names_from = "x", values_from = "max_run_length") -> rl
-
-write_csv(rl, "scratch/run_statistics_1_0.csv")
-
-iisve <- get_iisv_over_trials(d$found) 
-
-# compute simulated run statistics
-iisvp <- get_iisv_over_trials(pred$sim %>%
-                                # it would be great to remove this line
-                                filter(is.finite(x)))
-
-# bind everything together
-bind_rows(iisve %>%  mutate(x = "human"),
-          iisvp  %>% mutate(x = "model"))  -> iisv
-
-write_csv(iisv, "scratch/iisv_statistics_1_0.csv")
 
 # 1.1
 d <- readRDS("scratch/d_1_1.rds")

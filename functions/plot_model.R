@@ -131,6 +131,20 @@ plot_model_accuracy <- function(pred) {
 plot_model_fixed <- function(post, gt=NULL, clist=NULL)
 {
   
+  # sort out groudtruth params if passed in as sim params
+  if ("foraging" %in% names(gt)) {
+    
+    gt <- gt$foraging
+    
+    gt <- list(b_a = qlogis(filter(gt, param == "bA")$mu[[1]][1]),
+               b_stick = filter(gt, param == "bS")$mu[[1]],
+               rho_delta = filter(gt, param == "rho_delta")$mu[[1]],
+               rho_psi = filter(gt, param == "rho_psi")$mu[[1]])
+    
+    print(gt)
+    
+  }
+  
   my_widths <- c(0.53, 0.97)
   
   # create a plot for each parameter

@@ -46,7 +46,7 @@ inital_sel_params <- tibble(
   b2y = 1) 
 
 params <- list(exp = exp, 
-               foragaging = foraging, 
+               foraging = foraging, 
                abs_dir_tuning = abs_dir_tuning, 
                inital_sel_params = inital_sel_params)
 
