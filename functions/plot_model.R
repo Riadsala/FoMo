@@ -19,96 +19,53 @@ theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
-plot_model_human_iisv_comparison <- function(pred, df, iisv_emp = NULL) {
+plot_model_human_iisv_comparison <- function(iisv) {
   
   # Create a plot to compare our model to human/training data
   # in terms of  inter-item selection amplitude and direction
   
-  iisv_sim <- get_iisv_over_trials(pred$sim)
-  
-  if (is.null(iisv_emp)) iisv_emp <- get_iisv_over_trials(df$found) 
-  
-  if (!("person" %in% names(iisv_emp))) iisv_emp$person = 1
-  
   #################################################################
-  # create distance plot 
-  iisv_emp %>% 
-    filter(found > 1) %>%
-    group_by(found, condition) %>%
-    summarise(distance = median(sqrt(d2)), .groups = "drop") -> emp 
-  
-  iisv_sim %>%
-    filter(found > 1) %>%
-    group_by(found, condition, .draw) %>%
-    summarise(distance = median(sqrt(d2)), .groups = "drop") -> sim
-  
-  ggplot(emp, aes(found, distance)) + 
-    geom_path(data = emp, aes(colour = condition), 
-              colour = "darkgreen", linewidth = 2) +
-    geom_path(data = sim, aes( group = interaction(.draw, condition)), alpha = 0.20) -> plt_amp
-  
-  if (length(unique(iisv_sim$condition)) == 1) {
-    
-    plt_amp <- plt_amp + theme(legend.position = "none")
-  }
+  # create distance plot
+  ggplot(iisv, aes(d2, colour = data, group = interaction(.draw, data))) + 
+    geom_density(alpha = 0.33) +
+    scale_colour_viridis_d() +
+    facet_wrap(~condition) -> plt_amp
   
   #################################################################
   # create direction plot
-  
-  # first, we need to pad our data to take 0/2pi into account
-  bind_rows(iisv_emp, 
-            iisv_emp %>% mutate(theta = theta + 2*pi)) %>%
-    filter(found > 1) -> iisv_emp2
-  
-  bind_rows(iisv_sim, 
-            iisv_sim %>% mutate(theta = theta + 2*pi)) %>%
-    filter(found > 1) -> sim
-  
-  
   pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2), expression(2*pi))
   
-  iisv_emp2 %>%
-    ggplot(aes(theta, group = person)) + 
-    geom_line(stat = "density", bw = 0.1,
-              colour = "darkgreen", linewidth = 2) +
-    geom_line(data = sim, stat = "density", bw = 0.1,  
-                aes(group = interaction(.draw, condition)), alpha = 0.20) +
-    coord_cartesian(xlim = c(0, 2*pi)) +
+  iisv %>%
+    ggplot(aes(theta, colour = data, group = interaction(.draw, data))) + 
+    geom_line(stat = "density", bw = 0.1, alpha = 0.33,
+              linewidth = 2) +
+    coord_cartesian(xlim = c(-pi, pi)) +
     theme(legend.position = "none") +
     scale_colour_viridis_d() +
     scale_x_continuous("inter-item directions", breaks = seq(0, 2*pi, pi/2), 
                        labels = pi_labels) -> plt_wave
   
-  rm(iisv_emp2)
-  
   #################################################################
   # create rel direction plot
   
   # first, mirror to fix density plot around 0 
-  bind_rows(iisv_emp, 
-            iisv_emp %>% mutate(psi = -psi)) %>%
-    filter(found > 2) -> iisv_emp2
+  bind_rows(iisv, 
+            iisv %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv
   
-  bind_rows(iisv_sim, 
-            iisv_sim %>% mutate(psi = -psi)) %>%
-    filter(found > 2) -> iisv_sim2
-  
-  iisv_emp2 %>%
-    ggplot(aes(psi, group = person)) + 
+  iisv %>%
+    ggplot(aes(psi,  colour = data, group = interaction(.draw, data))) + 
     geom_line(stat = "density", bw = 0.1,
-              colour = "darkgreen", linewidth = 2) +
-    geom_line(data = iisv_sim2, aes(group = .draw), 
-              alpha = 0.25, stat = "density", bw = 0.2) + 
+               linewidth = 2, alpha = 0.5)  + 
+    scale_colour_viridis_d() +
     coord_cartesian(xlim = c(0, 1)) -> plt_psi
-  
-  rm(iisv_sim2, iisv_emp2)
   
   
   #################################################################
   # output plots
-  
-  plt <- plt_amp + plt_wave + plt_psi
-  
+
+  plt <- plt_amp + plt_psi + plt_wave + plot_layout(guides = "collect")
+
   return(plt)
 }
 
