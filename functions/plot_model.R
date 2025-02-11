@@ -19,6 +19,24 @@ theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
+
+plot_model_human_rl_comparison <- function(rl) {
+  
+  #################################################################
+  # plot scatter plots for mean max run length and mean num runs
+  
+  rl %>% 
+    pivot_longer(c("max_run_length", "n_runs"), names_to = "statistic") %>%
+    pivot_wider(names_from = "data") %>%
+    ggplot(aes(observed, simulated, colour = condition)) + 
+    geom_point() +
+    facet_wrap(~statistic) -> plt
+  
+  return(plt)
+  
+}
+
+
 plot_model_human_iisv_comparison <- function(iisv) {
   
   # Create a plot to compare our model to human/training data

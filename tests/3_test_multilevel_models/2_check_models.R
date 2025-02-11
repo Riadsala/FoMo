@@ -73,7 +73,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
     mutate(data = "simulated")
   
   # bind everything together
-  rl <- bind_rows(rle %>% mutate(.draw = 1) ,rlp)
+  rl <- bind_rows(rle ,rlp)
   
   # compute empirical run statistics
   iisve <- get_iisv_over_trials(d$found) %>% 
@@ -110,7 +110,9 @@ post$acc %>%
 # posterior densities
 plot_model_fixed(post, gt = d$params)
 
-# compare iisv statistics
-plot_model_human_iisv_comparison(stats$inter_item_statistics)
+# compare iisv and run statistics
+plt_iisv <- plot_model_human_iisv_comparison(stats$inter_item_statistics)
+plt_rl   <- plot_model_human_rl_comparison(stats$run_statistics)
 
-# compare run statistics
+plt_rl / plt_iisv
+
