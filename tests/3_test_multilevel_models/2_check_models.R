@@ -110,7 +110,7 @@ post$acc %>%
 # posterior densities
 plot_model_fixed(post, gt = d$params)
 
-
+# compare run statistics
 
 
 # 1.1
