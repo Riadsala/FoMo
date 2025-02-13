@@ -16,12 +16,12 @@ if (!file.exists("scratch"))  dir.create("scratch")
 
 # create parameters for simulation
 exp <- tibble(
-  n_people = 8,
+  n_people = 12,
   n_conditions = 1,
   condition_name = "simple test",
-  n_trials_per_cond = 2,
+  n_trials_per_cond = 4,
   n_item_class = 2, 
-  n_item_per_class = 5
+  n_item_per_class = 10
 )
 
 foraging <- tribble(
@@ -53,14 +53,7 @@ params <- list(exp = exp,
 # now simulate data
 d <- sim_foraging_people(params,
                          rel_proximity = FALSE,
-                         filename = "test_anna") 
+                         filename = "ac_test_") 
 
 # fit all the models
-m <- fit_model(d, fomo_ver = "1.0", mode = "all", iter = 500) 
 m <- fit_model(d, fomo_ver = "1.0", mode = "traintest", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.1", mode = "traintest", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.2", mode = "traintest", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.3", mode = "traintest", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.3", mode = "all", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.4", mode = "traintest", iter = 500) 
-m <- fit_model(d, fomo_ver = "1.5", mode = "traintest", iter = 500) 

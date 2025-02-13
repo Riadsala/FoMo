@@ -207,6 +207,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     
     mode <- "all"
     mtr <- m
+    training <- d
 
   }
   
@@ -241,7 +242,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   
   if (get_sim) {
     
-    sim <- extract_simulations(mtr, training, mode, draw_sample_frac, multi_level)
+    sim <- extract_simulations(mtr, training$stim, mode, draw_sample_frac, multi_level)
     
     # define output list
     list_out <- list(acc = pred, sim = sim)

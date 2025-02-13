@@ -10,10 +10,13 @@ source("../../functions/import_data.R")
 source("../../functions/compute_summary_stats.R")
 source("../../functions/fit_model.R")
 
-d <- readRDS("scratch/data/test_anna.RDS")
 
-dataset <- "test_anna"
-mode <- "all"
+
+dataset <- "ac_test_"
+
+d <- readRDS(paste0("scratch/data/", dataset, ".RDS"))
+
+mode <- "traintest"
 
 get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
   
@@ -94,7 +97,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
 # compute interesting stuff
 #################################################################################
 
-post <- get_post_and_pred_from_saved_model(d, "1_3", "traintest")
+post <- get_post_and_pred_from_saved_model(d, "1_0", mode)
 stats <- get_rl_and_iisv_statistics(d, post$sim)
 
 #################################################################################
