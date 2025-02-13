@@ -119,7 +119,7 @@ extract_var <- function(m, cl, param_names) {
 
 extract_prior <- function(m) {
   
-  # first, get list of variables in the model:
+  # first, get list of variables in the model:  
   vars <- m$metadata()$stan_variables
   # all priors should start with "prior_"
   pvars <- vars[str_detect(vars, "prior_")]
@@ -241,7 +241,7 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   
   if (get_sim) {
     
-    sim <- extract_simulations(mtr, d$stim, mode, draw_sample_frac, multi_level)
+    sim <- extract_simulations(mtr, training, mode, draw_sample_frac, multi_level)
     
     # define output list
     list_out <- list(acc = pred, sim = sim)
@@ -261,6 +261,7 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
   # do not call directly..
   # this is run by summarise_postpred()
   
+  # first, we exract Q from the model
   sim <- mod$draws("Q", format = "df")  %>%
     sample_frac(draw_sample_frac) %>%
     as_tibble() %>%
@@ -272,8 +273,7 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
     mutate(trial = parse_number(trial), 
            found = parse_number(found)) -> sim
   
- # merge with d_stim
-  
+  # now merge with d_stim to obtain x, y, item_class info etc
   sim %>% full_join(d_stim, by = join_by(trial, id)) %>%
     arrange(.draw, person, trial, found) %>%
     select(.draw, person, condition, trial, trial_p, 
@@ -281,7 +281,6 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
 
   return(sim)
 }
-
 
 summarise_acc <- function(post, compute_hpdi = TRUE) {
   
