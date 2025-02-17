@@ -1,31 +1,31 @@
-# fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
-#   
-#   # this file creates the d_list input data for FoMo.
-#   # it will do this three times,
-#   #   i) all data
-#   #  ii) training data
-#   # iii) test data
-#   
-#   # first, import dataset
-#   d <- import_data(dataset)
-#   
-#   folder <- paste0("scratch/d_list/", dataset, "/")
-#   dir.create(folder)
-#   
-#   # compute d_list on ALL the data
-#   d_list <- prep_data_for_stan(d, model_components)
-#   saveRDS(d_list, paste0(folder, "all.rds"))
-#   rm(d_list)
-#   
-#   
-#   # now compute for training/testing split
-#   d_list <- prep_train_test_data_for_stan(d, model_components)
-#   saveRDS(d_list$training, paste0(folder, "train.rds"))
-#   saveRDS(d_list$testing, paste0(folder, "test.rds"))
-#   rm(d_list)
-#   
-#   rm(d, folder)
-# }
+ fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
+   
+   # this file creates the d_list input data for FoMo.
+   # it will do this three times,
+   #   i) all data
+   #  ii) training data
+   # iii) test data
+   
+   # first, import dataset
+   d <- import_data(dataset, small_test = TRUE)
+   
+   folder <- paste0("scratch/d_list/", dataset, "/")
+   dir.create(folder)
+   
+   # compute d_list on ALL the data
+   d_list <- prep_data_for_stan(d, model_components)
+   saveRDS(d_list, paste0(folder, "all.rds"))
+   rm(d_list)
+   
+   
+   # now compute for training/testing split
+   d_list <- prep_train_test_data_for_stan(d, model_components)
+   saveRDS(d_list$training, paste0(folder, "train.rds"))
+   saveRDS(d_list$testing, paste0(folder, "test.rds"))
+   rm(d_list)
+   
+   rm(d, folder)
+ }
 
 prep_train_test_data_for_stan <- function(d, 
                                           model_components = c("spatial", "item_class"), 

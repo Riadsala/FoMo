@@ -114,6 +114,30 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
     w_s = w_s / sum(w_s);
     return(w_s);
   }
+  
+vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
+  vector log_theta, real kappa, vector phi) {
+    
+    // this is a version of the function with only 4 directional components, used in model 1.3, for testing
+    // in general, use the version with 8
+
+  vector[n_targets] w;
+  vector[4] theta = exp(log_theta);
+
+  w = rep_vector(1, n_targets); 
+
+  if (n > 1) {
+
+    w = w 
+           .* (theta[1]*exp(kappa * cos(phi           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[2]*exp(kappa * cos(phi - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[3]*exp(kappa * cos(phi - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+           +  theta[4]*exp(kappa * cos(phi - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa)) 
+           +  1);
+  }
+
+  return(w);
+}
 
 vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
   vector log_theta, real kappa, vector phi) {

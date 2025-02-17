@@ -48,7 +48,7 @@ functions {
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
 
-    absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
+    absdir_weights = compute_absdir_weights_fixed_kappa4(n, n_targets, 
                                  log_theta, kappa, phi);
 
     // return the dot product of the weights

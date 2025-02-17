@@ -15,6 +15,7 @@ import_data <- function(dataset, small_test=FALSE) {
   d <- switch(dataset,
               "clarke2022qjep" = import_clarke2022qjep(small_test),
               "tagu2022cog"    = import_tagu2022cog(small_test),
+              "tagu2025" = import_tagu2025(small_test),
               "kristjansson2014plos" = import_kristjansson2014plos(small_test),
               "hughes2024rsos" = import_hughes2024rsos(small_test),
               "unknown dataset")
@@ -102,6 +103,58 @@ fix_person_and_trial <- function(d) {
   return(d)
   
 }
+
+import_tagu2025 <- function(small_test) {
+  
+  d <- read_csv("../../data/tagu2025/DATA_ALL.csv") 
+  
+  d_tmp <- d %>%
+    mutate(condition = Bloc,
+           trial = TrialsCompleted,
+           person = participant,
+           targ_type = img,
+           id = TargetID,
+           x = x,
+           y = y,
+           found = nbselect) %>%
+    select(condition, trial, person, targ_type, id, x, y, found) %>%
+    mutate(condition = as.factor(condition),
+           id = parse_number(id),
+           item_class = parse_number(targ_type))
+  
+  if (small_test) {
+    
+    d_tmp <- filter(d_tmp, person < 10, trial < 10)
+  }
+  
+  d <- fix_person_and_trial(d_tmp)
+  
+  # scale x to (0, 1) and y to (0, a) where a is the aspect ratio
+  
+  # first subtract the min
+  d %>% mutate(x = x - min(x),
+               y = y - min(y)) -> d
+  
+  xmax <- max(d$x)
+  
+  d %>% mutate(x = x/xmax,
+               y = y/xmax) -> d
+  
+  # extract stimulus data
+  d_stim <- d %>% select(person, condition, trial, id, x, y, item_class, trial_p) %>%
+    arrange(person, condition, trial, id) 
+  
+  # extract behavioral data
+  d_found <- d %>% filter(found > 0) %>% 
+    arrange(person, condition, trial, found) 
+  
+  return(list(stim = d_stim,
+              found = d_found))
+  
+  
+}
+
+
 
 import_tagu2022cog <- function(small_test) {
   
