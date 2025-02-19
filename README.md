@@ -1,4 +1,4 @@
-*Model Versions*
+# Model Versions
 
 More details will be made available in the pre-print (once we finish it)
 
@@ -15,7 +15,7 @@ More details will be made available in the pre-print (once we finish it)
 
 
 
-*Import Data*
+# Import Data
 
 Data should be imported using the import_data() function. You will need to write your own code if you have a new dataset in a new format 
 
@@ -26,7 +26,18 @@ Coordinates are scaled such that $x \in (0, 1)$ and $y \in (0, a)$ where $a$ is 
 
 
 
-*Running Simulation Tests*
+# Running The Model
+
+## Simulation Tests
 
 
-*Running on Real Data*
+## Real Data
+
+
+# Tools for Working with Fitted Models
+
+## Posterior
+
+## Accuracies
+
+## Predictive Checks
