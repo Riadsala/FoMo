@@ -11,8 +11,7 @@ source("../../functions/compute_summary_stats.R")
 source("../../functions/fit_model.R")
 
 
-
-dataset <- "ac_test_"
+dataset <- "test_anna"
 
 d <- readRDS(paste0("scratch/data/", dataset, ".RDS"))
 
@@ -97,7 +96,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
 # compute interesting stuff
 #################################################################################
 
-post <- get_post_and_pred_from_saved_model(d, "1_0", mode)
+post <- get_post_and_pred_from_saved_model(d, "1_5", mode)
 stats <- get_rl_and_iisv_statistics(d, post$sim)
 
 #################################################################################
@@ -106,6 +105,7 @@ stats <- get_rl_and_iisv_statistics(d, post$sim)
 
 # accuracy
 ### tidy up plot_model_accuracy() in plot_models
+plot_model_accuracy(post)
 
 # posterior densities
 plot_model_fixed(post, gt = d$params)
@@ -115,4 +115,21 @@ plt_iisv <- plot_model_human_iisv_comparison(stats$inter_item_statistics)
 plt_rl   <- plot_model_human_rl_comparison(stats$run_statistics)
 
 plt_rl / plt_iisv
+
+#################################################################################
+# compare acc across models
+#################################################################################
+
+
+pred <- summarise_postpred(m, d, 
+                           get_sim = FALSE, draw_sample_frac = 1)
+
+acc <- bind_rows(post$acc %>% mutate(model_ver = post$model_ver),
+                 post10$acc %>% mutate(model_ver = post10$model_ver))
+        
+                 
+
+acc %>% group_by()
+                 
+
 

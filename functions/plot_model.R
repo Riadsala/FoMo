@@ -93,13 +93,20 @@ plot_model_accuracy <- function(pred) {
   
   baseline <- tibble(found = 1:n_targets, accuracy = 1/((n_targets + 1) - found))
   
-  pred$acc %>% group_by(found, .draw) %>%
-    summarise(accuracy = mean(model_correct, .groups ="last")) %>%
+  pred$acc %>%
+    # group_by(found, .draw) %>%
+    # summarise(accuracy = mean(model_correct, .groups ="last")) %>%
     median_hdci(accuracy) %>%
     ggplot(aes(found, accuracy)) + 
     geom_ribbon(aes(ymin = .lower, ymax = .upper), alpha = 0.5) + 
     geom_path() + 
-    geom_path(data = baseline, linetype = 2)
+    geom_path(data = baseline, linetype = 2) -> plt
+  
+  if ("split" %in% names(pred$acc)) {
+    plt <- plt + facet_wrap(~split)
+  } 
+  
+  return(plt)
 }
 
 plot_model_fixed <- function(post, gt=NULL, clist=NULL)
