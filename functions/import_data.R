@@ -55,14 +55,12 @@ get_train_test_split <- function(d) {
   training$found <- fix_person_and_trial(training$found)
   training$stim <- fix_person_and_trial(training$stim)
   
-  
   return(list(
     training = training, 
     testing = testing))
 }
 
 filter_one_person <- function(d, pp) {
-
 
   d_found_small <- d$found %>%
     filter(person == pp) %>%
@@ -154,8 +152,6 @@ import_tagu2025 <- function(small_test) {
   
 }
 
-
-
 import_tagu2022cog <- function(small_test) {
   
   my_spec <- cols(
@@ -204,9 +200,9 @@ import_tagu2022cog <- function(small_test) {
                y = y/xmax) -> d
   
   # flip y coordinates so that (0, 0) is the bottom left
-  # d$y = 1-d$y
-  # d$y = d$y - min(d$y)
-  # 
+  d$y = 1-d$y
+  d$y = d$y - min(d$y)
+  
   # extract stimulus data
   d_stim <- d %>% select(person, condition, trial, id, x, y, item_class, trial_p) %>%
     arrange(person, condition, trial) 
@@ -256,8 +252,8 @@ import_clarke2022qjep <- function(small_test) {
   d <- fix_person_and_trial(d)
   
   # flip y coordinates so that (0, 0) is the bottom left
-  # d$y = 1-d$y
-  # d$y = d$y - min(d$y)
+  d$y = 1-d$y
+  d$y = d$y - min(d$y)
   
   # extract stimulus data
   d_stim <- d %>% select(person, condition, trial, id, x, y, item_class, trial_p) %>%
@@ -270,6 +266,8 @@ import_clarke2022qjep <- function(small_test) {
   if (small_test) {
     d_found <- filter(d_found, found == 1)
   }
+  
+
 
   return(list(stim = d_stim,
               found = d_found))
