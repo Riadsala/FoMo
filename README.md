@@ -33,6 +33,11 @@ Coordinates are scaled such that $x \in (0, 1)$ and $y \in (0, a)$ where $a$ is 
 
 ## Real Data
 
+Some preprocessing is required. `fomo_preprocess(dataset, model_components = c("spatial", "item_class"))` in `functions/prep_data.R` computes list required for passing data to cmdStan and saves as `.rds`.
+
+`fit_model(dataset, fomo_ver, mode = "traintest", iter = 500)` in the `functions/fit_model.R` script is a wrapper function that carries out all the required steps to fit a model.
+
+MORE DETAILS on the inputs etc
 
 # Tools for Working with Fitted Models
 
