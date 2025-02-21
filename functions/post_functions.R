@@ -1,6 +1,12 @@
+library(tidybayes)
+
 # some helpful functions for extracting fixed and random effect posterior of our foraging model 
 
 # cl contains the condition labels
+
+################################################################################################
+# extract posterior density estimates
+################################################################################################
 
 extract_post <- function(m, d) {
   
@@ -172,28 +178,16 @@ extract_post_random <- function(m, cl) {
   
 }
 
-extract_pred <- function(my_model, my_data, pv, sample_frac) {
-  
-  my_model$draws(pv, format = "df") %>% 
-    sample_frac(sample_frac) %>%
-    as_tibble() %>%
-    select(-.chain, -.iteration) %>%
-    pivot_longer(-.draw) %>%
-    mutate(n = parse_number(name),
-           name = str_remove(name, "\\[\\d*\\]")) %>%
-    pivot_wider(names_from = "name", values_from = "value") -> pred
-  
-  pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
-                    pred, by = join_by(n)) %>%
-    select(-n, -item_class, -x, -y) %>%
-    mutate(model_correct = (P == id))
-  
-}
+################################################################################################
+# extracting post predictions
+################################################################################################
 
-summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01, get_sim = TRUE) {
+extract_pred <- function(m, d) {
+  
+  # This function computes the item-by-item accuracy from the model's generated quantities{} block
+  # and joins it with the empirical data so that we can measure accuracy
   
   # first, deal with m being either one model or a list
-  
   if (unique(class(m)=="list")) {
     
     # m has been input as a list, presumably:
@@ -208,13 +202,22 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     mode <- "all"
     mtr <- m
     training <- d
-
+    
   }
   
-  # first, get list of variables in the model:
+  # get list of variables in the model:
   vars <- mtr$metadata()$stan_variables
-  # all fixed effects should start with "rho_" or "b_"
-  pvars <- vars[str_detect(vars, "^[PW]")]
+  
+  # get item-selection predictions
+  # sometimes we might want to extract W (loglik) 
+  # not done at present as naming inconsistent
+  pvars <- vars[str_detect(vars, "^P")]
+  
+  # do the trial level simulations exist?
+  get_sim = ("Q" %in% vars)
+  
+  # determine if m is a multi-level model or not
+  multi_level <- ("z_u" %in% vars)
   
   if (mode == "train_test") {
     
@@ -225,9 +228,9 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
     rm(dtt)
     
     # get training set predictions
-    pred_tr <- extract_pred(mtr, training, pvars, draw_sample_frac) %>% mutate(split = "training")
+    pred_tr <- extract_item_pred(mtr, training, pvars) %>% mutate(split = "training")
     # now we also need to get the test set predictions
-    pred_te <- extract_pred(mte, testing, pvars, draw_sample_frac) %>% mutate(split = "testing")
+    pred_te <- extract_item_pred(mte, testing, pvars) %>% mutate(split = "testing")
     
     pred <- bind_rows(pred_tr,pred_te)
     
@@ -236,16 +239,16 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   } else {
     
     # get training set predictions
-    pred <- extract_pred(mtr, d, pvars, draw_sample_frac)
+    pred <- extract_item_pred(mtr, d, pvars)
     
   }
   
   if (get_sim) {
     
-    sim <- extract_simulations(mtr, training$stim, mode, draw_sample_frac, multi_level)
+    sim <- extract_trial_pred(mtr, training$stim)
     
     # define output list
-    list_out <- list(acc = pred, sim = sim)
+    list_out <- list(itemwise = pred, trialwise = sim)
     
   } else {
     
@@ -257,14 +260,33 @@ summarise_postpred <- function(m, d, multi_level = TRUE, draw_sample_frac = 0.01
   
 }
 
-extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level) {
+extract_item_pred <- function(my_model, my_data, pv, chains = 1) {
+  
+  my_model$draws(pv, format = "df") %>% 
+    filter(.chain == chains) %>%
+    # sample_frac(sample_frac) %>%
+    as_tibble() %>%
+    select(-.chain, -.iteration) %>%
+    pivot_longer(-.draw) %>%
+    mutate(n = parse_number(name),
+           name = str_remove(name, "\\[\\d*\\]")) %>%
+    pivot_wider(names_from = "name", values_from = "value") -> pred
+  
+  pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
+                    pred, by = join_by(n)) %>%
+    select(-n, -item_class, -x, -y, -rt) %>%
+    mutate(model_correct = (P == id))
+  
+}
+
+extract_trial_pred <- function(mod, d_stim, mode, chains = 1) {
   
   # do not call directly..
   # this is run by summarise_postpred()
   
-  # first, we exract Q from the model
+  # first, we extract Q from the model
   sim <- mod$draws("Q", format = "df")  %>%
-    sample_frac(draw_sample_frac) %>%
+    filter(.chain == chains) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw, values_to = "id") %>%
@@ -283,45 +305,47 @@ extract_simulations <- function(mod, d_stim, mode, draw_sample_frac, multi_level
   return(sim)
 }
 
-summarise_acc <- function(post, compute_hpdi = TRUE) {
+### 
+# needs reworked once we decide more on what graphs we present
+summarise_acc <- function(post, compute_hpdi = FALSE) {
   
-  if ("split" %in% names(post$acc)) {
+  if ("split" %in% names(post$itemwise)) {
     
-    post$acc %>% 
+    post$itemwise %>% 
       filter(found != 1) %>%
-      group_by(split, condition, found, .draw, person, trial) -> post$acc
+      group_by(split, condition, found, .draw, person, trial) -> post$itemwise
     
   } else {
     
-    post$acc %>% 
+    post$itemwise %>% 
       filter(found != 1) %>%
-      group_by(condition, found, .draw, person, trial) -> post$acc
+      group_by(condition, found, .draw, person, trial) -> post$itemwise
     
   }
   
-  post$acc  %>%
+  post$itemwise  %>%
     summarise(trial_acc = mean(model_correct), .groups = "drop_last") %>%
     summarise(person_acc = mean(trial_acc), .groups = "drop_last") %>%
-    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> post$acc
+    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> post$itemwise
   
   if (compute_hpdi) {
     
-    post$acc %>% 
-      median_hdci(accuracy, .width = c(0.53, 0.97)) -> post$acc
+    post$itemwise %>% 
+      median_hdci(accuracy, .width = c(0.53, 0.97)) -> post$itemwise
     
   }
   
   # add meta data
-  post$acc %>% mutate(model = post$model_ver,
-                 dataset = post$dataset) -> post$acc
+  post$itemwise %>% mutate(model = post$model_ver,
+                 dataset = post$dataset) -> post$itemwiseacc
   
-  if ("split" %in% names(post$acc)) {
+  if ("split" %in% names(post$itemwise)) {
     
-    post$acc %>%  mutate(split = factor(split, levels = c("training", "testing"))) -> post$acc
+    post$itemwise %>%  mutate(split = factor(split, levels = c("training", "testing"))) -> post$itemwise
     
   }
   
-  return(post$acc)
+  return(post$itemwise)
   
   
 }

@@ -1,64 +1,92 @@
 library(tidyverse)
-# library(cmdstanr)
+
 
 # This script reads evaluates model accuracy and computes summaries
 # allowing us to compare human and model run statistics and inter-
 # item selection vectors. 
 
 source("../../functions/import_data.R")
-source("../../functions/prep_data.R")
 source("../../functions/compute_summary_stats.R")
-# source("../../functions/plot_model.R")
-# source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
-# source("../../functions/sim_foraging_data.R")
 
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
 
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
-models <- "1_0" #c("1_0", "1_1", "1_2")
+# datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
+datasets <-"hughes2024rsos"
 
 ############################################################################
 
-# wrapper function for computing train/test accuracy
-compare_FoMo_accuracy <- function(dataset) {
+extract_and_save_predictions <- function(dataset) {
+  # wrapper function for computing train/test accuracy for each version
+  # of FoMo for a given dataset
   
   d <- import_data(dataset)
   
-  dout <- tibble()
+  # get list of model versions to compute over
+  folder <- paste0("scratch/models/", dataset, "/")
+  mode <- "train"
+  models <- unlist(dir(folder))
+  models <- models[str_detect(models, mode)]
+  models <- str_extract(models, "1_[0-9]")
   
-  for (modelver in models)
-  {
-    
-    m <- readRDS(paste0("scratch/models/", dataset, "/train", modelver, ".model"))
-    t <- readRDS(paste0("scratch/", dataset, "_test_", modelver, ".model"))
-    
-    pred <- summarise_postpred(list(training = m, testing = t), d, 
-                                 get_sim = FALSE, draw_sample_frac = 1)
-    
-    acc <- compute_acc(pred$acc, compute_hpdi = FALSE) %>% 
-      mutate(model = paste("FoMo",  modelver))
-    
-    rm(m, t, pred) 
-    
-    dout <- bind_rows(dout, bind_rows(acc, acc) %>%
-                        mutate(data = dataset))
-    
+  # create output folder
+  outfolder <- paste0("scratch/post/", dataset)
+  
+  if(!dir.exists("scratch/post/")) {
+    dir.create("scratch/post/")
   }
   
-  return(dout)
+  # create save folder if it doesn't yet exist
+  if(!dir.exists(outfolder)) {
+    dir.create(outfolder)
+  }
   
+  # read in models and extract post predictions
+  for (modelver in models)
+  {
+    print(paste("... model version ", modelver))
+    
+    m <- readRDS(paste0("scratch/models/", dataset, "/train", modelver, ".model"))
+    t <- readRDS(paste0("scratch/models/", dataset, "/test", modelver, ".model"))
+    
+    # get all model predictions
+    pred <- extract_pred(list(training = m, testing = t), d)
+    
+    pred$dataset <- dataset
+    pred$model_ver <- modelver
+    
+    # save
+    print("saving data")
+    saveRDS(pred, paste0(outfolder, "/pred_", mode, modelver, ".rds"))
+    
+    # summarise accuracy and save
+    print("summarising accuracy....")
+    acc <- summarise_acc(pred)
+    write_csv(acc, paste0(outfolder, "/acc_", mode, modelver, ".csv"))
+    rm(m, t, pred) 
+    
+  }
  }
 
 ############################################################################
-
+# extract model predictions
+############################################################################
 for (ds in datasets) {
   
-  d_acc_c2022 <- compare_FoMo_accuracy(ds)
-  write_csv(d_acc_c2022, paste0("scratch/post_acc_", ds, ".csv"))
+  print(paste("Obtaining posterior predictions for dataset ", ds))
+  extract_and_save_predictions(ds)
+
 }
+
+############################################################################
+# summarise accuracy
+############################################################################
+pred <- readRDS("scratch/post/hughes2024rsos/pred_train1_0.rds")
+
+summarise_acc(pred)
+
 
 ############################################################################
 # compute simulated run statistics
