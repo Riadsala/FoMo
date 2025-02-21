@@ -25,7 +25,6 @@ The output of this import function should return a list of tibbles: d$stim and d
 Coordinates are scaled such that $x \in (0, 1)$ and $y \in (0, a)$ where $a$ is the aspect ratio.
 
 
-
 # Running The Model
 
 ## Simulation Tests
@@ -44,5 +43,7 @@ MORE DETAILS on the inputs etc
 ## Posterior
 
 ## Accuracies
+
+`summarise_postpred(m, d, draw_sample_frac = 0.01, get_sim = TRUE)` 
 
 ## Predictive Checks
