@@ -49,9 +49,9 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   # now save
   if (mode == "all") {
-    filename <- paste0("scratch/models/", dataset_name, "all", fomo_ver_str, ".model")
+    filename <- paste0("scratch/models/", dataset_name, "/all", fomo_ver_str, ".model")
   } else {
-    filename <- paste0("scratch/models/", dataset_name, "train", fomo_ver_str, ".model")
+    filename <- paste0("scratch/models/", dataset_name, "/train", fomo_ver_str, ".model")
   }
   
   m$save_object(filename)
@@ -62,7 +62,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   ###########################################################################
   if (mode == "traintest") {
     
-    d_list <- get_list(dataset, mode, "testing")
+    d_list <- get_list(dataset, mode, "/testing")
     # although we aren't using the priors, the model still
     # expects them to be in the input
     d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver)
