@@ -1,13 +1,13 @@
 library(tidyverse)
 library(cmdstanr)
 
-source("../../functions/import_data.R")
-source("../../functions/prep_data.R")
-source("../../functions/compute_summary_stats.R")
-source("../../functions/plot_model.R")
-source("../../functions/plot_data.R")
-source("../../functions/post_functions.R")
-source("../../functions/sim_foraging_data.R")
+source("../functions/import_data.R")
+source("../functions/prep_data.R")
+source("../functions/compute_summary_stats.R")
+source("../functions/plot_model.R")
+source("../functions/plot_data.R")
+source("../functions/post_functions.R")
+source("../functions/sim_foraging_data.R")
 
 options(mc.cores = 1, digits = 2)
 
@@ -15,42 +15,19 @@ options(mc.cores = 1, digits = 2)
 theme_set(ggthemes::theme_tufte())
 
 model_ver <- "1_0"
-# dataset   <- "kristjansson2014plos"
-dataset <- "clarke2022qjep"
+
+dataset <- "hughes2024rsos"
+
 
 # read in data
 d <- import_data(dataset)
 
-# read in model and predictions for test data
-m <- read_rds(paste0("scratch/", dataset, "_train_", model_ver, ".model"))
-t <- read_rds(paste0("scratch/", dataset, "_test_", model_ver, ".model"))
-
-# get simulation data for model
-pred <- summarise_postpred(list(training = m, testing = t), d, 
-                           get_sim = TRUE, draw_sample_frac = 0.01)
-
-# sanity check we have correct number of items per trial etc
-pred$sim %>% group_by(person, condition, .draw, trial) %>%
-  summarise(n = n())  -> tmp
-
-pred$acc %>% group_by(.draw) %>%
-  summarise(n = n()) %>%
-  summarise(n = unique(n))
-
-tmp %>% filter(n > 40) -> tmp2
- 
-summary(tmp2)
- 
-filter(pred$acc, .draw == 1397) %>% group_by(person, trial, condition) %>%
-   summarise(n=n()) -> tmp3
-
-rm(m, t)
-
+folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 
 #############################################################################
 # plot accuracy
 #############################################################################
-
+acc 
 
 #############################################################################
 # compute empirical run statistics

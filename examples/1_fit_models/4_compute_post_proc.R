@@ -80,13 +80,6 @@ for (ds in datasets) {
 
 }
 
-############################################################################
-# summarise accuracy
-############################################################################
-pred <- readRDS("scratch/post/hughes2024rsos/pred_train1_0.rds")
-
-summarise_acc(pred)
-
 
 ############################################################################
 # compute simulated run statistics
