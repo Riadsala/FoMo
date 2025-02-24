@@ -42,8 +42,10 @@ MORE DETAILS on the inputs etc
 
 ## Posterior
 
+`extract_post()`
+
 ## Accuracies
 
-`summarise_postpred(m, d, draw_sample_frac = 0.01, get_sim = TRUE)` 
+`extract_pred(m, d, draw_sample_frac = 0.01, get_sim = TRUE)` 
 
 ## Predictive Checks
