@@ -36,7 +36,6 @@ plot_model_human_rl_comparison <- function(rl) {
   
 }
 
-
 plot_model_human_iisv_comparison <- function(iisv) {
   
   # Create a plot to compare our model to human/training data
@@ -87,22 +86,30 @@ plot_model_human_iisv_comparison <- function(iisv) {
   return(plt)
 }
 
-plot_model_accuracy <- function(pred) {
+plot_model_accuracy <- function(acc) {
   
-  n_targets <- max((pred$acc$found))
+  # acc is a dataframe of .draws, as computed by  summarise_acc() in post_functions.R
   
+  #calculate chance baseline
+  n_targets <- max((acc$found))
   baseline <- tibble(found = 1:n_targets, accuracy = 1/((n_targets + 1) - found))
   
-  pred$acc %>%
-    # group_by(found, .draw) %>%
-    # summarise(accuracy = mean(model_correct, .groups ="last")) %>%
-    median_hdci(accuracy) %>%
+  # work out grouping factors
+  groups <- names(acc)[!(names(acc) %in% c(".draw", "accuracy"))]
+  
+  # calculate HPDI
+  acc %>%
+    group_by_at(groups) %>%
+    median_hdci(accuracy) -> acc_hpdi
+  
+   acc_hpdi %>%
     ggplot(aes(found, accuracy)) + 
-    geom_ribbon(aes(ymin = .lower, ymax = .upper), alpha = 0.5) + 
-    geom_path() + 
+    geom_ribbon(aes(ymin = .lower, ymax = .upper, fill = condition), 
+                alpha = 0.5) + 
+    geom_line(aes(colour = condition)) + 
     geom_path(data = baseline, linetype = 2) -> plt
   
-  if ("split" %in% names(pred$acc)) {
+  if ("split" %in% names(acc)) {
     plt <- plt + facet_wrap(~split)
   } 
   
