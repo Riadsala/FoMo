@@ -29,6 +29,7 @@ Coordinates are scaled such that $x \in (0, 1)$ and $y \in (0, a)$ where $a$ is 
 
 ## Simulation Tests
 
+See the `tests` folder for a range of options for simulating foraging data (`1_test_data_simulation`), testing simulated data using models without a random effects structure (`2_test_simple_models`) and testing simulated data using models with a random effects structure (`3_test_multilevel_models`). The model fitting procedure is the same as for real data, below.
 
 ## Real Data
 
