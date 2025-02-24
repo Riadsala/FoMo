@@ -86,6 +86,47 @@ plot_model_human_iisv_comparison <- function(iisv) {
   return(plt)
 }
 
+plot_models_accuracy <- function(ds) {
+  
+  # function to compare accuracy over models on the same dataset
+  # input is a dataset label
+  # will auto look for relevant models
+  
+  # find list of models
+  files <- dir(paste0("1_fit_models/scratch/post/", ds))
+  files <- files[str_detect(files,"acc")]
+  
+  d <- tibble()
+  
+  my_cols <- cols(
+    split = col_character(),
+    condition = col_character(),
+    found = col_double(),
+    .draw = col_double(),
+    accuracy = col_double()
+  )
+  
+  for (ff in files) {
+    
+    a <- read_csv(paste0("1_fit_models/scratch/post/", ds, "/", ff),
+                  col_types = my_cols)
+    a$model_ver <- str_extract(ff, "[0-1]*_[0-9]")
+    
+    d <- bind_rows(d, a)
+    
+  }
+  
+  # create our plot
+  d %>% 
+    mutate(split = fct_relevel(split, "training")) %>%
+    group_by(model_ver, split, condition, .draw) %>%
+    summarise(accuracy = mean(accuracy)) %>%
+    ggplot(aes(model_ver, accuracy, colour = split)) +
+    stat_interval(alpha = 0.5, position = position_dodge(0.3), .width = c(0.53, 0.97)) + 
+    facet_wrap(~condition)
+  
+}
+
 plot_model_accuracy <- function(acc) {
   
   # acc is a dataframe of .draws, as computed by  summarise_acc() in post_functions.R
