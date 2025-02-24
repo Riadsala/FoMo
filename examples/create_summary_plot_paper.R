@@ -18,7 +18,6 @@ model_ver <- "1_0"
 
 dataset <- "hughes2024rsos"
 
-
 # read in data
 d <- import_data(dataset)
 
@@ -27,7 +26,8 @@ folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 #############################################################################
 # plot accuracy
 #############################################################################
-acc 
+acc <- read_csv(paste0(folder, "acc_train1_0.csv"))
+acc_plot <- plot_model_accuracy(acc)
 
 #############################################################################
 # compute empirical run statistics
@@ -35,7 +35,8 @@ acc
 rle <- get_run_info_over_trials(d$found) %>%
   group_by(person, condition) %>%
   summarise(max_run_length = mean(max_run_length),
-            num_runs       = mean(n_runs))
+            num_runs       = mean(n_runs),
+            .groups = "drop")
 
 # compute simulated run statistics
 rlp <- get_run_info_over_trials(pred$sim %>% filter(.draw == 1101)) %>%
