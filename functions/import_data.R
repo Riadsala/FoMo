@@ -319,6 +319,10 @@ import_hughes2024rsos <- function(small_test){
     separate(condition, c("condition",  "scarcity"), "_") %>%
     mutate(condition = as_factor(condition)) -> d_stim
   
+  # fix trial_p numbering
+  d_stim  <- fix_person_and_trial(d_stim)
+  d_found <- fix_person_and_trial(d$found)
+  
   return(list(stim = d_stim,
               found = d_found))
 }
