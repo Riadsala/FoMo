@@ -14,3 +14,5 @@ examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
 examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
 examples/1_test_old_model_old_data/scratch/post_acc_tagu2022cog.csv
 examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
+*.csv
+examples/1_fit_models/.Rhistory
