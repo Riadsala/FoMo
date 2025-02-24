@@ -12,6 +12,20 @@ library(tidyverse)
 
 import_data <- function(dataset, small_test=FALSE) {
   
+  # first, find data folder... 
+  # we will assume it is in a parent folder of the current working directory
+  data_path <- "../"
+  
+  for (ii in 1:3) {
+    
+    if ("data" %in% dir(data_path)) {
+      data_path <- paste0(data_path, "data/")
+      break
+    } else {
+      data_path <- paste0(data_path, "../")
+    }
+  }
+  
   d <- switch(dataset,
               "clarke2022qjep" = import_clarke2022qjep(small_test),
               "tagu2022cog"    = import_tagu2022cog(small_test),
@@ -104,7 +118,8 @@ fix_person_and_trial <- function(d) {
 
 import_tagu2025 <- function(small_test) {
   
-  d <- read_csv("../../data/tagu2025/DATA_ALL.csv") 
+  datafile <- paste0(data_path, "tagu2025/DATA_ALL.csv")
+  d <- read_csv(datafile) 
   
   d_tmp <- d %>%
     mutate(condition = Bloc,
@@ -164,7 +179,9 @@ import_tagu2022cog <- function(small_test) {
     y = col_double(),
     found = col_double())
   
-  d <- read_csv("../../data/tagu2022/tagu_2020_prox_mouse.csv", col_types = my_spec) 
+  datafile <- paste0(data_path, "tagu2022/tagu_2020_prox_mouse.csv/DATA_ALL.csv")
+  d <- read_csv(datafile,
+                col_types = my_spec) 
   
   # remove trials with NAs 
   na_trls <- filter(d, is.na(targ_type)) %>%
@@ -233,7 +250,9 @@ import_clarke2022qjep <- function(small_test) {
     found = col_double(),
     RT = col_double())
   
-  d <- read_csv("../../data/clarke2022qjep/clarke2022qjep_collected.csv", 
+  datafile <- paste0(data_path, "clarke2022qjep/clarke2022qjep_collected.csv")
+  
+  d <- read_csv(datafile, 
                 col_types = my_spec)
   
   d  %>%
@@ -278,9 +297,9 @@ import_hughes2024rsos <- function(small_test){
   # import from csv files. 
   # These were computed by the pre-processing script in data/hughes2024
   
-  d_stim <- read_csv("../../data/hughes2024rsos/hughes2024rsos_stim.csv",
+  d_stim <- read_csv(paste0(data_path, "hughes2024rsos/hughes2024rsos_stim.csv"),
                      show_col_types = FALSE) 
-  d_found <- read_csv("../../data/hughes2024rsos/hughes2024rsos_found.csv",
+  d_found <- read_csv(paste0(data_path, "hughes2024rsos/hughes2024rsos_found.csv"),
                       show_col_types = FALSE)
   
   # fix condition labels
@@ -317,7 +336,7 @@ import_kristjansson2014plos <- function(small_test) {
     y = col_double(),
     found = col_double())
   
-  d <- read_csv("../../data/kristjansson2014/human_data_2014_prox.csv", col_types = my_spec) 
+  d <- read_csv(poaste0(data_path, "kristjansson2014/human_data_2014_prox.csv"), col_types = my_spec) 
   
   d %>% 
     select(person = "observer", condition, trial = "trial",  
