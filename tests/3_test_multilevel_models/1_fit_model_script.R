@@ -53,7 +53,7 @@ params <- list(exp = exp,
 # now simulate data
 d <- sim_foraging_people(params,
                          rel_proximity = FALSE,
-                         filename = "ac_test_") 
+                         filename = "ac_test") 
 
 iter <- 1000
 

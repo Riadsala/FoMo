@@ -11,13 +11,13 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     }
   }
   
-  # create save folder if it doesn't yet exist
-  if(!dir.exists("scratch/models")) {
-    dir.create("scratch/models")
-  }
-  
   # get dataset name
   dataset_name <- get_dataset_name(dataset)
+  
+  # create save folder if it doesn't yet exist
+  if(!dir.exists(paste0("scratch/models/", dataset_name))) {
+    dir.create(paste0("scratch/models/", dataset_name))
+  }
   
   # load in the Stan model
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
