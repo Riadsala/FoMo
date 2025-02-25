@@ -27,11 +27,11 @@ import_data <- function(dataset, small_test=FALSE) {
   }
   
   d <- switch(dataset,
-              "clarke2022qjep" = import_clarke2022qjep(small_test),
-              "tagu2022cog"    = import_tagu2022cog(small_test),
-              "tagu2025" = import_tagu2025(small_test),
-              "kristjansson2014plos" = import_kristjansson2014plos(small_test),
-              "hughes2024rsos" = import_hughes2024rsos(small_test),
+              "clarke2022qjep" = import_clarke2022qjep(data_path, small_test),
+              "tagu2022cog"    = import_tagu2022cog(data_path, small_test),
+              "tagu2025" = import_tagu2025(data_path, small_test),
+              "kristjansson2014plos" = import_kristjansson2014plos(data_path, small_test),
+              "hughes2024rsos" = import_hughes2024rsos(data_path, small_test),
               "unknown dataset")
   
   return(list(
@@ -116,7 +116,7 @@ fix_person_and_trial <- function(d) {
   
 }
 
-import_tagu2025 <- function(small_test) {
+import_tagu2025 <- function(data_path = "../data/", small_test) {
   
   datafile <- paste0(data_path, "tagu2025/DATA_ALL.csv")
   d <- read_csv(datafile) 
@@ -167,7 +167,7 @@ import_tagu2025 <- function(small_test) {
   
 }
 
-import_tagu2022cog <- function(small_test) {
+import_tagu2022cog <- function(data_path = "../data/", small_test) {
   
   my_spec <- cols(
     condition = col_double(),
@@ -237,7 +237,7 @@ import_tagu2022cog <- function(small_test) {
 
 }
 
-import_clarke2022qjep <- function(small_test) {
+import_clarke2022qjep <- function(data_path = "../data/", small_test) {
   
   my_spec <- cols(
     condition = col_double(),
@@ -292,7 +292,7 @@ import_clarke2022qjep <- function(small_test) {
               found = d_found))
 }
 
-import_hughes2024rsos <- function(small_test){
+import_hughes2024rsos <- function(data_path = "../data/", small_test){
   
   # import from csv files. 
   # These were computed by the pre-processing script in data/hughes2024
@@ -321,14 +321,13 @@ import_hughes2024rsos <- function(small_test){
   
   # fix trial_p numbering
   d_stim  <- fix_person_and_trial(d_stim)
-  d_found <- fix_person_and_trial(d$found)
+  d_found <- fix_person_and_trial(d_found)
   
   return(list(stim = d_stim,
               found = d_found))
 }
 
-
-import_kristjansson2014plos <- function(small_test) {
+import_kristjansson2014plos <- function(data_path = "../data/", small_test) {
   
   my_spec <- cols(
     condition = col_double(),
