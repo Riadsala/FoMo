@@ -320,8 +320,24 @@ import_hughes2024rsos <- function(data_path = "../data/", small_test){
     mutate(condition = as_factor(condition)) -> d_stim
   
   # fix trial_p numbering
-  d_stim  <- fix_person_and_trial(d_stim)
-  d_found <- fix_person_and_trial(d_found)
+  d_stim %>% 
+    mutate(second_half = (trial_p > 5)) %>%
+    mutate(blk = as.numeric(factor(scarcity)),
+           tp = if_else(second_half, 
+                        10 + (blk-1)*5 + trial_p,  
+                        (blk-1)*5 + trial_p)) %>%
+    select(-second_half, -blk) %>%
+    arrange(person, tp)  -> d_stim
+  
+  d_found %>% 
+    mutate(second_half = (trial_p > 5)) %>%
+    mutate(blk = as.numeric(factor(scarcity)),
+           tp = if_else(second_half, 
+                        10 + (blk-1)*5 + trial_p,  
+                        (blk-1)*5 + trial_p)) %>%
+    select(-second_half, -blk) %>%
+    arrange(person, tp)  -> d_found
+  
   
   return(list(stim = d_stim,
               found = d_found))
