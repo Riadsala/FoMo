@@ -89,7 +89,7 @@ plot_model_human_iisv_comparison <- function(iisv) {
 plot_models_accuracy <- function(ds) {
   
   # function to compare accuracy over models on the same dataset
-  # input is a dataset label
+  # ds is a dataset label
   # will auto look for relevant models
   
   # find list of models

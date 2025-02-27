@@ -23,6 +23,8 @@ d <- import_data(dataset)
 
 folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 
+plot_models_accuracy(dataset)
+
 #############################################################################
 # plot accuracy
 #############################################################################

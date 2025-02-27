@@ -7,7 +7,7 @@
    # iii) test data
    
    # first, import dataset
-   d <- import_data(dataset, small_test = TRUE)
+   d <- import_data(dataset)
    
    folder <- paste0("scratch/d_list/", dataset, "/")
    dir.create(folder)
