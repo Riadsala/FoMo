@@ -1,0 +1,65 @@
+---
+title: "Brief Analysis of Tagu's 2025 Data"
+author: "A Clarke"
+format: html
+editor: visual
+---
+
+First, we need to get set up:
+
+```{r}
+library(tidyverse)
+library(cmdstanr)
+library(patchwork)
+
+source("../../functions/import_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/plot_model.R")
+
+```
+
+
+# Import
+
+## Loading Data
+
+
+```{r}
+d <- import_data("tagu2025")
+
+summary(d$found)
+
+summary(d$stim)
+```
+
+
+## Loading Model
+
+The model was previously run and saved
+
+```{r}
+m <- readRDS("../1_fit_models/scratch/models/tagu2025all1_0.model")
+
+m$summary()
+```
+
+Now extract posterior samples and predictions.
+
+```{r}
+pred <- extract_pred(m, d)
+post <- extract_post(m, d)
+```
+
+
+# Accuracy
+
+```{r}
+acc <- summarise_acc(pred)
+plot_model_accuracy(acc)
+```
+
+Looks like the model does a pretty good job of predicting which item will be selected next in all three conditions.
+
+
+
+
