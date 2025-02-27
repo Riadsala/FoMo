@@ -274,7 +274,7 @@ extract_item_pred <- function(my_model, my_data, pv, chains = 1) {
   
   pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
                     pred, by = join_by(n)) %>%
-    select(-n, -item_class, -x, -y, -rt) %>%
+    select(-any_of(c("n", "item_class", "x", "y", "rt"))) %>%
     mutate(model_correct = (P == id))
   
 }
