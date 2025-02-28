@@ -1,13 +1,13 @@
 ---
 title: "Brief Analysis of Tagu's 2025 Data"
 author: "A Clarke"
-format: html
+format: pdf
 editor: visual
 ---
 
 First, we need to get set up:
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(cmdstanr)
 library(patchwork)
@@ -16,15 +16,17 @@ source("../../functions/import_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/plot_model.R")
 
-```
+knitr::opts_chunk$set(echo = TRUE,
+                      dev = "ragg_png",
+                      dpi = 400)
 
+```
 
 # Import
 
 ## Loading Data
 
-
-```{r}
+```{r, message = FALSE}
 d <- import_data("tagu2025")
 
 summary(d$found)
@@ -32,12 +34,11 @@ summary(d$found)
 summary(d$stim)
 ```
 
-
 ## Loading Model
 
 The model was previously run and saved
 
-```{r}
+```{r, warning = FALSE}
 m <- readRDS("../1_fit_models/scratch/models/tagu2025all1_0.model")
 
 m$summary()
@@ -45,21 +46,16 @@ m$summary()
 
 Now extract posterior samples and predictions.
 
-```{r}
+```{r, cache = TRUE}
 pred <- extract_pred(m, d)
 post <- extract_post(m, d)
 ```
 
-
 # Accuracy
 
-```{r}
+```{r, warning = FALSE, cache = TRUE}
 acc <- summarise_acc(pred)
 plot_model_accuracy(acc)
 ```
 
 Looks like the model does a pretty good job of predicting which item will be selected next in all three conditions.
-
-
-
-
