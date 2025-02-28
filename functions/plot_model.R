@@ -182,7 +182,7 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL)
               gt = gt, clist = clist)
   
   # assemble the plots!
-  plt <- wrap_plots(plts, nrow = 1) + 
+  plt <- wrap_plots(plts, nrow = 2) + 
     plot_layout(guides = "collect", axis_titles = "collect")
   
   return(plt)

@@ -59,3 +59,42 @@ plot_model_accuracy(acc)
 ```
 
 Looks like the model does a pretty good job of predicting which item will be selected next in all three conditions.
+
+# Posterior Distributions
+
+## Parameter Estimates
+
+```{r}
+plot_model_fixed(post) + theme_bw()
+```
+
+
+## Differences between Conditions
+
+```{r}
+
+# are there differences between conditions?
+post$fixed %>% 
+  pivot_longer(-c(.draw, condition), names_to = "param") %>%
+  pivot_wider(names_from = "condition") %>%
+  group_by(.draw, param) %>%
+  mutate(negative = negative - neutral,
+         positive = positive - neutral,
+         .keep = "none") %>%
+  pivot_longer(c(negative, positive), names_to = "comparison") %>%
+  ggplot(aes(value, fill = comparison)) + 
+  geom_density(alpha = 0.6) + 
+  geom_vline(xintercept = 0, linetype = 2) + 
+  facet_wrap(~param, scales = "free")
+```
+
+
+## Individual Differences
+  
+```{r}
+plot_model_random(post)
+```
+
+
+
+
