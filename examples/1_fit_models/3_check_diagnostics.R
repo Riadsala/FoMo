@@ -29,7 +29,8 @@ for (model in models) {
 }
 
 
-d %>% ggplot(aes(rhat)) +
-  geom_histogram() +
-  facet_wrap(~model) + 
+d %>% 
+  ggplot(aes(rhat)) +
+  geom_histogram(binwidth = 0.01) +
+  facet_wrap(~model, scales = "free") + 
   ggtitle("distribution of Rhat statistics")

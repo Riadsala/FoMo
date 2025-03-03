@@ -1,6 +1,7 @@
 library(tidyverse)
 library(cmdstanr)
 library(patchwork)
+library(tidybayes)
 
 source("../functions/import_data.R")
 source("../functions/prep_data.R")
@@ -13,23 +14,73 @@ source("../functions/sim_foraging_data.R")
 options(mc.cores = 1, digits = 2)
 
 # set global ggplot theme
-theme_set(ggthemes::theme_tufte())
+theme_set(theme_bw())
 
 model_ver <- "1_5"
-dataset <- "hughes2024rsos"
+dataset <- "clarke2022qjep"
 
 # read in data
 d <- import_data(dataset)
 
 folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 
+
+#############################################################################
+# plot model comparison over models
+#############################################################################
 plot_models_accuracy(dataset)
+
+# scatter plot of person acc by model
+v1 <- "1_0"
+v2 <- "1_3"
+
+plot_model_accuracy_comparison <- function(dataset, v1, v2) {
+  
+acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
+  mutate(version = v1) %>%
+  filter(found > 1, found < 40, split == "testing") %>%
+  group_by(version, person, condition, .draw) %>%
+  summarise(accuracy = mean(model_correct),
+            .groups = "drop_last") %>%
+  median_hdci(accuracy)
+
+acc2 <- readRDS(paste0(folder, "pred_train", v2, ".rds"))$itemwise %>%
+  mutate(version = v2) %>%
+  filter(found > 1, found < 40, split == "testing") %>%
+  group_by(version, person, condition, .draw) %>%
+  summarise(accuracy = mean(model_correct),
+            .groups = "drop_last") %>%
+  median_hdci(accuracy)
+
+acc <- bind_rows(acc1, acc2) 
+
+rm(acc1, acc2)
+
+acc %>% 
+  unite(accuracy, .lower, accuracy, .upper) %>%
+  pivot_wider(names_from = "version", values_from = "accuracy") %>%
+  separate(v1, c("xmin", "x", "xmax"), "_", convert = TRUE) %>%
+  separate(v2, c("ymin", "y", "ymax"), "_", convert = TRUE) %>%
+  ggplot(aes(x, y, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  geom_point(alpha = 0.75) + 
+  geom_errorbar(alpha = 0.25) +
+  geom_errorbarh(alpha = 0.25) + 
+  geom_abline(linetype = 2) + 
+  facet_wrap( ~ condition) + 
+  coord_equal() +
+  scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
+  scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
+  theme(panel.grid  = element_blank())
+
+
+}
 
 #############################################################################
 # plot accuracy
 #############################################################################
 acc <- read_csv(paste0(folder, "acc_train1_0.csv"))
-acc_plt <- plot_model_accuracy(acc)
+plot_model_accuracy(acc)
+ggsave("clarke1_0_acc.png", width = 6, height = 4)
 rm(acc)
 
 #############################################################################
