@@ -61,7 +61,12 @@ acc %>%
   pivot_wider(names_from = "version", values_from = "accuracy") %>%
   separate(v1, c("xmin", "x", "xmax"), "_", convert = TRUE) %>%
   separate(v2, c("ymin", "y", "ymax"), "_", convert = TRUE) %>%
-  ggplot(aes(x, y, xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  mutate(improvement = cut(y - x, breaks = seq(-.025, .30, 0.05))) -> acc
+
+acc %>% ggplot(aes(x, y, 
+             xmin = xmin, xmax = xmax,
+             ymin = ymin, ymax = ymax,
+             colour = improvement)) +
   geom_point(alpha = 0.75) + 
   geom_errorbar(alpha = 0.25) +
   geom_errorbarh(alpha = 0.25) + 
@@ -70,10 +75,14 @@ acc %>%
   coord_equal() +
   scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
   scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
+  scale_color_viridis_d() + 
+  theme_dark() +
   theme(panel.grid  = element_blank())
 
 
 }
+
+plot_model_accuracy_comparison(dataset, v1, v2)
 
 #############################################################################
 # plot accuracy
