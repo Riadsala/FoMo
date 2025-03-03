@@ -159,7 +159,7 @@ transformed parameters {
 
   // add fixed and random effects together
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_stick, u_delta, u_psi;
+  array[K] vector[L] u_a, u_stick, u_delta;
 
   for (k in 1:K) {
     u_a[k]     = to_vector(b_a[k]       + u[3*(k-1)+1]);

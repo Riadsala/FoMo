@@ -64,8 +64,8 @@ data {
   int <lower = 1> n_trials;  // total number of trials (overall)
   int <lower = 1> n_classes; // number of target classes - we assume this is constant over n_trials
   int <lower = 1> n_targets; // total number of targets per trial
-  array[N] int <lower = 0, upper = n_targets> found_order; // = 1 is starting a new trial, 0 otherwise
 
+  array[N] int <lower = 0, upper = n_targets> found_order; // = 1 is starting a new trial, 0 otherwise
   array[N] int <lower = 1> Y; // target IDs - which target was selected here? This is what we predict
 
   // (x, y) coordinates of each target

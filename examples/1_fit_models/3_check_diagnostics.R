@@ -4,7 +4,7 @@ library(posterior)
 
 # this script (or QMD) checks previously fitted models and assesses how well they fit
 
-dataset <- "hughes2024rsos"
+dataset <- "clarke2022qjep"
 folder <- paste0("scratch/models/", dataset, "/")
 mode <- "train"
 
