@@ -178,10 +178,10 @@ transformed parameters {
       u_log_theta[k, l, 3] = (log_theta[k, 3] + w[4*(k-1)+3, l]);
       u_log_theta[k, l, 4] = (log_theta[k, 4] + w[4*(k-1)+4, l]);
       */
-      u_log_theta[k, l, 1] = (log_theta[k, 1] + z_w[4*(k-1)+1, l] .* sigma_w[k]);
-      u_log_theta[k, l, 2] = (log_theta[k, 2] + z_w[4*(k-1)+2, l] .* sigma_w[k]);
-      u_log_theta[k, l, 3] = (log_theta[k, 3] + z_w[4*(k-1)+3, l] .* sigma_w[k]);
-      u_log_theta[k, l, 4] = (log_theta[k, 4] + z_w[4*(k-1)+4, l] .* sigma_w[k]);
+      u_log_theta[k, l, 1] = (log_theta[k, 1] + z_w[4*(k-1)+1, l] .* sigma_w[4*(k-1)+1]);
+      u_log_theta[k, l, 2] = (log_theta[k, 2] + z_w[4*(k-1)+2, l] .* sigma_w[4*(k-1)+2]);
+      u_log_theta[k, l, 3] = (log_theta[k, 3] + z_w[4*(k-1)+3, l] .* sigma_w[4*(k-1)+3]);
+      u_log_theta[k, l, 4] = (log_theta[k, 4] + z_w[4*(k-1)+4, l] .* sigma_w[4*(k-1)+4]);
 
     }  
   }
