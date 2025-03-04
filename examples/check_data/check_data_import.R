@@ -20,6 +20,22 @@ get_first_items <- function(ds) {
   
 }
 
+check_train_test <- function(ds) {
+  
+  d <- import_data(ds)
+  tt <- get_train_test_split(d)
+  
+  tibble(dataset = ds,
+         split = rep(c("train", "test"), each = 2),
+         data = rep(c("stim", "found"), 2),
+         rows = c(nrow(tt$training$stim), nrow(tt$training$found),
+                  nrow(tt$testing$stim), nrow(tt$testing$found))) -> dout
+  
+  return(dout)
+  
+}
+
+
 datasets <- c("clarke2022qjep", "tagu2022cog", "hughes2024rsos", "kristjansson2014plos")
 
 d <- map_df(datasets, get_first_items)
