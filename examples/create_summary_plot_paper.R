@@ -32,10 +32,12 @@ plot_models_accuracy(dataset)
 
 # scatter plot of person acc by model
 v1 <- "1_0"
-v2 <- "1_3"
+v2 <- "1_5"
 
 
 plot_model_accuracy_comparison(dataset, v1, v2)
+
+plot_model_accuracy_comparison("hughes2024rsos", v1, v2)
 
 #############################################################################
 # plot accuracy

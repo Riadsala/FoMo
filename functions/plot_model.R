@@ -3,6 +3,8 @@ library(patchwork)
 library(tidybayes)
 library(hrbrthemes)
 
+# load subfunctions for plotting
+source("../functions/subfunctions/plot_model_sf.R")
 # plotting our foraging model
 
 # plot_model_fixed() plots the fixed effects (group averages) 
@@ -24,6 +26,8 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2) {
   
   # scatterplot showing how well two different models (v1 and v2) can 
   # predict indidual participants
+  
+  folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
   
   acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
     mutate(version = v1) %>%
@@ -50,7 +54,10 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2) {
     pivot_wider(names_from = "version", values_from = "accuracy") %>%
     separate(v1, c("xmin", "x", "xmax"), "_", convert = TRUE) %>%
     separate(v2, c("ymin", "y", "ymax"), "_", convert = TRUE) %>%
-    mutate(improvement = cut(y - x, breaks = seq(-.025, .30, 0.05))) -> acc
+    mutate(improvement = cut(y - x, breaks = seq(-.025, .50, 0.05))) %>%
+    separate(improvement, into = c("l", "u"), sep = ",") %>%
+    mutate(improvement = factor((parse_number(l)+parse_number(u))/2),
+           .keep = "unused")-> acc
   
   acc %>% ggplot(aes(x, y, 
                      xmin = xmin, xmax = xmax,
@@ -66,7 +73,9 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2) {
     scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
     scale_color_viridis_d() + 
     theme_dark() +
-    theme(panel.grid  = element_blank())
+    theme(panel.grid  = element_blank()) -> plt
+  
+  return(plt)
   
 }
 
@@ -238,62 +247,6 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
   return(plt)
 }
 
-plot_cts_params <- function(post,  gt=NULL, clist=NULL) {
-  
-  my_widths <- c(0.53, 0.97)
-  
-  # create a plot for each parameter
-  plts <- map(post$params, plt_post_prior, 
-              post = post$fixed, prior = post$prior, 
-              gt = gt, clist = clist)
-  
-  # assemble the plots!
-  plt <- wrap_plots(plts, nrow = 1) + 
-    plot_layout(guides = "collect")
-  
-  return(plt)
-}
-
-plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
-  
-  # function to plot the posterior against the prior. 
-  # gt allows us to mark up the groundtruth (if available)
-  # clist allows us to specify a list of conditions to use in different ways
-  
-  if (is.null(clist)) {
-    fill_cond <- "condition"
-  } else {
-    fill_cond <- clist$fill
-  }
-  
-  prior_var = paste("prior", var, sep = "_")
-  
-  # get prior HDPI
-  prior %>% 
-    as_tibble() %>%
-    median_hdci(get(prior_var), .width = c(0.53, 0.97)) -> prior_hpdi
-  
-  post %>% 
-    ggplot() + 
-    geom_rect(data = prior_hpdi,
-              aes(ymin = -Inf, ymax = Inf, xmin = .lower, xmax = .upper), 
-              fill = "grey", alpha = 0.25) +  
-    geom_density(aes(get(var), fill = !!sym(fill_cond)), alpha = 0.5) +
-    scale_x_continuous(var) -> plt
-  
-  if (!is.null(gt)) {
-    
-    plt <- plt + geom_vline(xintercept = gt[[var]], linetype = 2, colour = "darkred")
-    
-  }
-  
-  if (!is.null(clist)) {
-    plt <- plt + facet_wrap(as.formula(paste("~", clist$facet_cond)))
-  }
-  
-  return(plt)
-  
-}
 
 plot_model_random <- function(post) {
   
