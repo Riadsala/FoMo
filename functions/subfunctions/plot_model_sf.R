@@ -6,7 +6,7 @@
 
 plot_cts_params <- function(post,  gt=NULL, clist=NULL) {
   
-  # this function is currently unused
+  # this function is currently unused?????
   
   my_widths <- c(0.53, 0.97)
   
@@ -58,6 +58,47 @@ plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   if (!is.null(clist)) {
     plt <- plt + facet_wrap(as.formula(paste("~", clist$facet_cond)))
   }
+  
+  return(plt)
+  
+}
+
+create_weight_plot <- function(param, x1, x2, post) {
+  
+  x1 <- 0
+  
+  if (param == "rho_psi") {
+    x2 <- 1  
+  } else {
+    x2 <- 2
+  }
+  
+  x <- seq(x1, x2, (x2-x1)/100)
+  
+  rho <- post$fixed %>% select(condition, "rho" = {param}) 
+  dout <- pmap_df(rho, neg_exp, x=x)
+  
+  plt <- ggplot(dout, aes(x = x, y= p, fill = condition)) + 
+    stat_lineribbon(alpha = 0.4) +
+    scale_x_continuous(param)
+  
+  return(plt)
+  
+} 
+
+neg_exp <- function(condition, rho, x) {
+  
+  return(tibble(condition = condition, 
+                rho = rho, 
+                x = x, 
+                p = exp(-rho*x)))
+}
+
+plot_model_weights <- function(post, params) {
+  
+  plts <- map(params, create_weight_plot, post = post)
+  
+  plt <- wrap_plots(plts) + plot_layout(guides = "collect")
   
   return(plt)
   

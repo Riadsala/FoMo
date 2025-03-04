@@ -21,6 +21,9 @@ theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
+##################################################################################
+# accuracy plots
+##################################################################################
 
 plot_model_accuracy_comparison <- function(dataset, v1, v2) {
   
@@ -77,73 +80,6 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2) {
   
   return(plt)
   
-}
-
-
-plot_model_human_rl_comparison <- function(rl) {
-  
-  #################################################################
-  # plot scatter plots for mean max run length and mean num runs
-  
-  rl %>% 
-    pivot_longer(c("max_run_length", "n_runs"), names_to = "statistic") %>%
-    pivot_wider(names_from = "data") %>%
-    ggplot(aes(observed, simulated, colour = condition)) + 
-    geom_point() +
-    facet_wrap(~statistic) -> plt
-  
-  return(plt)
-  
-}
-
-plot_model_human_iisv_comparison <- function(iisv) {
-  
-  # Create a plot to compare our model to human/training data
-  # in terms of  inter-item selection amplitude and direction
-  
-  #################################################################
-  # create distance plot
-  ggplot(iisv, aes(d2, colour = data, group = interaction(.draw, data))) + 
-    geom_density(alpha = 0.33) +
-    scale_colour_viridis_d() +
-    facet_wrap(~condition) -> plt_amp
-  
-  #################################################################
-  # create direction plot
-  pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2), expression(2*pi))
-  
-  iisv %>%
-    ggplot(aes(theta, colour = data, group = interaction(.draw, data))) + 
-    geom_line(stat = "density", bw = 0.1, alpha = 0.33,
-              linewidth = 2) +
-    coord_cartesian(xlim = c(-pi, pi)) +
-    theme(legend.position = "none") +
-    scale_colour_viridis_d() +
-    scale_x_continuous("inter-item directions", breaks = seq(0, 2*pi, pi/2), 
-                       labels = pi_labels) -> plt_wave
-  
-  #################################################################
-  # create rel direction plot
-  
-  # first, mirror to fix density plot around 0 
-  bind_rows(iisv, 
-            iisv %>% mutate(psi = -psi)) %>%
-    filter(found > 2) -> iisv
-  
-  iisv %>%
-    ggplot(aes(psi,  colour = data, group = interaction(.draw, data))) + 
-    geom_line(stat = "density", bw = 0.1,
-               linewidth = 2, alpha = 0.5)  + 
-    scale_colour_viridis_d() +
-    coord_cartesian(xlim = c(0, 1)) -> plt_psi
-  
-  
-  #################################################################
-  # output plots
-
-  plt <- plt_amp + plt_psi + plt_wave + plot_layout(guides = "collect")
-
-  return(plt)
 }
 
 plot_models_accuracy <- function(ds) {
@@ -217,6 +153,10 @@ plot_model_accuracy <- function(acc) {
   return(plt)
 }
 
+##################################################################################
+# plotting the model's posterior density distributions
+##################################################################################
+
 plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
   
   # sort out groudtruth params if passed in as sim params
@@ -247,7 +187,6 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
   return(plt)
 }
 
-
 plot_model_random <- function(post) {
   
   post$random %>%
@@ -264,49 +203,82 @@ plot_model_random <- function(post) {
   
 }
 
-plot_model_weights <- function(post, params) {
-  
-  plts <- map(params, create_weight_plot, post = post)
-  
-  plt <- wrap_plots(plts) + plot_layout(guides = "collect")
-  
-  return(plt)
-  
-}
-
-create_weight_plot <- function(param, x1, x2, post) {
-  
-  x1 <- 0
-  
-  if (param == "rho_psi") {
-    x2 <- 1  
-  } else {
-    x2 <- 2
-  }
-  
-  x <- seq(x1, x2, (x2-x1)/100)
-  
-  rho <- post$fixed %>% select(condition, "rho" = {param}) 
-  dout <- pmap_df(rho, neg_exp, x=x)
-  
-  plt <- ggplot(dout, aes(x = x, y= p, fill = condition)) + 
-    stat_lineribbon(alpha = 0.4) +
-    scale_x_continuous(param)
-  
-  return(plt)
-  
-} 
-
-neg_exp <- function(condition, rho, x) {
-  
-  return(tibble(condition = condition, 
-                rho = rho, 
-                x = x, 
-                p = exp(-rho*x)))
-}
+##################################################################################
+# model diagnostic plots
+##################################################################################
 
 plot_traceplots <- function(m) {
   
   bayesplot::mcmc_trace(m$draws(), pars = c("bA", "b_stick"))
   
+}
+
+##################################################################################
+# plots for comparing run and iisv statistics
+##################################################################################
+
+plot_model_human_rl_comparison <- function(rl) {
+  
+  #################################################################
+  # plot scatter plots for mean max run length and mean num runs
+  
+  rl %>% 
+    pivot_longer(c("max_run_length", "n_runs"), names_to = "statistic") %>%
+    pivot_wider(names_from = "data") %>%
+    ggplot(aes(observed, simulated, colour = condition)) + 
+    geom_point() +
+    facet_wrap(~statistic) -> plt
+  
+  return(plt)
+  
+}
+
+plot_model_human_iisv_comparison <- function(iisv) {
+  
+  # Create a plot to compare our model to human/training data
+  # in terms of  inter-item selection amplitude and direction
+  
+  #################################################################
+  # create distance plot
+  ggplot(iisv, aes(d2, colour = data, group = interaction(.draw, data))) + 
+    geom_density(alpha = 0.33) +
+    scale_colour_viridis_d() +
+    facet_wrap(~condition) -> plt_amp
+  
+  #################################################################
+  # create direction plot
+  pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2), expression(2*pi))
+  
+  iisv %>%
+    ggplot(aes(theta, colour = data, group = interaction(.draw, data))) + 
+    geom_line(stat = "density", bw = 0.1, alpha = 0.33,
+              linewidth = 2) +
+    coord_cartesian(xlim = c(-pi, pi)) +
+    theme(legend.position = "none") +
+    scale_colour_viridis_d() +
+    scale_x_continuous("inter-item directions", breaks = seq(0, 2*pi, pi/2), 
+                       labels = pi_labels) -> plt_wave
+  
+  #################################################################
+  # create rel direction plot
+  
+  # first, mirror to fix density plot around 0 
+  bind_rows(iisv, 
+            iisv %>% mutate(psi = -psi)) %>%
+    filter(found > 2) -> iisv
+  
+  iisv %>%
+    ggplot(aes(psi,  colour = data, group = interaction(.draw, data))) + 
+    geom_line(stat = "density", bw = 0.1,
+              linewidth = 2, alpha = 0.5)  + 
+    scale_colour_viridis_d() +
+    coord_cartesian(xlim = c(0, 1)) -> plt_psi
+  
+  
+  #################################################################
+  # output plots
+  
+  plt <- plt_amp + plt_psi + plt_wave + plot_layout(guides = "collect")
+  
+  return(plt)
 }
