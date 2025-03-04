@@ -20,6 +20,57 @@ options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
 
 
+plot_model_accuracy_comparison <- function(dataset, v1, v2) {
+  
+  # scatterplot showing how well two different models (v1 and v2) can 
+  # predict indidual participants
+  
+  acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
+    mutate(version = v1) %>%
+    filter(found > 1, found < 40, split == "testing") %>%
+    group_by(version, person, condition, .draw) %>%
+    summarise(accuracy = mean(model_correct),
+              .groups = "drop_last") %>%
+    median_hdci(accuracy)
+  
+  acc2 <- readRDS(paste0(folder, "pred_train", v2, ".rds"))$itemwise %>%
+    mutate(version = v2) %>%
+    filter(found > 1, found < 40, split == "testing") %>%
+    group_by(version, person, condition, .draw) %>%
+    summarise(accuracy = mean(model_correct),
+              .groups = "drop_last") %>%
+    median_hdci(accuracy)
+  
+  acc <- bind_rows(acc1, acc2) 
+  
+  rm(acc1, acc2)
+  
+  acc %>% 
+    unite(accuracy, .lower, accuracy, .upper) %>%
+    pivot_wider(names_from = "version", values_from = "accuracy") %>%
+    separate(v1, c("xmin", "x", "xmax"), "_", convert = TRUE) %>%
+    separate(v2, c("ymin", "y", "ymax"), "_", convert = TRUE) %>%
+    mutate(improvement = cut(y - x, breaks = seq(-.025, .30, 0.05))) -> acc
+  
+  acc %>% ggplot(aes(x, y, 
+                     xmin = xmin, xmax = xmax,
+                     ymin = ymin, ymax = ymax,
+                     colour = improvement)) +
+    geom_point(alpha = 0.75) + 
+    geom_errorbar(alpha = 0.25) +
+    geom_errorbarh(alpha = 0.25) + 
+    geom_abline(linetype = 2) + 
+    facet_wrap( ~ condition) + 
+    coord_equal() +
+    scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
+    scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
+    scale_color_viridis_d() + 
+    theme_dark() +
+    theme(panel.grid  = element_blank())
+  
+}
+
+
 plot_model_human_rl_comparison <- function(rl) {
   
   #################################################################
@@ -157,8 +208,7 @@ plot_model_accuracy <- function(acc) {
   return(plt)
 }
 
-plot_model_fixed <- function(post, gt=NULL, clist=NULL)
-{
+plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
   
   # sort out groudtruth params if passed in as sim params
   if ("foraging" %in% names(gt)) {
@@ -188,8 +238,7 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL)
   return(plt)
 }
 
-plot_cts_params <- function(post,  gt=NULL, clist=NULL)
-{
+plot_cts_params <- function(post,  gt=NULL, clist=NULL) {
   
   my_widths <- c(0.53, 0.97)
   
@@ -204,7 +253,6 @@ plot_cts_params <- function(post,  gt=NULL, clist=NULL)
   
   return(plt)
 }
-
 
 plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   
@@ -247,8 +295,7 @@ plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   
 }
 
-plot_model_random <- function(post) 
-{
+plot_model_random <- function(post) {
   
   post$random %>%
     pivot_longer(starts_with("u"), names_to = "param") %>%
@@ -305,8 +352,7 @@ neg_exp <- function(condition, rho, x) {
                 p = exp(-rho*x)))
 }
 
-plot_traceplots <- function(m) 
-{
+plot_traceplots <- function(m) {
   
   bayesplot::mcmc_trace(m$draws(), pars = c("bA", "b_stick"))
   
