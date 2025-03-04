@@ -45,3 +45,10 @@ d %>% ggplot(aes(x, y, colour = condition)) +
   facet_wrap(~dataset, nrow = 2)  +
   coord_fixed() +
   ggtitle("dist. of first selected items")
+
+
+d <- map_df(datasets, check_train_test) %>%
+  pivot_wider(names_from = split, values_from = rows)
+
+d %>% knitr::kable()
+
