@@ -179,7 +179,7 @@ import_tagu2022cog <- function(data_path = "../data/", small_test) {
     y = col_double(),
     found = col_double())
   
-  datafile <- paste0(data_path, "tagu2022/tagu_2020_prox_mouse.csv/DATA_ALL.csv")
+  datafile <- paste0(data_path, "tagu2022/tagu_2020_prox_mouse.csv")
   d <- read_csv(datafile,
                 col_types = my_spec) 
   
@@ -355,7 +355,7 @@ import_kristjansson2014plos <- function(data_path = "../data/", small_test) {
     y = col_double(),
     found = col_double())
   
-  d <- read_csv(poaste0(data_path, "kristjansson2014/human_data_2014_prox.csv"), col_types = my_spec) 
+  d <- read_csv(paste0(data_path, "kristjansson2014/human_data_2014_prox.csv"), col_types = my_spec) 
   
   d %>% 
     select(person = "observer", condition, trial = "trial",  
