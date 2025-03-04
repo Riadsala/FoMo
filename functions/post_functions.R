@@ -72,13 +72,14 @@ extrat_post_theta_u <- function(m, cl) {
   
   post_absdir <- m$draws("u_log_theta", format = "df") %>%
     as_tibble() %>%
+    select(-.chain, -.iteration) %>%
     pivot_longer(starts_with("u_log_theta"), names_to = "comp", values_to = "log_theta") %>%
     mutate(theta = exp(log_theta), .keep = "unused") %>%
     separate(comp, c("condition", "person", "comp"), sep = ",") %>%  
     mutate(condition = factor(condition, labels = cl),
            comp = (parse_number(comp)),
            phi = (comp-1) * pi/2,
-           comp = factor(comp))
+           comp = factor(comp)) 
   
   return(post_absdir)
   
