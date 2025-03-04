@@ -17,6 +17,10 @@ source("../functions/subfunctions/plot_model_sf.R")
 # MORE sample_beta() to post_functions ???
 # plot_model_spatial () will need fixed at some point
 
+##################################################################################
+# set theme
+##################################################################################
+
 theme_set(theme_ipsum())
 options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
         ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
@@ -157,7 +161,7 @@ plot_model_accuracy <- function(acc) {
 # plotting the model's posterior density distributions
 ##################################################################################
 
-plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
+plot_model_fixed <- function(post, gt=NULL, clist=NULL, nrow = 1) {
   
   # sort out groudtruth params if passed in as sim params
   if ("foraging" %in% names(gt)) {
@@ -181,7 +185,7 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL) {
               gt = gt, clist = clist)
   
   # assemble the plots!
-  plt <- wrap_plots(plts, nrow = 2) + 
+  plt <- wrap_plots(plts, nrow = nrow) + 
     plot_layout(guides = "collect", axis_titles = "collect")
   
   return(plt)

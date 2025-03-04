@@ -86,7 +86,8 @@ extrat_post_theta_u <- function(m, cl) {
 
 extrat_post_theta <- function(m, cl) {
   
-  post_absdir <- m$draws("log_theta", format = "df") %>%
+  # get fixed (mean) effects
+  m$draws("log_theta", format = "df") %>%
     as_tibble() %>%
     pivot_longer(starts_with("log_theta"), names_to = "comp", values_to = "log_theta") %>%
     mutate(theta = exp(log_theta), .keep = "unused") %>%
@@ -94,7 +95,27 @@ extrat_post_theta <- function(m, cl) {
     mutate(condition = factor(condition, labels = cl),
            comp = (parse_number(comp)),
            phi = (comp-1) * pi/2,
-           comp = factor(comp))
+           comp = factor(comp)) %>%
+    select(-.chain, -.iteration) -> post_absdir
+  
+  n_directions = length(unique(post_absdir$phi))
+  
+  # get variances in direction
+  m$draws("sigma_w", format = "df") %>%
+    as_tibble() %>%
+    pivot_longer(starts_with("sigma_w"), names_to = "comp", values_to = "sigma") %>%
+    mutate(
+      comp = parse_number(comp),
+      condition = (comp-1) %/% n_directions,
+      condition = factor(condition, labels = cl),
+           comp = comp %% n_directions,
+           comp = factor(if_else(comp == 0, n_directions, comp)),
+            ) %>%
+    select(-.chain, -.iteration) -> post_theta_sigma
+  
+  post_absdir <- left_join(post_absdir, post_theta_sigma, 
+            by = join_by(.draw, condition, comp))
+  
   
   return(post_absdir)
   

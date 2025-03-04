@@ -16,7 +16,7 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(theme_bw())
 
-model_ver <- "1_5"
+model_ver <- "1_3"
 dataset <- "clarke2022qjep"
 
 # read in data
@@ -55,8 +55,23 @@ post <- extract_post(m, d)
 post_plt <- plot_model_fixed(post)
 
 # plot directions
+grid_break_width <- pi/4
+
+post$theta %>% 
+  ggplot(aes(phi, theta, colour = condition)) +
+  stat_interval(
+    alpha = 0.33, .width = c(0.53, 0.97)) + 
+  coord_radial(start = 0) +
+  scale_x_continuous(
+    limits = c(0, 2*pi),
+    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
+    expand = c(0, 0)) +
+  scale_y_continuous(labels = NULL) +
+  theme(panel.grid.minor = element_blank())
 
 
+m$draws(c("log_theta", "sigma_w"), format = "df") %>%
+  as_tibble()
 
 #############################################################################
 # create plot
