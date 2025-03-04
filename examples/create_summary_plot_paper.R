@@ -24,7 +24,6 @@ d <- import_data(dataset)
 
 folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 
-
 #############################################################################
 # plot model comparison over models
 #############################################################################
@@ -69,9 +68,31 @@ post$theta %>%
   scale_y_continuous(labels = NULL) +
   theme(panel.grid.minor = element_blank())
 
+post$theta %>% 
+  ggplot(aes(phi, sigma, colour = condition)) +
+  stat_interval(
+    alpha = 0.33, .width = c(0.53, 0.97)) + 
+  coord_radial(start = 0) +
+  scale_x_continuous(
+    limits = c(0, 2*pi),
+    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
+    expand = c(0, 0)) +
+  scale_y_continuous(labels = NULL) +
+  theme(panel.grid.minor = element_blank())
 
-m$draws(c("log_theta", "sigma_w"), format = "df") %>%
-  as_tibble()
+post$utheta %>% 
+  ggplot(aes(phi, theta, colour = condition)) +
+  stat_interval(
+    alpha = 0.33, .width = c(0.53, 0.97)) + 
+  coord_radial(start = 0) +
+  scale_x_continuous(
+    limits = c(0, 2*pi),
+    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
+    labels  = NULL,
+    expand = c(0, 0)) +
+  scale_y_continuous(labels = NULL) +
+  theme(panel.grid.minor = element_blank()) +
+  facet_wrap(~person, nrow = 6)
 
 #############################################################################
 # create plot
