@@ -53,47 +53,10 @@ m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver
 post <- extract_post(m, d)
 post_plt <- plot_model_fixed(post)
 
-# plot directions
-grid_break_width <- pi/4
 
-post$theta %>% 
-  ggplot(aes(phi, theta, colour = condition)) +
-  stat_interval(
-    alpha = 0.33, .width = c(0.53, 0.97)) + 
-  coord_radial(start = 0) +
-  scale_x_continuous(
-    limits = c(0, 2*pi),
-    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
-    expand = c(0, 0)) +
-  scale_y_continuous(labels = NULL) +
-  theme(panel.grid.minor = element_blank())
-
-post$theta %>% 
-  ggplot(aes(phi, sigma, colour = condition)) +
-  stat_interval(
-    alpha = 0.33, .width = c(0.53, 0.97)) + 
-  coord_radial(start = 0) +
-  scale_x_continuous(
-    limits = c(0, 2*pi),
-    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
-    expand = c(0, 0)) +
-  scale_y_continuous(labels = NULL) +
-  theme(panel.grid.minor = element_blank())
-
-post$utheta %>% 
-  ggplot(aes(phi, theta, colour = condition)) +
-  stat_interval(
-    alpha = 0.33, .width = c(0.53, 0.97)) + 
-  coord_radial(start = 0) +
-  scale_x_continuous(
-    limits = c(0, 2*pi),
-    breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
-    labels  = NULL,
-    expand = c(0, 0)) +
-  scale_y_continuous(labels = NULL) +
-  theme(panel.grid.minor = element_blank()) +
-  facet_wrap(~person, nrow = 6)
-
+plot_model_theta(post)
+plot_model_theta(post, per_person = TRUE, nrow = 10)
+ggsave("test.png", width = 10, height = 20)
 #############################################################################
 # create plot
 #############################################################################
