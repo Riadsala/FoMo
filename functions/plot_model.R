@@ -50,13 +50,12 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
   
   # scatterplot showing how well two different models (v1 and v2) can 
   # predict individual participants
-  
-
-  folder <- paste0(scratch_folder, "/post/", dataset, "/")
 
   acc <- tibble()
 
   for (ds in dataset) {  
+    
+    folder <- paste0(scratch_folder, "/post/", ds, "/")
     
     acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
       mutate(version = v1) %>%
@@ -110,7 +109,7 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
   
 }
 
-plot_models_accuracy <- function(ds) {
+plot_models_accuracy <- function(ds, scratch_folder = "scratch") {
   
   # function to compare accuracy over models on the same dataset
   # ds is a dataset label
