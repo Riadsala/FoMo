@@ -46,12 +46,12 @@ options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
 # accuracy plots
 ##################################################################################
 
-plot_model_accuracy_comparison <- function(dataset, v1, v2) {
+plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "scratch") {
   
   # scatterplot showing how well two different models (v1 and v2) can 
   # predict indidual participants
   
-  folder <- paste0("scratch/post/", dataset, "/")
+  folder <- paste0(scratch_folder, "/post/", dataset, "/")
   
   acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
     mutate(version = v1) %>%
@@ -110,7 +110,7 @@ plot_models_accuracy <- function(ds) {
   # will auto look for relevant models
   
   # find list of models
-  files <- dir(paste0("scratch/post/", ds))
+  files <- dir(paste0(scratch_folder, "/post/", ds))
   files <- files[str_detect(files,"acc")]
   
   d <- tibble()
@@ -125,7 +125,7 @@ plot_models_accuracy <- function(ds) {
   
   for (ff in files) {
     
-    a <- read_csv(paste0("scratch/post/", ds, "/", ff),
+    a <- read_csv(paste0(scratch_folder, "/post/", ds, "/", ff),
                   col_types = my_cols)
     a$model_ver <- str_extract(ff, "[0-1]*_[0-9]")
     
