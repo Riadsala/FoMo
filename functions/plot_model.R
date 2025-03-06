@@ -49,15 +49,14 @@ options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
 plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "scratch") {
   
   # scatterplot showing how well two different models (v1 and v2) can 
-  # predict indidual participants
+  # predict individual participants
   
-<<<<<<< Updated upstream
+
   folder <- paste0(scratch_folder, "/post/", dataset, "/")
-=======
+
   acc <- tibble()
 
   for (ds in dataset) {  
-    folder <- paste0("1_fit_models/scratch/post/", ds, "/")
     
     acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
       mutate(version = v1) %>%
@@ -74,7 +73,6 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
       summarise(accuracy = mean(model_correct),
                 .groups = "drop_last") %>%
       median_hdci(accuracy)
->>>>>>> Stashed changes
   
     acc <- bind_rows(acc, 
                      bind_rows(acc1, acc2) %>% mutate(dataset = ds))
