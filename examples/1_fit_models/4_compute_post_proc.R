@@ -18,6 +18,17 @@ datasets <-"clarke2022qjep"
 
 ############################################################################
 
+get_models_in_dir <- function(folder, mode) {
+  
+  models <- unlist(dir(folder))
+  models <- models[str_detect(models, mode)]
+  models <- str_extract(models, "1_[0-9]")
+  
+  return(models)
+
+}
+
+
 extract_and_save_predictions <- function(dataset) {
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
@@ -27,9 +38,7 @@ extract_and_save_predictions <- function(dataset) {
   # get list of model versions to compute over
   folder <- paste0("scratch/models/", dataset, "/")
   mode <- "train"
-  models <- unlist(dir(folder))
-  models <- models[str_detect(models, mode)]
-  models <- str_extract(models, "1_[0-9]")
+  models <- get_models_in_dir(folder, mode)
   
   # create output folder
   outfolder <- paste0("scratch/post/", dataset)
@@ -68,7 +77,12 @@ extract_and_save_predictions <- function(dataset) {
     rm(m, t, pred) 
     
   }
- }
+}
+
+compute_iisv_and_run_statistics <- function{
+  
+  
+  }
 
 ############################################################################
 # extract model predictions
