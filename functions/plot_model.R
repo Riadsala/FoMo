@@ -51,25 +51,34 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
   # scatterplot showing how well two different models (v1 and v2) can 
   # predict indidual participants
   
+<<<<<<< Updated upstream
   folder <- paste0(scratch_folder, "/post/", dataset, "/")
+=======
+  acc <- tibble()
+
+  for (ds in dataset) {  
+    folder <- paste0("1_fit_models/scratch/post/", ds, "/")
+    
+    acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
+      mutate(version = v1) %>%
+      filter(found > 1, found < 40, split == "testing") %>%
+      group_by(version, person, condition, .draw) %>%
+      summarise(accuracy = mean(model_correct),
+                .groups = "drop_last") %>%
+      median_hdci(accuracy)
+    
+    acc2 <- readRDS(paste0(folder, "pred_train", v2, ".rds"))$itemwise %>%
+      mutate(version = v2) %>%
+      filter(found > 1, found < 40, split == "testing") %>%
+      group_by(version, person, condition, .draw) %>%
+      summarise(accuracy = mean(model_correct),
+                .groups = "drop_last") %>%
+      median_hdci(accuracy)
+>>>>>>> Stashed changes
   
-  acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
-    mutate(version = v1) %>%
-    filter(found > 1, found < 40, split == "testing") %>%
-    group_by(version, person, condition, .draw) %>%
-    summarise(accuracy = mean(model_correct),
-              .groups = "drop_last") %>%
-    median_hdci(accuracy)
-  
-  acc2 <- readRDS(paste0(folder, "pred_train", v2, ".rds"))$itemwise %>%
-    mutate(version = v2) %>%
-    filter(found > 1, found < 40, split == "testing") %>%
-    group_by(version, person, condition, .draw) %>%
-    summarise(accuracy = mean(model_correct),
-              .groups = "drop_last") %>%
-    median_hdci(accuracy)
-  
-  acc <- bind_rows(acc1, acc2) 
+    acc <- bind_rows(acc, 
+                     bind_rows(acc1, acc2) %>% mutate(dataset = ds))
+  }
   
   rm(acc1, acc2)
   
@@ -91,7 +100,7 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
     geom_errorbar(alpha = 0.25) +
     geom_errorbarh(alpha = 0.25) + 
     geom_abline(linetype = 2) + 
-    facet_wrap( ~ condition) + 
+    facet_grid(dataset ~ condition) + 
     coord_equal() +
     scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
     scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
@@ -238,8 +247,8 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
   
   theta %>% 
     ggplot(aes(phi, theta, colour = condition)) +
-    stat_interval(linewidth = 8,
-                  alpha = 0.33, .width = c(0.53, 0.97)) + 
+    stat_interval(linewidth = 4,
+                  alpha = 0.7, .width = c(0.53, 0.97)) + 
     coord_radial(start = -pi/2, direction = -1) +
     scale_x_continuous(
       name = element_blank(),
@@ -250,7 +259,7 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
     scale_y_continuous(expression(theta)) +
     theme(axis.title.y = element_text(hjust = 0.68),
           axis.ticks.x = element_blank()) + 
-    facet_wrap(~condition) -> plt
+    facet_wrap(~condition, nrow = nrow) -> plt
   
   if (per_person) plt <- plt + facet_wrap(~person, nrow = nrow)
   

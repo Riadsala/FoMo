@@ -27,16 +27,18 @@ folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
 #############################################################################
 # plot model comparison over models
 #############################################################################
-plot_models_accuracy(dataset)
+plt_hughes <- plot_models_accuracy("hughes2024rsos") + theme_bw() + ggtitle("Hughes et al (2024, RSOS)")
+plt_clarke <- plot_models_accuracy("clarke2022qjep") + theme_bw() + ggtitle("Clarke et al (2022, QJEP)")
+
+
+plt_hughes / plt_clarke
 
 # scatter plot of person acc by model
 v1 <- "1_0"
-v2 <- "1_5"
+v2 <- "1_3"
 
-
-plot_model_accuracy_comparison(dataset, v1, v2)
-
-plot_model_accuracy_comparison("hughes2024rsos", v1, v2)
+plot_model_accuracy_comparison(c("hughes2024rsos", "clarke2022qjep"), v1, v2) 
+ggsave("acc_comp.png", width = 8, height = 8)
 
 #############################################################################
 # plot accuracy
@@ -49,12 +51,15 @@ rm(acc)
 #############################################################################
 # plot posterior densities
 #############################################################################
+dataset <- "hughes2024rsos"
+
 m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver, ".model"))
 post <- extract_post(m, d)
 post_plt <- plot_model_fixed(post)
 
+plot_model_theta(post, nrow = 2)
+ggsave("theta_fixed.png", width = 4, height = 6)
 
-plot_model_theta(post)
 plot_model_theta(post, per_person = TRUE, nrow = 10)
 ggsave("test.png", width = 10, height = 20)
 #############################################################################
