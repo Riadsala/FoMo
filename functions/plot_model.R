@@ -207,6 +207,47 @@ plot_model_random <- function(post) {
   
 }
 
+plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
+  
+  # plot directions
+  grid_break_width <- pi/2
+  pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2))
+  
+  if (per_person) {
+    theta <- post$utheta
+  } else {
+    theta <- post$theta
+  }
+  
+  theta %>% 
+    ggplot(aes(phi, theta, colour = condition)) +
+    stat_interval(linewidth = 8,
+                  alpha = 0.33, .width = c(0.53, 0.97)) + 
+    coord_radial(start = -pi/2, direction = -1) +
+    scale_x_continuous(
+      name = element_blank(),
+      limits = c(0, 2*pi),
+      breaks = seq(0, 2*pi-grid_break_width, grid_break_width),
+      labels = pi_labels,
+      expand = c(0, 0)) +
+    scale_y_continuous(expression(theta)) +
+    theme(axis.title.y = element_text(hjust = 0.68),
+          axis.ticks.x = element_blank()) + 
+    facet_wrap(~condition) -> plt
+  
+  if (per_person) plt <- plt + facet_wrap(~person, nrow = nrow)
+  
+  return(plt)
+  
+  
+  
+  
+  
+}
+
+
+
+ 
 ##################################################################################
 # model diagnostic plots
 ##################################################################################
