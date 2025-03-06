@@ -4,7 +4,24 @@ library(tidybayes)
 library(hrbrthemes)
 
 # load subfunctions for plotting
-source("../../functions/subfunctions/plot_model_sf.R")
+
+# first, find data folder... 
+# we will assume it is in a parent folder of the current working directory
+
+plot_sf_path <- "../"
+
+for (ii in 1:3) {
+  
+  if ("functions" %in% dir(plot_sf_path)) {
+    plot_sf_path <- paste0(plot_sf_path, "functions/subfunctions/plot_model_sf.R")
+    break
+  } else {
+    plot_sf_path <- paste0(plot_sf_path, "../")
+  }
+}
+
+source(plot_sf_path)
+
 # plotting our foraging model
 
 # plot_model_fixed() plots the fixed effects (group averages) 
