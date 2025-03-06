@@ -4,7 +4,7 @@ library(tidybayes)
 library(hrbrthemes)
 
 # load subfunctions for plotting
-source("../functions/subfunctions/plot_model_sf.R")
+source("../../functions/subfunctions/plot_model_sf.R")
 # plotting our foraging model
 
 # plot_model_fixed() plots the fixed effects (group averages) 

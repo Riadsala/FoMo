@@ -11,7 +11,7 @@ source("../../functions/compute_summary_stats.R")
 source("../../functions/fit_model.R")
 
 
-dataset <- "test_anna"
+dataset <- "ac_test"
 
 d <- readRDS(paste0("scratch/data/", dataset, ".RDS"))
 
@@ -26,8 +26,8 @@ get_post_and_pred_from_saved_model <- function(d, model_ver, mode) {
     
   } else {
     
-    m <- readRDS(paste0("scratch/models/", d$name, "train", model_ver, ".model"))
-    t <- readRDS(paste0("scratch/models/", d$name, "test", model_ver, ".model"))
+    m <- readRDS(paste0("scratch/models/", d$name, "/", "train", model_ver, ".model"))
+    t <- readRDS(paste0("scratch/models/", d$name, "/",  "test", model_ver, ".model"))
     
     # get model posteriors
     post <- extract_post(m, d)
@@ -96,7 +96,7 @@ get_rl_and_iisv_statistics <- function(d, sim) {
 # compute interesting stuff
 #################################################################################
 
-post <- get_post_and_pred_from_saved_model(d, "1_5", mode)
+post <- get_post_and_pred_from_saved_model(d, "1_3", mode)
 stats <- get_rl_and_iisv_statistics(d, post$sim)
 
 #################################################################################
