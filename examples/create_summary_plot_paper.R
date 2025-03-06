@@ -22,9 +22,8 @@ dataset <- "clarke2022qjep"
 # read in data
 d <- import_data(dataset)
 
-folder <- paste0("1_fit_models/scratch/post/", dataset, "/")
-
 sf <- "1_fit_models/scratch"
+folder <- paste0(sf, "/post/", dataset, "/")
 
 #############################################################################
 # plot model comparison over models
