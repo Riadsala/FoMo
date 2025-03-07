@@ -13,8 +13,8 @@ source("../functions/sim_foraging_data.R")
 
 options(mc.cores = 1, digits = 2)
 
-model_ver <- "1_3"
-dataset <- "clarke2022qjep"
+model_ver <- "1_0"
+dataset <- "hughes2024rsos"
 
 # read in data
 d <- import_data(dataset)
@@ -33,7 +33,6 @@ prior <- tibble(value = rexp(1000, 1))
 
 # calculate sd from the post indiv diff estimates
 post$random %>%
-  select(-u_psi) %>%
   pivot_longer(c(u_a, u_stick, u_delta), names_to = "param") %>%
   group_by(.draw, param, condition) %>%
   summarise(sd = sd(value)) -> calc_from_u
@@ -52,7 +51,7 @@ prior <- tibble(value = rexp(1000, 1))
 
 post$utheta %>%
   group_by(.draw, comp, condition) %>%
-  summarise(sd = sd(theta)) -> calc_from_u
+  summarise(sd = sd(log(theta))) -> calc_from_u
 
 post$theta %>%
   ggplot(aes(sigma)) +
