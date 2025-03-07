@@ -137,7 +137,7 @@ extract_var <- function(m, cl, param_names) {
            condition = if_else(condition == 0, length(cl), condition),
            condition = factor(condition, labels = cl),
            param = (parse_number(name)+1) %/% length(cl),
-           param = if_else(param == 0, n_params_per_condition, param),
+          # param = if_else(param == 0, n_params_per_condition, param),
            param = factor(param, labels = param_names)) %>%
     select(-name) -> post_sig
   
