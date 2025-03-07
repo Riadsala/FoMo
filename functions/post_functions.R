@@ -138,7 +138,7 @@ extract_var <- function(m, cl, param_names) {
     pivot_longer(-.draw) %>%
     mutate(condition = (parse_number(name)+n_params_per_condition-1) %/% n_params_per_condition,
            condition = factor(condition, labels = cl),
-           param = (parse_number(name)+1) %% n_params_per_condition,
+           param = parse_number(name) %% n_params_per_condition,
            param = if_else(param == 0, n_params_per_condition, param),
            param = factor(param, labels = param_names)) %>%
     select(-name) -> post_sig
