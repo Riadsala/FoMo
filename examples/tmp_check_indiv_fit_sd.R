@@ -57,7 +57,7 @@ post$utheta %>%
 post$theta %>%
   ggplot(aes(sigma)) +
   geom_density(data = prior, aes(value), fill = "grey") +
-  geom_density(aes(fill = condition), alpha = 0.5) + 
+ # geom_density(aes(fill = condition), alpha = 0.5) + 
   stat_intervalh(data = calc_from_u, aes(colour = condition, x = sd), y = 0) + 
   facet_wrap(~comp)
 
