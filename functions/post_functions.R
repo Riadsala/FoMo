@@ -128,16 +128,18 @@ extract_var <- function(m, cl, param_names) {
   
   # work out how many params
   # we -3 due to the .chain, .iteration and .draw variables
+  
+  # u params are mapped to parameters using + u[4*(kk-1)+1])
+  
   n_params_per_condition <- (length(post_sig) - 3) / length(cl)
   
   post_sig %>% as_tibble() %>%
     select(-.chain, -.iteration) %>%
     pivot_longer(-.draw) %>%
-    mutate(condition = parse_number(name) %% length(cl),
-           condition = if_else(condition == 0, length(cl), condition),
+    mutate(condition = (parse_number(name)+n_params_per_condition-1) %/% n_params_per_condition,
            condition = factor(condition, labels = cl),
-           param = (parse_number(name)+1) %/% length(cl),
-          # param = if_else(param == 0, n_params_per_condition, param),
+           param = (parse_number(name)+1) %% n_params_per_condition,
+           param = if_else(param == 0, n_params_per_condition, param),
            param = factor(param, labels = param_names)) %>%
     select(-name) -> post_sig
   
