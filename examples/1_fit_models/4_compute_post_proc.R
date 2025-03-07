@@ -28,7 +28,6 @@ get_models_in_dir <- function(folder, mode) {
 
 }
 
-
 extract_and_save_predictions <- function(dataset) {
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
@@ -79,7 +78,50 @@ extract_and_save_predictions <- function(dataset) {
   }
 }
 
-compute_iisv_and_run_statistics <- function{
+compute_iisv_and_run_statistics <- function(dataset){
+  
+  d <- import_data(dataset)
+  
+  # compute empirical run statistics
+  rl <- get_run_info_over_trials(d$found) %>%
+    group_by(person, condition) %>%
+    summarise(max_run_length = mean(max_run_length)) %>%
+    mutate(z = "observed")
+  
+  # compute empirical run statistics
+  iisv <- get_iisv_over_trials(d$found) %>%
+    mutate(z = "observed")
+  
+  # tidy up
+  rm(d)
+  
+  # get list of model versions to compute over
+  folder <- paste0("scratch/models/", dataset, "/")
+  mode <- "train"
+  models <- get_models_in_dir(folder, mode)
+  
+  
+  for (modelver in models) {
+    
+    # get simulation data for model
+    pred <- readRDS(paste0(folder, "pred_", mode, model_ver, ".rds"))
+    
+
+    # compute simulated run statistics
+    rlp <- get_run_info_over_trials(pred$sim) %>%
+      group_by(person, condition) %>%
+      summarise(max_run_length = mean(max_run_length))
+    
+    # bind everything together
+    bind_rows(rle %>% mutate(x = "observed"),
+              rlp %>% mutate(x = "predicted")) %>%
+      pivot_wider(names_from = "x", values_from = "max_run_length") %>%
+      mutate(dataset = ds) %>% 
+      bind_rows(rl) -> rl
+  }
+  
+  write_csv(rl, paste0("scratch/run_statistics", model_ver, ".csv"))
+  
   
   
   }
@@ -91,6 +133,9 @@ for (ds in datasets) {
   
   print(paste("Obtaining posterior predictions for dataset ", ds))
   extract_and_save_predictions(ds)
+  
+  
+  
 
 }
 
@@ -153,8 +198,7 @@ for (model_ver in models) {
     pred <- summarise_postpred(list(training = m, testing = m), d, 
                                get_sim = TRUE, draw_sample_frac = 0.01) 
     
-    # compute empirical run statistics
-    iisve <- get_iisv_over_trials(d$found) 
+   
     
     # compute simulated run statistics
     iisvp <- get_iisv_over_trials(pred$sim %>%
