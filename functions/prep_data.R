@@ -227,7 +227,7 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
   
   
   ## add in angular offset
-  d_list$offset = rep(0, d_list$K)
+  d_list$grid_offset = rep(0, d_list$K)
   
   return(d_list)
   

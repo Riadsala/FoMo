@@ -12,8 +12,8 @@ functions {
 
   vector compute_weights(
     real u_a, real u_s, real u_delta, vector log_theta, real kappa,
-    vector item_class, vector match_prev_item, vector delta, vector phi,
-    int n, int n_targets, vector remaining_items) {
+    vector item_class, vector match_prev_item, vector delta, vector phi, 
+    int n, int n_targets, vector remaining_items, real os) {
 
     vector[n_targets] weights;
     
@@ -26,7 +26,7 @@ functions {
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
       u_delta, log_theta, kappa,
-      delta, phi);
+      delta, phi, os);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -97,7 +97,7 @@ data {
 
   // pass in kappa hyper-parameter
   real<lower = 0> kappa;
-  array[K] real offset; // angular grid offset (ie, should we rotate our coordiante acis)
+  array[K] real grid_offset; // angular grid offset (ie, should we rotate our coordiante acis)
 }
 
 transformed data{
@@ -234,7 +234,7 @@ model {
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii],
-      offset[x]); 
+      grid_offset[x]); 
 
     target += log(weights[Y[ii]]);
   
@@ -280,7 +280,7 @@ generated quantities {
         u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii],
-      offset[x]); 
+      grid_offset[x]); 
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);
@@ -328,7 +328,7 @@ generated quantities {
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
           to_vector(item_class[t]), S_j, delta_j, phi_j,
           found_order[ii], n_targets, remaining_items_j,
-      offset[x]); 
+      grid_offset[x]); 
 
         Q[t, ii] = categorical_rng(weights);
 
