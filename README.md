@@ -1,3 +1,6 @@
+If you are interested in using this model, please feel free to get in touch with us (Alasdair Clarke and/or Anna Hughes) for help and advice. We're happy to help. 
+
+
 # Model Versions
 
 More details will be made available in the pre-print (once we finish it)
