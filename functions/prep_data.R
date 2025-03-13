@@ -225,6 +225,10 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
   
   d_list$trial = df$trial
   
+  
+  ## add in angular offset
+  d_list$offset = rep(0, d_list$K)
+  
   return(d_list)
   
 }
