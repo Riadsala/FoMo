@@ -327,7 +327,7 @@ import_hughes2024rsos <- function(data_path = "../data/", small_test){
                         10 + (blk-1)*5 + trial_p,  
                         (blk-1)*5 + trial_p)) %>%
     select(-second_half, -blk) %>%
-    arrange(person, tp)  -> d_stim
+    arrange(person, trial)  -> d_stim
   
   d_found %>% 
     mutate(second_half = (trial_p > 5)) %>%
@@ -336,7 +336,7 @@ import_hughes2024rsos <- function(data_path = "../data/", small_test){
                         10 + (blk-1)*5 + trial_p,  
                         (blk-1)*5 + trial_p)) %>%
     select(-second_half, -blk) %>%
-    arrange(person, tp)  -> d_found
+    arrange(person, trial)  -> d_found
   
   
   return(list(stim = d_stim,
