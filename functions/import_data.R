@@ -325,8 +325,9 @@ import_hughes2024rsos <- function(data_path = "../data/", small_test){
     mutate(blk = as.numeric(factor(scarcity)),
            tp = if_else(second_half, 
                         10 + (blk-1)*5 + trial_p,  
-                        (blk-1)*5 + trial_p)) %>%
-    select(-second_half, -blk) %>%
+                        (blk-1)*5 + trial_p),
+           trial_p = tp) %>%
+    select(-second_half, -blk, -tp) %>%
     arrange(person, trial)  -> d_stim
   
   d_found %>% 
@@ -334,8 +335,9 @@ import_hughes2024rsos <- function(data_path = "../data/", small_test){
     mutate(blk = as.numeric(factor(scarcity)),
            tp = if_else(second_half, 
                         10 + (blk-1)*5 + trial_p,  
-                        (blk-1)*5 + trial_p)) %>%
-    select(-second_half, -blk) %>%
+                        (blk-1)*5 + trial_p),
+           trial_p = tp) %>%
+    select(-second_half, -blk, -tp) %>%
     arrange(person, trial)  -> d_found
   
   
