@@ -1,4 +1,4 @@
-If you are interested in using this model, please feel free to get in touch with us (Alasdair Clarke and/or Anna Hughes) for help and advice. We're happy to help. 
+If you are interested in using this model, please feel free to contact us (Alasdair Clarke and/or Anna Hughes) for help and advice. We're happy to help. 
 
 
 # Model Versions
@@ -17,7 +17,6 @@ More details will be made available in the pre-print (once we finish it)
 
 
 
-
 # Import Data
 
 Data should be imported using the import_data() function. You will need to write your own code if you have a new dataset in a new format 
@@ -26,6 +25,7 @@ The output of this import function should return a list of tibbles: d$stim and d
 
 (x, y) coordinates are in Euclidean coordinates, with (0, 0) indicating the *bottom left* corner of the display. 
 Coordinates are scaled such that $x \in (0, 1)$ and $y \in (0, a)$ where $a$ is the aspect ratio.
+
 
 
 # Running The Model
