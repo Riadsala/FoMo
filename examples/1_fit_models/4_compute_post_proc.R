@@ -80,12 +80,19 @@ extract_and_save_predictions <- function(dataset) {
 
 compute_iisv_and_run_statistics <- function(dataset){
   
+  #####################################################
+  # Process empirical data first
+  
   d <- import_data(dataset)
   
   # compute empirical run statistics
   rl <- get_run_info_over_trials(d$found) %>%
     group_by(person, condition) %>%
-    summarise(max_run_length = mean(max_run_length)) %>%
+    summarise(max_run_length = mean(max_run_length),
+              num_runs = mean(n_runs),
+              mean_bestr = mean(best_r),
+              mean_pao = mean(pao),
+              .groups = "drop") %>%
     mutate(z = "observed")
   
   # compute empirical run statistics
@@ -100,29 +107,37 @@ compute_iisv_and_run_statistics <- function(dataset){
   mode <- "train"
   models <- get_models_in_dir(folder, mode)
   
+  # update folder to point to scratch/post
+  folder <- paste0("scratch/post/", dataset, "/")
   
   for (modelver in models) {
     
     # get simulation data for model
-    pred <- readRDS(paste0(folder, "pred_", mode, model_ver, ".rds"))
+    pred <- readRDS(paste0(folder, "pred_", mode, modelver, ".rds")) 
+    pred <- pred$trialwise %>% filter(.draw == 1)
     
-
     # compute simulated run statistics
-    rlp <- get_run_info_over_trials(pred$sim) %>%
+    rlp <- get_run_info_over_trials(pred) %>%
       group_by(person, condition) %>%
-      summarise(max_run_length = mean(max_run_length))
+      summarise(max_run_length = mean(max_run_length),
+                num_runs = mean(n_runs),
+                mean_bestr = mean(best_r),
+                mean_pao = mean(pao),
+                .groups = "drop")
+    
+    # compute simulated iisv statistics
+    #iisvp <- get_iisv_over_trials(pred)
     
     # bind everything together
-    bind_rows(rle %>% mutate(x = "observed"),
-              rlp %>% mutate(x = "predicted")) %>%
-      pivot_wider(names_from = "x", values_from = "max_run_length") %>%
-      mutate(dataset = ds) %>% 
-      bind_rows(rl) -> rl
+    rl %>% bind_rows(rlp %>% mutate(z = paste0("v",  modelver))) -> rl
+    
   }
   
-  write_csv(rl, paste0("scratch/run_statistics", model_ver, ".csv"))
+  rl %>% 
+    pivot_longer(c(max_run_length, num_runs, mean_bestr, mean_pao), names_to = "statistic") %>%
+    pivot_wider(names_from = z) -> rl
   
-  
+  write_csv(rl, paste0(folder, "run_statistics.csv"))
   
   }
 
@@ -132,88 +147,14 @@ compute_iisv_and_run_statistics <- function(dataset){
 for (ds in datasets) {
   
   print(paste("Obtaining posterior predictions for dataset ", ds))
+  
+  # first, extract and save accuracy
+  print("***** Computing accuracy *****")
   extract_and_save_predictions(ds)
   
-  
+  print("***** Computing iisv and run statistics *****")
+  compute_iisv_and_run_statistics(ds)
   
 
 }
 
-
-############################################################################
-# compute simulated run statistics
-############################################################################
-
-for (model_ver in models) {
-  
-  rl <- tibble()
-  
-  for (ds in datasets) {
-    
-    # load dataset and model
-    d <- import_data(ds)
-    m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
-    
-    # get simulation data for model
-    pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.01)
-    
-    # compute empirical run statistics
-    rle <- get_run_info_over_trials(d$found) %>%
-      group_by(person, condition) %>%
-      summarise(max_run_length = mean(max_run_length))
-    
-    # compute simulated run statistics
-    rlp <- get_run_info_over_trials(pred$sim) %>%
-      group_by(person, condition) %>%
-      summarise(max_run_length = mean(max_run_length))
-    
-    # bind everything together
-    bind_rows(rle %>% mutate(x = "observed"),
-              rlp %>% mutate(x = "predicted")) %>%
-      pivot_wider(names_from = "x", values_from = "max_run_length") %>%
-      mutate(dataset = ds) %>% 
-      bind_rows(rl) -> rl
-  }
-  
-  write_csv(rl, paste0("scratch/run_statistics", model_ver, ".csv"))
-
-}
-
-############################################################################
-# compute simulated iisv statistics
-############################################################################
-
-for (model_ver in models) {
-  
-  iisv <- tibble()
-  
-  for (ds in datasets) {
-    
-    # load dataset and model
-    d <- import_data(ds)
-    m <- readRDS(paste0("scratch/", ds, "_train_", model_ver, ".model"))
-    
-    # get simulation data for model
-    pred <- summarise_postpred(list(training = m, testing = m), d, 
-                               get_sim = TRUE, draw_sample_frac = 0.01) 
-    
-   
-    
-    # compute simulated run statistics
-    iisvp <- get_iisv_over_trials(pred$sim %>%
-                                    # it would be great to remove this line
-                                    filter(is.finite(x)))
-    
-    # bind everything together
-    bind_rows(iisve %>%  mutate(x = "human"),
-              iisvp  %>% mutate(x = "model")) %>%
-      mutate(dataset = ds,
-             model_ver = model_ver) %>% 
-      bind_rows(iisv) -> iisv
-    
-  }
-  
-  write_csv(iisv, paste0("scratch/iisv_statistics", model_ver, ".csv"))
-  
-}

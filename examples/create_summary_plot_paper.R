@@ -69,51 +69,43 @@ ggsave("test.png", width = 10, height = 20)
 acc_plt / post_plt
 
 #############################################################################
-# compute & compare run statistics
+# compare run statistics
 #############################################################################
-pred <- readRDS(paste0(folder, "pred_train1_0.rds"))
 
-rle <- get_run_info_over_trials(d$found) %>%
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length),
-            num_runs       = mean(n_runs),
-            .groups = "drop")
+trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
+  pivot_longer(starts_with("v"), names_to = "model_version", values_to = "predicted")
 
-# compute simulated run statistics
-rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
-  group_by(person, condition) %>%
-  summarise(max_run_length = mean(max_run_length),
-            num_runs       = mean(n_runs))
-
-# bind everything together
-bind_rows(rle %>% mutate(x = "observed"),
-          rlp %>% mutate(x = "predicted")) %>%
-  pivot_longer(c(max_run_length, num_runs), names_to = "statistic") %>%
-  pivot_wider(names_from = "x") -> rl
-
-# plot
-rl %>% ggplot(aes(predicted, observed, 
-                  colour = condition, shape = condition)) + 
+ggplot(r, aes(observed, predicted, colour = condition)) + 
   geom_point() + 
   geom_abline(linetype = 2) + 
-  facet_wrap(~statistic, scales = "free")
+  ggh4x::facet_grid2(statistic ~ model_version, scales = "free", independent = "all")
+
+# compute correlations
+
+comp_r <- function(condition, statistic, model_version, trl_stats) {
+  
+  t <- filter(trl_stats, 
+              {{condition}} == condition,
+              {{statistic}} == statistic, 
+              {{model_version}} == model_version)
+  
+  r <- cor.test(t$observed, t$predicted)$estimate
+  
+  return(tibble(condition = condition,
+                statistic = statistic,
+                model_version = model_version,
+                r = r))
+}
+
+
+trl_stats %>% modelr::data_grid(condition, statistic, model_version) -> to_test
+
+pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
+  pivot_wider(names_from = model_version, values_from = r) %>%
+  knitr::kable()
 
 #############################################################################
 # compute & compare iisv statistics
 #############################################################################
 
-rle <- get_iisv_over_trials(d$found) 
 
-# compute simulated run statistics
-rlp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw == 1))
-
-  # bind everything together
-bind_rows(rle %>% mutate(x = "observed"),
-          rlp %>% mutate(x = "predicted")) -> rl
-
-# plot
-rl %>% ggplot(aes(predicted, observed, 
-                  colour = condition, shape = condition)) + 
-  geom_point() + 
-  geom_abline(linetype = 2) + 
-  facet_wrap(~statistic, scales = "free")

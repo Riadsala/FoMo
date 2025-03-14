@@ -1,3 +1,5 @@
+library(ForagingOrg)
+
 # Computes some descriptive summary statistics of foraging data
 
 # get_run_info_over_trials(df) - pass in a dataframe, and get out one row per trial
@@ -108,8 +110,11 @@ get_run_info <- function(person, condition, trial_p, df) {
     condition = condition,
     n_found = nrow(trl_dat),
     max_run_length = max(rl$lengths), 
-    n_runs = length(rl$lengths)))
+    n_runs = length(rl$lengths),
+    best_r = best.r(trl_dat$x, trl_dat$y),
+    pao = PAO(trl_dat$x, trl_dat$y)))
 }    
+
 
 get_iisv_stats <- function(person, condition, trial_p, d) {
   
