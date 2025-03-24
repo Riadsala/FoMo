@@ -34,7 +34,6 @@ prep_train_test_data_for_stan <- function(d,
   d <- get_train_test_split(d)
   
   # check that there is data in the test set! 
-  # ie, the number of trials wasn't too small
   if (nrow(d$testing$found) == 0) {
     print("ERROR: no test data. Have you set n_trials to 1?")
     return()
@@ -54,7 +53,7 @@ prep_train_test_data_for_stan <- function(d,
   
 }
 
-add_priors_to_d_list <- function(dl, modelver="1.1") {
+add_priors_to_d_list <- function(dl, modelver="1.1", model_path = "../models/") {
   
   filename <- paste0("priors_model", modelver, ".csv")
   
@@ -62,7 +61,7 @@ add_priors_to_d_list <- function(dl, modelver="1.1") {
   dl <- dl[!str_detect(names(dl), "prior_") ]
   
   # add in priors
-  priors <- read_csv(paste0("../../models/multi_level/", filename), show_col_types = FALSE) %>%
+  priors <- read_csv(paste0(model_path, "multi_level/", filename), show_col_types = FALSE) %>%
     pivot_longer(-param, names_to = "stat", values_to = "value") %>%
     mutate(param = paste("prior", stat, param, sep="_")) %>%
     select(-stat) %>%

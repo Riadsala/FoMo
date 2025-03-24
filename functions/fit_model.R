@@ -18,10 +18,22 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   if(!dir.exists(paste0("scratch/models/", dataset_name))) {
     dir.create(paste0("scratch/models/", dataset_name))
   }
+  # get model directory path
+  model_path <- "../"
+  
+  for (ii in 1:3) {
+    
+    if ("models" %in% dir(model_path)) {
+      model_path <- paste0(model_path, "models/")
+      break
+    } else {
+      model_path <- paste0(model_path, "../")
+    }
+  }
   
   # load in the Stan model
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
-  mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", fomo_ver_str, ".stan"))
+  mod <- cmdstan_model(paste0(model_path, "multi_level/FoMo", fomo_ver_str, ".stan"))
   
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
@@ -38,7 +50,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   d_list <- get_list(dataset, mode, "training")
  
   # add priors to d_list
-  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = model_path)
 
   m <- mod$sample(data = d_list, 
                     chains = 4, parallel_chains = 4, threads = 4,
@@ -65,7 +77,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     d_list <- get_list(dataset, mode, "testing")
     # although we aren't using the priors, the model still
     # expects them to be in the input
-    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = model_path)
     
     m_test <- mod$generate_quantities(m, data = d_list, seed = 123)
     
