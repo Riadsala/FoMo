@@ -12,8 +12,8 @@ More details will be made available in the pre-print (once we finish it)
 | v1.1                       | As v1.0, but with rel distance     |
 | v1.2                       | As v1.0, but removes rel direction |
 | v1.3                       | As v1.2, but with abs direction <br> (four components) |
-| v1.4                | As v1.2, but with abs direction <br> (eight components) |
-| v1.5               | As v1.4, but adds rel direction back in                          |
+| v1.4                | As v1.3, but Q simulations anchored at human's first pick |
+
 
 
 

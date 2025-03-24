@@ -1,6 +1,9 @@
-/* FoMo V1.4 - multi-level
+/* FoMo V1.3 - multi-level
 
-Increase number of directions to 8
+Removes relative direction:
+
+b_a, b_stick, rho_delta
+
 */
 
 functions {
@@ -9,8 +12,8 @@ functions {
 
   vector compute_weights(
     real u_a, real u_s, real u_delta, vector log_theta, real kappa,
-    vector item_class, vector match_prev_item, vector delta, vector phi,
-    int n, int n_targets, vector remaining_items) {
+    vector item_class, vector match_prev_item, vector delta, vector phi, 
+    int n, int n_targets, vector remaining_items, real os) {
 
     vector[n_targets] weights;
     
@@ -23,7 +26,7 @@ functions {
     // calculate by spatial weights
     weights += compute_spatial_weights(n, n_targets, 
       u_delta, log_theta, kappa,
-      delta, phi);
+      delta, phi, os);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -34,7 +37,7 @@ functions {
 
   vector compute_spatial_weights(int n, int n_targets, 
     real rho_delta, vector log_theta, real kappa,
-    vector delta, vector phi) {
+    vector delta, vector phi, real os) {
 
     // computes spatial weights
     // for FoMo1.3, this includes proximity and absolute direction
@@ -45,15 +48,14 @@ functions {
     prox_weights   = compute_prox_weights(n, n_targets, 
                                  rho_delta, delta);
 
-    absdir_weights = compute_absdir_weights_fixed_kappa(n, n_targets, 
-                                 log_theta, kappa, phi);
+    absdir_weights = compute_absdir_weights_fixed_kappa4(n, n_targets, 
+                                 log_theta, kappa, phi, os);
 
     // return the dot product of the weights
     return(prox_weights + absdir_weights);
 
   }
 }
-
 
 data {
   int <lower = 1> N; // total number of selected targets over the whole experiment
@@ -94,12 +96,26 @@ data {
 
   // pass in kappa hyper-parameter
   real<lower = 0> kappa;
+  array[K] real grid_offset; // angular grid offset (ie, should we rotate our coordiante acis)
 }
 
 transformed data{
 
   array[N] vector[n_targets] remaining_items;
   remaining_items = calc_remaining_items(N, n_targets, Y, found_order);
+
+  // get first item for every trial
+  array[n_trials] int first_selected_item;
+
+  int trl = 0;
+  for (ii in 1:N) {
+    if (found_order[ii] == 1) {
+      trl = trl + 1;
+      first_selected_item[trl]  = Y[ii];
+    }
+
+  }
+
 
 }
 
@@ -122,7 +138,7 @@ parameters {
   array[K] real<lower = 0> rho_delta; // distance tuning
 
   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K, 8] real log_theta; // mixing values for abs directions
+  array[K, 4] real log_theta; // mixing values for abs directions
 
   ///////////////////////////////
   // random effects
@@ -130,14 +146,14 @@ parameters {
 
   // random effect variances
   vector<lower=0>[3*K] sigma_u;
-  vector<lower=0>[8*K] sigma_w;
+  vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a 3*K x 3*K correlation matrix
   cholesky_factor_corr[3*K] L_u;
-  //cholesky_factor_corr[8*K] L_w; // skip var-cov matrix for now
+  //cholesky_factor_corr[4*K] L_w; // skip var-cov matrix for now
 
   // random effect matrix
   matrix[3*K, L] z_u; // 3*K as we have three params
-  matrix[8*K, L] z_w; // 8*K as we have four directions
+  matrix[4*K, L] z_w; // 4*K as we have four directions
   
 }
 
@@ -165,7 +181,7 @@ transformed parameters {
   }
 
   // now work out thet u_log_theta
-  array[K, L] vector[8] u_log_theta;
+  array[K, L] vector[4] u_log_theta;
 
   for (k in 1:K) {
     for (l in 1:L) {
@@ -175,14 +191,10 @@ transformed parameters {
       u_log_theta[k, l, 3] = (log_theta[k, 3] + w[4*(k-1)+3, l]);
       u_log_theta[k, l, 4] = (log_theta[k, 4] + w[4*(k-1)+4, l]);
       */
-      u_log_theta[k, l, 1] = (log_theta[k, 1] + z_w[8*(k-1)+1, l] .* sigma_w[8*(k-1)+1]);
-      u_log_theta[k, l, 2] = (log_theta[k, 2] + z_w[8*(k-1)+2, l] .* sigma_w[8*(k-1)+2]);
-      u_log_theta[k, l, 3] = (log_theta[k, 3] + z_w[8*(k-1)+3, l] .* sigma_w[8*(k-1)+3]);
-      u_log_theta[k, l, 4] = (log_theta[k, 4] + z_w[8*(k-1)+4, l] .* sigma_w[8*(k-1)+4]);
-      u_log_theta[k, l, 5] = (log_theta[k, 5] + z_w[8*(k-1)+5, l] .* sigma_w[8*(k-1)+5]);
-      u_log_theta[k, l, 6] = (log_theta[k, 6] + z_w[8*(k-1)+6, l] .* sigma_w[8*(k-1)+6]);
-      u_log_theta[k, l, 7] = (log_theta[k, 7] + z_w[8*(k-1)+7, l] .* sigma_w[8*(k-1)+7]);
-      u_log_theta[k, l, 8] = (log_theta[k, 8] + z_w[8*(k-1)+8, l] .* sigma_w[8*(k-1)+8]);
+      u_log_theta[k, l, 1] = (log_theta[k, 1] + z_w[4*(k-1)+1, l] .* sigma_w[4*(k-1)+1]);
+      u_log_theta[k, l, 2] = (log_theta[k, 2] + z_w[4*(k-1)+2, l] .* sigma_w[4*(k-1)+2]);
+      u_log_theta[k, l, 3] = (log_theta[k, 3] + z_w[4*(k-1)+3, l] .* sigma_w[4*(k-1)+3]);
+      u_log_theta[k, l, 4] = (log_theta[k, 4] + z_w[4*(k-1)+4, l] .* sigma_w[4*(k-1)+4]);
 
     }  
   }
@@ -233,7 +245,8 @@ model {
     weights = compute_weights(
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
-      found_order[ii], n_targets, remaining_items[ii]); 
+      found_order[ii], n_targets, remaining_items[ii],
+      grid_offset[x]); 
 
     target += log(weights[Y[ii]]);
   
@@ -278,7 +291,8 @@ generated quantities {
       weights = compute_weights(
         u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
-        found_order[ii], n_targets, remaining_items[ii]); 
+        found_order[ii], n_targets, remaining_items[ii],
+      grid_offset[x]); 
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);
@@ -306,8 +320,12 @@ generated quantities {
       // first, set things up!
       remaining_items_j = rep_vector(1, n_targets);
 
+      // get first item from data
+      Q[t, 1] = first_selected_item[t];
+      remaining_items_j[Q[t, 1]] = 0;
+
       // simulate a trial!
-      for (ii in 1:n_targets) {
+      for (ii in 2:n_targets) {
 
         // delta_j: distance to previously selected item
         S_j = rep_vector(0, n_targets);
@@ -325,7 +343,8 @@ generated quantities {
         weights = compute_weights(
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
           to_vector(item_class[t]), S_j, delta_j, phi_j,
-          found_order[ii], n_targets, remaining_items_j); 
+          found_order[ii], n_targets, remaining_items_j,
+          grid_offset[x]); 
 
         Q[t, ii] = categorical_rng(weights);
 
