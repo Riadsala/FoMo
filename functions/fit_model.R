@@ -18,6 +18,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   if(!dir.exists(paste0("scratch/models/", dataset_name))) {
     dir.create(paste0("scratch/models/", dataset_name))
   }
+  
   # get model directory path
   model_path <- "../"
   
