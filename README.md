@@ -5,14 +5,14 @@ If you are interested in using this model, please feel free to contact us (Alasd
 
 More details will be made available in the pre-print (once we finish it)
 
-| Version Number             | Overview                           |
-|----------------------------|------------------------------------|
-| v0.0                       | prior predictions for 1.0          |
-| v1.0                       | Clarke, Hunt & Hughes (2022)       |
-| v1.1                       | As v1.0, but with rel distance     |
-| v1.2                       | As v1.0, but removes rel direction |
-| v1.3                       | As v1.2, but with abs direction <br> (four components) |
-| v1.4                | As v1.3, but Q simulations anchored at human's first pick |
+| Version Number             | Overview                           | item class | proximity | direciton | sim start |
+|----------------------------|------------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|
+| v0.0                       | prior predictions for 1.0          | | | | |
+| v1.0                       | Clarke, Hunt & Hughes (2022)       | | | | |
+| v1.1                       | As v1.0, but with rel distance     || | | |
+| v1.2                       | As v1.0, but removes rel direction || | | |
+| v1.3                       | As v1.2, but with abs direction <br> (four components) || | | |
+| v1.4                | As v1.3, but Q simulations anchored at human's first pick || | | |
 
 
 
