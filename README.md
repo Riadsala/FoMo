@@ -5,15 +5,16 @@ If you are interested in using this model, please feel free to contact us (Alasd
 
 More details will be made available in the pre-print (once we finish it)
 
-| Version Number             | Overview                           | item class | proximity | direciton | sim start |
-|----------------------------|------------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|
-| v0.0                       | prior predictions for 1.0          | | | | |
-| v1.0                       | Clarke, Hunt & Hughes (2022)       | | | | |
-| v1.1                       | As v1.0, but with rel distance     || | | |
-| v1.2                       | As v1.0, but removes rel direction || | | |
-| v1.3                       | As v1.2, but with abs direction <br> (four components) || | | |
-| v1.4                | As v1.3, but Q simulations anchored at human's first pick || | | |
-
+| Version Number             | Overview                           | item class | proximity ($\delta$) | rel dir ($\psi$)  | abs dir ($\phi$) | sim start |
+|----------------------------|------------------------------------|-----------------|--------------------|-----------|-----------|---------|
+| v0.0                       | prior predictions for 1.0          | $b_a$ and $b_s$ | abs | x | | random |
+| v1.0                       | Clarke, Hunt & Hughes (2022)       | $b_a$ and $b_s$ | abs | x |  |random |
+| v1.1                       | Does relative prox help?    | $b_a$ and $b_s$ | rel | x | | random |
+| v1.2                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |       |   | random |
+| v1.3                       | Four comp directions | $b_a$ and $b_s$ | abs | x|  4 | random |
+| v1.4                       | Eight comp directions | $b_a$ and $b_s$ | abs | x |  8 | random |
+| v1.5                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |  |  8 | random |
+| v2.0      ????                 | Fix starting point | $b_a$ and $b_s$ | abs | x |  4 | fixed |
 
 
 
