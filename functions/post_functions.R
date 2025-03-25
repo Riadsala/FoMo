@@ -269,7 +269,7 @@ extract_pred <- function(m, d) {
   
   if (get_sim) {
     
-    sim <- extract_trial_pred(mtr, training$stim)
+    sim <- extract_trial_pred(mte, testing$stim)
     
     # define output list
     list_out <- list(itemwise = pred, trialwise = sim)

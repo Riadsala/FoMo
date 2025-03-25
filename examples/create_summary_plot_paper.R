@@ -63,6 +63,7 @@ ggsave("theta_fixed.png", width = 4, height = 6)
 
 plot_model_theta(post, per_person = TRUE, nrow = 10)
 ggsave("test.png", width = 10, height = 20)
+
 #############################################################################
 # create plot
 #############################################################################

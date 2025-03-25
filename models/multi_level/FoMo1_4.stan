@@ -112,11 +112,12 @@ transformed data{
     if (found_order[ii] == 1) {
       trl = trl + 1;
       first_selected_item[trl]  = Y[ii];
+
+      if (trl < 6)
+        print(first_selected_item[trl]);
+      
     }
-
   }
-
-
 }
 
 parameters {
@@ -282,7 +283,7 @@ generated quantities {
     //////////////////////////////////////////////////
     // // step through data row by row and define LLH
     //////////////////////////////////////////////////
-   for (ii in 1:N) {
+    for (ii in 1:N) {
 
       t = trial[ii];
       z = Z[t];
