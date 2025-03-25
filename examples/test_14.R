@@ -20,11 +20,9 @@ t <- readRDS(paste0("1_fit_models/scratch/models/tagu2022cog/test1_3.model"))
 # get all model predictions
 pred <- extract_pred(list(training = m, testing = t), d)
 
-
+mod <- cmdstan_model("../models/multi_level/FoMo1_3.stan")
 
 mod <- cmdstan_model(paste0("../models/multi_level/FoMo", fomo_ver_str, ".stan"))
-
-
 m_test <- mod$generate_quantities(m, data = dtest, seed = 123)
 
 
