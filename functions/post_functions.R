@@ -303,13 +303,13 @@ extract_item_pred <- function(my_model, my_data, pv, chains = 1) {
   
 }
 
-extract_trial_pred <- function(mod, d_stim, mode, chains = 1) {
+extract_trial_pred <- function(my_model, d_stim, mode, chains = 1) {
   
   # do not call directly..
   # this is run by summarise_postpred()
   
   # first, we extract Q from the model
-  sim <- mod$draws("Q", format = "df")  %>%
+  sim <- my_model$draws("Q", format = "df")  %>%
     filter(.chain == chains) %>%
     as_tibble() %>%
     select(-.chain, -.iteration) %>%

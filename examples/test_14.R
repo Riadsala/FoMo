@@ -14,22 +14,31 @@ fomo_ver_str <- "1_4"
 dataset <- "tagu2022cog"
 d <- import_data(dataset)
 
-mod <- cmdstan_model(paste0("../models/multi_level/FoMo", fomo_ver_str, ".stan"))
+# load previous 1.3
 m <- readRDS("1_fit_models/scratch/models/tagu2022cog/train1_3.model")
-m_test <- mod$generate_quantities(m, data = dtest, seed = 123)
-
 t <- readRDS(paste0("1_fit_models/scratch/models/tagu2022cog/test1_3.model"))
-
 # get all model predictions
 pred <- extract_pred(list(training = m, testing = t), d)
+
+
+
+mod <- cmdstan_model(paste0("../models/multi_level/FoMo", fomo_ver_str, ".stan"))
+
+
+m_test <- mod$generate_quantities(m, data = dtest, seed = 123)
+
 
 pred$dataset <- dataset
 pred$model_ver <- "1_3"
 
 pred14 <- extract_pred(list(training = m, testing = m_test), d)
 
+
+# get test data split for Q comparisons
+dte <- get_train_test_split(d)$testing
+
 # compute empirical run statistics
-rl <- get_run_info_over_trials(d$found) %>%
+rl <- get_run_info_over_trials(dte$found) %>%
   group_by(person, condition) %>%
   summarise(max_run_length = mean(max_run_length),
             num_runs = mean(n_runs),
@@ -112,6 +121,6 @@ rl  %>% filter(is.finite(person)) %>%
   filter(d$found, person == 19)
 
   
-  plot_a_trial(d$stim, d$found, 388
-               )
+  plot_a_trial(d$stim, d$found, 388)
+  plot_a_trial(d$stim, pred14$trialwise, 388)
   
