@@ -101,7 +101,7 @@ data {
 
 }
 
-transformed data{
+transformed data {
 
   // pre-compute array giving remaining items for each selection
   array[N] vector[n_targets] remaining_items;
