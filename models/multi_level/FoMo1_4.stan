@@ -1,11 +1,9 @@
-/* FoMo v1.0 - multi-level
+/* FoMo v1.4 - multi-level
 
 Add in absolute direction:
 
 b_a, b_stick, rho_delta, rho_psi
 theta
-
-requires input of angular offset per condition
 
 */
 
@@ -131,8 +129,7 @@ parameters {
   array[K] real rho_psi; // direction tuning
 
   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K, 4] real log_theta; // mixing values for directions
-
+  array[K, 8] real log_theta; // mixing values for directions
 
   ///////////////////////////////
   // random effects
@@ -140,13 +137,13 @@ parameters {
   // random effect variances: 
   // 4*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[4*K] sigma_u;
-  // 4*K as we have four directions x K conditions
-  vector<lower=0>[4*K] sigma_w;
+  // 8*K as we have eight directions x K conditions
+  vector<lower=0>[8*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[4*K] L_u;
   // random effect matrix
   matrix[4*K,L] z_u; // for main params
-  matrix[4*K, L] z_w; // for directional params
+  matrix[8*K, L] z_w; // for directional params
 }
 
 transformed parameters {
@@ -177,10 +174,14 @@ transformed parameters {
   for (kk in 1:K) {
     for (l in 1:L) {
 
-      u_log_theta[kk, l, 1] = (log_theta[kk, 1] + z_w[4*(kk-1)+1, l] .* sigma_w[4*(kk-1)+1]);
-      u_log_theta[kk, l, 2] = (log_theta[kk, 2] + z_w[4*(kk-1)+2, l] .* sigma_w[4*(kk-1)+2]);
-      u_log_theta[kk, l, 3] = (log_theta[kk, 3] + z_w[4*(kk-1)+3, l] .* sigma_w[4*(kk-1)+3]);
-      u_log_theta[kk, l, 4] = (log_theta[kk, 4] + z_w[4*(kk-1)+4, l] .* sigma_w[4*(kk-1)+4]);
+      u_log_theta[kk, l, 1] = (log_theta[kk, 1] + z_w[8*(kk-1)+1, l] .* sigma_w[8*(kk-1)+1]);
+      u_log_theta[kk, l, 2] = (log_theta[kk, 2] + z_w[8*(kk-1)+2, l] .* sigma_w[8*(kk-1)+2]);
+      u_log_theta[kk, l, 3] = (log_theta[kk, 3] + z_w[8*(kk-1)+3, l] .* sigma_w[8*(kk-1)+3]);
+      u_log_theta[kk, l, 4] = (log_theta[kk, 4] + z_w[8*(kk-1)+4, l] .* sigma_w[8*(kk-1)+4]);
+      u_log_theta[kk, l, 5] = (log_theta[kk, 5] + z_w[8*(kk-1)+5, l] .* sigma_w[8*(kk-1)+5]);
+      u_log_theta[kk, l, 6] = (log_theta[kk, 6] + z_w[8*(kk-1)+6, l] .* sigma_w[8*(kk-1)+6]);
+      u_log_theta[kk, l, 7] = (log_theta[kk, 7] + z_w[8*(kk-1)+7, l] .* sigma_w[8*(kk-1)+7]);
+      u_log_theta[kk, l, 8] = (log_theta[kk, 8] + z_w[8*(kk-1)+8, l] .* sigma_w[8*(kk-1)+8]);
 
     }  
   }
