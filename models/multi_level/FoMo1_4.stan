@@ -169,7 +169,7 @@ transformed parameters {
   }
 
   // now work out thet u_log_theta
-  array[K, L] vector[4] u_log_theta;
+  array[K, L] vector[8] u_log_theta;
 
   for (kk in 1:K) {
     for (l in 1:L) {
