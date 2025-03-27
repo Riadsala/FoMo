@@ -1,6 +1,7 @@
-﻿param,mu,sd
+param,mu,sd
 b_a,0,1.5
 b_stick,0,1.5
 rho_delta,15,5
+rho_psi,0,1
 theta,0.1,NA
-kappa,10,NA
+kappa,0,NA
