@@ -207,6 +207,7 @@ model {
     target += normal_lpdf(b_stick[kk]   | prior_mu_b_stick, prior_sd_b_stick);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[kk]   | prior_mu_rho_psi, prior_sd_rho_psi);
+    target += normal_lpdf(log_theta[kk] | 0, 2);
   }
 
   // create some variables
