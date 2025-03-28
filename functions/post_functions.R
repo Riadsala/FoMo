@@ -277,7 +277,7 @@ extract_pred <- function(m, d) {
   } else {
     
     # define output list
-    list_out <- list(acc = pred)
+    list_out <- list(itemwise = pred)
   }
   
   return(list_out)

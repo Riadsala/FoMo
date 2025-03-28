@@ -80,7 +80,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     # expects them to be in the input
     d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = model_path)
     
-    m_test <- mod$generate_quantities(m, data = d_list, seed = 123)
+    m_test <- mod$generate_quantities(as_draws_matrix(m$draws())[1,],
+                                      data = d_list, seed = 123)
     
     filename <- paste0("scratch/models/", dataset_name, "/test", fomo_ver_str, ".model")
     m_test$save_object(filename)
