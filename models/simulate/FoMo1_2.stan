@@ -150,44 +150,6 @@ transformed parameters {
 
 model {
 
-  /////////////////////////////////////////////////////
-  // Define Priors
-  ////////////////////////////////////////////////////
-
-  // priors for random effects
-  sigma_u ~ exponential(1);
-  L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
-  to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
-
-  // priors for fixed effects
-  for (kk in 1:K) {
-    target += normal_lpdf(b_a[kk]       | prior_mu_b_a, prior_sd_b_a);
-    target += normal_lpdf(b_stick[kk]   | prior_mu_b_stick, prior_sd_b_stick);
-    target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
-    }
-
-  // create some variables
-  vector[n_targets] weights;
-  int t, z, x; // trial, person, and condition
-
-  //////////////////////////////////////////////////
-  // // step through data row by row and define LLH
-  //////////////////////////////////////////////////  
-  for (ii in 1:N) {
-
-    t = trial[ii];
-    z = Z[t];
-    x = X[t];
- 
-    weights = compute_weights(
-      u_a[x, z], u_stick[x, z], u_delta[x, z],
-      to_vector(item_class[t]), S[ii], delta[ii],
-      found_order[ii], n_targets, remaining_items[ii]); 
-
-    // get likelihood of item selection
-    target += log(weights[Y[ii]]);
-   
-  }
 }
 
 generated quantities {
@@ -195,4 +157,104 @@ generated quantities {
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
   real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* 
+  i) Step through data item-selection at a time and compute which item the 
+  model selects next. This allows us to compute accuracy
+
+  P: which item do we think the human will select next?
+  log_lik: what is the likelihood of selecting the next item ? 
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[N] int P;
+  array[N] real log_lik;
+
+  {
+    
+    // create some variables
+    vector[n_targets] weights;
+    int t, z, x; // trial, person, and condition
+
+    //////////////////////////////////////////////////
+    // // step through data row by row and define LLH
+    //////////////////////////////////////////////////
+    for (ii in 1:N) {
+
+      t = trial[ii];
+      z = Z[t];
+      x = X[t];
+
+      weights = compute_weights(
+        u_a[x, z], u_stick[x, z], u_delta[x, z], 
+        to_vector(item_class[t]), S[ii], delta[ii], 
+        found_order[ii], n_targets, remaining_items[ii]); 
+
+      P[ii] = categorical_rng(weights);
+      log_lik[ii] = log(weights[Y[ii]]);
+
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* 
+  ii) Simulate each trial, start to finish. This allows us to compuare the model
+  to human participants in terms of run statistics and selection vectors
+
+  - have not implemented starting rule: select item at random
+  - we do not have a stopping rule yet: so we will simply collect all of the targets
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[n_trials, n_targets] int Q; 
+
+  {
+
+    // create some variables
+    vector[n_targets] weights;
+    int z, x; // trial, person, and condition
+    /* we need new remaining_items and features (S, psi, delta) as
+    these features will update dynamically as we carry out a new 
+    simulated foraging trial */
+    vector[n_targets] remaining_items_q;
+    vector[n_targets] S_q, delta_q;
+
+    //for each trial
+    for (t in 1:n_trials) {
+
+      z = Z[t];
+      x = X[t];
+
+      // first, set up new trial_ all the items are remaining!
+      remaining_items_q = rep_vector(1, n_targets);
+   
+      // simulate a trial!
+      for (ii in 1:n_targets) {
+
+        // create empty vectors to store our features in
+        S_q     = rep_vector(0, n_targets);
+        delta_q = rep_vector(1, n_targets);
+          
+        // if we're not on the first item.... calculate feature vectors  
+        if (ii > 1) 
+        {
+          S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
+          delta_q =     compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+        }
+
+        weights = compute_weights(
+          u_a[x, z], u_stick[x, z], u_delta[x, z], 
+          to_vector(item_class[t]), S_q, delta_q, 
+          found_order[ii], n_targets, remaining_items_q); 
+
+        // sample an item to select
+        Q[t, ii] = categorical_rng(weights);
+
+        // update remaining_items_q
+        remaining_items_q[Q[t, ii]] = 0;
+ 
+      }  
+    }
+  } 
 }
