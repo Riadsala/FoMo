@@ -28,11 +28,11 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   }
   
   # get dataset name
-  dataset <- get_dataset_name(dataset)
+  dataset_name <- get_dataset_name(dataset)
   
   # get filepath for the stan files for fitting multi-level model 
   # for for simulating new data
-  paths <- get_paths(dataset)
+  paths <- get_paths(dataset_name)
   
   # Change 1.x to 1_x if required
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
@@ -63,7 +63,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                   sig_figs = 3,
                   fixed_param = fxdp,
                   output_dir = paths$out_fit,
-                  output_basename = paste(dataset, fomo_ver_str, sep=""))
+                  output_basename = paste(dataset_name, fomo_ver_str, sep=""))
   
   # now save
   m$save_object(paste0(paths$out_fit, fomo_ver_str, ".model"))
@@ -84,9 +84,9 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                                         data = d_list, 
                                         seed = 123,
                                         output_dir = paths$out_sim,
-                                        output_basename = paste(dataset, fomo_ver_str, sep=""))
+                                        output_basename = paste(dataset_name, fomo_ver_str, sep=""))
     
-  p$save_object(paste0(paths$out_sim, fomo_ver_str, ".model"))
+  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
 
 }
 
@@ -113,14 +113,16 @@ get_paths <- function(ds) {
   # now sort out output path
   outpt_path <- paste0("scratch/models/", ds)
   # create save folder if it doesn't yet exist
-  if(!dir.exists(outpt_path)) {
+
     dir.create(outpt_path)
-  }
+    dir.create(paste0(outpt_path, "/fit/"))
+    dir.create(paste0(outpt_path, "/sim/"))
+
   
   return(list(model = model_path, 
               simul = simul_path,
-              out_fit = paste0(outpt_path, "fit/"),
-              out_sim = paste0(outpt_path, "sim/")))
+              out_fit = paste0(outpt_path, "/fit/"),
+              out_sim = paste0(outpt_path, "/sim/")))
 }
 
 get_list <- function(dataset, mode, stage) {

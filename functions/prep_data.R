@@ -61,7 +61,7 @@ add_priors_to_d_list <- function(dl, modelver="1.1", model_path = "../models/") 
   dl <- dl[!str_detect(names(dl), "prior_") ]
   
   # add in priors
-  priors <- read_csv(paste0(model_path, "multi_level/", filename), show_col_types = FALSE) %>%
+  priors <- read_csv(paste0(model_path, filename), show_col_types = FALSE) %>%
     pivot_longer(-param, names_to = "stat", values_to = "value") %>%
     mutate(param = paste("prior", stat, param, sep="_")) %>%
     select(-stat) %>%
