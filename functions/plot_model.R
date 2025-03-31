@@ -38,9 +38,9 @@ source(plot_sf_path)
 # set theme
 ##################################################################################
 
-theme_set(theme_ipsum())
-options(ggplot2.discrete.colour = ggthemes::ptol_pal()(2),
-        ggplot2.discrete.fill = ggthemes::ptol_pal()(2))
+theme_set(theme_bw())
+options(ggplot2.discrete.colour = paletteer::paletteer_d("MetBrewer::Austria"),
+        ggplot2.discrete.fill = paletteer::paletteer_d("MetBrewer::Austria"))
 
 ##################################################################################
 # accuracy plots
@@ -171,7 +171,8 @@ plot_model_accuracy <- function(acc) {
     geom_ribbon(aes(ymin = .lower, ymax = .upper, fill = condition), 
                 alpha = 0.5) + 
     geom_line(aes(colour = condition)) + 
-    geom_path(data = baseline, linetype = 2) -> plt
+    geom_path(data = baseline, linetype = 2) +
+    scale_x_continuous("item selection", expand = c(0, 0), limits = c(0, n_targets)) -> plt
   
   if ("split" %in% names(acc)) {
     plt <- plt + facet_wrap(~split)
@@ -262,13 +263,7 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
   
   return(plt)
   
-  
-  
-  
-  
 }
-
-
 
  
 ##################################################################################

@@ -4,7 +4,7 @@ library(posterior)
 
 # this script (or QMD) checks previously fitted models and assesses how well they fit
 
-dataset <- "clarke2022qjep"
+dataset <- "kristjansson2014plos"
 folder <- paste0("scratch/models/", dataset, "/")
 mode <- "train"
 
@@ -18,7 +18,7 @@ for (model in models) {
   m <- readRDS(paste0(folder, model))
   
   vars <- m$metadata()$stan_variables
-  vars <- vars[!(vars %in% c("P", "Q", "z_u", "z_w", "u", "L_u", "log_lik"))]
+  vars <- vars[!(vars %in% c("P", "Q",  "z_w", "u", "log_lik"))]
   vars <- vars[!str_detect(vars, "prior")]
   # this is quite slow if we have many variables
   rhat <- m$summary(variables = vars)$rhat

@@ -19,7 +19,6 @@ get_paths <- function() {
   return(list(model = model_path, simul = simul_path))
 }
 
-
 fit_model <- function(dataset, fomo_ver, mode = "all",
                       model_components = c("spatial", "item_class"),
                       iter = 1000) {

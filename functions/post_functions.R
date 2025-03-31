@@ -230,7 +230,7 @@ extract_pred <- function(m, d) {
   }
   
   # get list of variables in the model:
-  vars <- mtr$metadata()$stan_variables
+  vars <- mte$metadata()$stan_variables
   
   # get item-selection predictions
   # sometimes we might want to extract W (loglik) 
@@ -252,13 +252,13 @@ extract_pred <- function(m, d) {
     rm(dtt)
     
     # get training set predictions
-    pred_tr <- extract_item_pred(mtr, training, pvars) %>% mutate(split = "training")
+    # pred_tr <- extract_item_pred(mtr, training, pvars) %>% mutate(split = "training")
     # now we also need to get the test set predictions
-    pred_te <- extract_item_pred(mte, testing, pvars) %>% mutate(split = "testing")
+    pred <- extract_item_pred(mte, testing, pvars) %>% mutate(split = "testing")
     
-    pred <- bind_rows(pred_tr,pred_te)
+    # pred <- bind_rows(pred_tr,pred_te)
     
-    rm(pred_tr, pred_te)
+    # rm(pred_tr, pred_te)
     
   } else {
     
@@ -300,6 +300,8 @@ extract_item_pred <- function(my_model, my_data, pv, chains = 1) {
                     pred, by = join_by(n)) %>%
     select(-any_of(c("n", "item_class", "x", "y", "rt"))) %>%
     mutate(model_correct = (P == id))
+  
+  return(pred)
   
 }
 
@@ -370,6 +372,5 @@ summarise_acc <- function(post, compute_hpdi = FALSE) {
   }
   
   return(post$itemwise)
-  
   
 }

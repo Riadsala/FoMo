@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 ############################################################################
 
 # datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
-datasets <-"clarke2022qjep"
+datasets <- "kristjansson2014plos"
 
 ############################################################################
 
@@ -154,7 +154,6 @@ for (ds in datasets) {
   
   print("***** Computing iisv and run statistics *****")
   compute_iisv_and_run_statistics(ds)
-  
 
 }
 
