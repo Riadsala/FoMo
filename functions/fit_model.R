@@ -1,27 +1,23 @@
-get_paths <- function() {
-  
-  # get model directory path
-  model_path <- "../"
-  simul_path <- "../"
-  
-  for (ii in 1:3) {
-    
-    if ("models" %in% dir(model_path)) {
-      model_path <- paste0(model_path, "models/")
-      simul_path <- paste0(simul_path, "simulate/")
-      break
-    } else {
-      model_path <- paste0(model_path, "../")
-      simul_path <- paste0(simul_path, "../")
-    }
-  }
-  
-  return(list(model = model_path, simul = simul_path))
-}
+library(cmdstanr)
+
 
 fit_model <- function(dataset, fomo_ver, mode = "all",
-                      model_components = c("spatial", "item_class"),
-                      iter = 1000) {
+                      iter = 1000, iter_genquant = 10) {
+  
+  #######################################################################
+  # wrapper function for loading d_list, fitting model, train, test etc. 
+  
+  # - dataset should be either a label, or a list containing dataset$name
+  # - mode = "all" means that training and testing will be be done on all 
+  # the data. "split" or "traintest" means that training and testing 
+  # take place on separate partitions of the data
+  # - iter = number of iterations during model fitting
+  # - iter_genquant = number of posterior prediction/simulation samples
+  # - required
+  #######################################################################
+  
+  #######################################################################
+  # getting setup etc.
   
   # check that if dataset is a list, did we provide a name?
   if (class(dataset) == "list") {
@@ -34,21 +30,16 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   # get dataset name
   dataset_name <- get_dataset_name(dataset)
   
-  # create save folder if it doesn't yet exist
-  if(!dir.exists(paste0("scratch/models/", dataset_name))) {
-    dir.create(paste0("scratch/models/", dataset_name))
-  }
-
+  # get filepath for the stan files for fitting multi-level model 
+  # for for simulating new data
   paths <- get_paths()
   
-  # load in the Stan model
+  # Change 1.x to 1_x if required
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   
-  # stan file for model fitting
-  mod <- cmdstan_model(paste0(paths$model, "multi_level/FoMo", fomo_ver_str, ".stan"))
-  
-  # stan file for simulating
-  mod_sim <- cmdstan_model(paste0(paths$model, "simulate/FoMo", fomo_ver_str, ".stan"))
+  # load the two stan files
+  mod_fit <- cmdstan_model(paste0(paths$model, "FoMo", fomo_ver_str, ".stan"))
+  mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
   
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
@@ -57,59 +48,79 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     fxdp = FALSE
   }
   
-  ###########################################################################
-  # fit model to data 
-  # either "all" or "training"
+  #######################################################################
+  # load data and fit model
   
-  # get d_list
+  # load the pre-computed d_list and add required priors
   d_list <- get_list(dataset, mode, "training")
- 
-  # add priors to d_list
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = paths$model)
-
-  # m <- mod$sample(data = d_list, 
-  #                   chains = 4, parallel_chains = 4, threads = 4,
-  #                   refresh = 10, 
-  #                   iter_warmup = iter, iter_sampling = iter,
-  #                   sig_figs = 3,
-  #                   fixed_param = fxdp)
   
-  m <- readRDS("scratch/models/kristjansson2014plos/train1_0.model")
+  # fit the model
+  m <- mod_fit$sample(data = d_list,
+                  chains = 4, parallel_chains = 4, threads = 4,
+                  refresh = 10,
+                  iter_warmup = iter, iter_sampling = iter,
+                  sig_figs = 3,
+                  fixed_param = fxdp,
+                  output_dir = paths$out_fit,
+                  output_basename = paste(dataset, fomo_ver_str, sep=""))
   
   # now save
-  if (mode == "all") {
-    filename <- paste0("scratch/models/", dataset_name, "/all", fomo_ver_str, ".model")
-  } else {
-    filename <- paste0("scratch/models/", dataset_name, "/train", fomo_ver_str, ".model")
-  }
-  
-  m$save_object(filename)
+  m$save_object(paste0(paths$out_fit, fomo_ver_str, ".model"))
   
   ###########################################################################
-  # If we are in train-test model, we should now 
-  # compute generated quantities for the test data
-  ###########################################################################
-  if (mode == "traintest") {
-    
-    d_list <- get_list(dataset, mode, "testing")
-    # although we aren't using the priors, the model still
-    # expects them to be in the input
-    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = paths$model)
-    
-    m_test <- mod_sim$generate_quantities(as_draws_matrix(m$draws())[1,],
-                                      data = d_list, seed = 123)
-    
-    filename <- paste0("scratch/models/", dataset_name, "/test", fomo_ver_str, ".model")
-    m_test$save_object(filename)
+  # now create generated quantities from fitted model
 
+  # do we need to load in a new d_list for testing?
+  if (mode %in%  c("split", "traintest")) {
+    d_list <- get_list(dataset, mode, "testing")
   }
   
-  # return model
-  if (mode == "all") {
-    return(m)
-  } else {
-    return(list(training = m, testing = m_test))
+  # randomly sample some draws to calculate generated quantities for
+  draws_matrix <- posterior::as_draws_matrix(m$draws())
+  idx <- sample(nrow(draws_matrix), iter_genquant)
+    
+  p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,], 
+                                        data = d_list, 
+                                        seed = 123,
+                                        output_dir = paths$out_sim,
+                                        output_basename = paste(dataset, fomo_ver_str, sep=""))
+    
+  p$save_object(paste0(paths$out_sim, fomo_ver_str, ".model"))
+
+}
+
+get_paths <- function(ds) {
+  
+  # get model directory path
+  model_path <- "../"
+  simul_path <- "../"
+  
+  for (ii in 1:3) {
+    
+    if ("models" %in% dir(model_path)) {
+      model_path <- paste0(model_path, "models/")
+      
+      break
+    } else {
+      model_path <- paste0(model_path, "../")
+    }
   }
+  
+  simul_path <- paste0(model_path, "simulate/")
+  model_path <- paste0(model_path, "multi_level/")
+  
+  # now sort out output path
+  outpt_path <- paste0("scratch/models/", ds)
+  # create save folder if it doesn't yet exist
+  if(!dir.exists(outpt_path)) {
+    dir.create(outpt_path)
+  }
+  
+  return(list(model = model_path, 
+              simul = simul_path,
+              out_fit = paste0(outpt_path, "fit/"),
+              out_sim = paste0(outpt_path, "sim/")))
 }
 
 get_list <- function(dataset, mode, stage) {
