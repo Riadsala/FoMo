@@ -49,7 +49,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   mod <- cmdstan_model(paste0(paths$model, "multi_level/FoMo", fomo_ver_str, ".stan"))
   
   # stan file for simulating
-  mod_sim <- cmdstan_model(paste0(paths$simul, "multi_level/FoMo", fomo_ver_str, ".stan"))
+  mod_sim <- cmdstan_model(paste0(paths$simul, "simulate/FoMo", fomo_ver_str, ".stan"))
   
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
