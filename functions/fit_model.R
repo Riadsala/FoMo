@@ -49,7 +49,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   mod <- cmdstan_model(paste0(paths$model, "multi_level/FoMo", fomo_ver_str, ".stan"))
   
   # stan file for simulating
-  mod_sim <- cmdstan_model(paste0(paths$simul, "simulate/FoMo", fomo_ver_str, ".stan"))
+  mod_sim <- cmdstan_model(paste0(paths$model, "simulate/FoMo", fomo_ver_str, ".stan"))
   
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
@@ -66,14 +66,16 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   d_list <- get_list(dataset, mode, "training")
  
   # add priors to d_list
-  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = model_path)
+  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = paths$model)
 
-  m <- mod$sample(data = d_list, 
-                    chains = 4, parallel_chains = 4, threads = 4,
-                    refresh = 10, 
-                    iter_warmup = iter, iter_sampling = iter,
-                    sig_figs = 3,
-                    fixed_param = fxdp)
+  # m <- mod$sample(data = d_list, 
+  #                   chains = 4, parallel_chains = 4, threads = 4,
+  #                   refresh = 10, 
+  #                   iter_warmup = iter, iter_sampling = iter,
+  #                   sig_figs = 3,
+  #                   fixed_param = fxdp)
+  
+  m <- readRDS("scratch/models/kristjansson2014plos/train1_0.model")
   
   # now save
   if (mode == "all") {
@@ -93,7 +95,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     d_list <- get_list(dataset, mode, "testing")
     # although we aren't using the priors, the model still
     # expects them to be in the input
-    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = model_path)
+    d_list  <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = paths$model)
     
     m_test <- mod_sim$generate_quantities(as_draws_matrix(m$draws())[1,],
                                       data = d_list, seed = 123)
