@@ -28,11 +28,11 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   }
   
   # get dataset name
-  dataset_name <- get_dataset_name(dataset)
+  dataset <- get_dataset_name(dataset)
   
   # get filepath for the stan files for fitting multi-level model 
   # for for simulating new data
-  paths <- get_paths()
+  paths <- get_paths(dataset)
   
   # Change 1.x to 1_x if required
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
