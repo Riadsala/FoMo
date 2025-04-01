@@ -16,7 +16,6 @@ options(mc.cores = 4, digits = 2)
 datasets <- "kristjansson2014plos"
 ############################################################################
 
-
 extract_and_save_predictions <- function(dataset) {
   
   # wrapper function for computing train/test accuracy for each version
@@ -66,10 +65,10 @@ extract_and_save_predictions <- function(dataset) {
   # read in models and extract post predictions
   for (file in models)
   {
-    print(paste("... model version ", modelver))
     
     # get model version from file name
     modelver <- str_extract(file, "\\d_\\d")
+    print(paste("... model version ", modelver))
 
     # get all model predictions
     pred <- extract_pred(dataset, modelver, folder)
@@ -105,7 +104,7 @@ extract_and_save_predictions <- function(dataset) {
     pivot_wider(names_from = z) -> rl
   
   # save run statistics
-  write_csv(rl, paste0(outfolder, "run_statistics.csv"))
+  write_csv(rl, paste0(outfolder, "/run_statistics.csv"))
   
 }
 

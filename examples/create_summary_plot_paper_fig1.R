@@ -17,7 +17,7 @@ options(mc.cores = 1, digits = 2)
 theme_set(theme_bw())
 
 model_ver <- "1_0"
-dataset <- "clarke2022qjep"
+dataset <- "kristjansson2014plos"
 
 # read in data
 d <- import_data(dataset)
@@ -28,10 +28,9 @@ folder <- paste0(sf, "/post/", dataset, "/")
 #############################################################################
 # plot accuracy
 #############################################################################
-pred <- readRDS(paste0(folder, "pred_train1_0.rds"))
+pred <- readRDS(paste0(folder, "pred_1_0.rds"))
 
 pred$itemwise %>% 
-  filter(split == "testing") %>%
   group_by(condition, found, .draw, person) %>%
   summarise(person_acc = mean(model_correct), .groups = "drop_last") %>%
   summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
@@ -43,7 +42,7 @@ rm(acc)
 #############################################################################
 # plot posterior densities
 #############################################################################
-dataset <- "hughes2024rsos"
+
 
 m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver, ".model"))
 post <- extract_post(m, d)
@@ -67,10 +66,21 @@ acc_plt / post_plt
 trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
   pivot_longer(starts_with("v"), names_to = "model_version", values_to = "predicted")
 
-ggplot(r, aes(observed, predicted, colour = condition)) + 
+# reorder factor levels for plotting
+trl_stats %>% 
+  mutate(statistic = fct_recode(statistic, 
+                                `number of runs` = "num_runs", 
+                                `max(run length)` = "max_run_length",
+                                pao = "mean_pao",
+                                `best r`  = "mean_bestr"),
+         statistic = fct_relevel(statistic, 
+                                 "number of runs", "max(run length)", "pao")) -> trl_stats
+
+
+ggplot(trl_stats, aes(observed, predicted, colour = condition)) + 
   geom_point() + 
   geom_abline(linetype = 2) + 
-  ggh4x::facet_grid2(statistic ~ model_version, scales = "free", independent = "all")
+  ggh4x::facet_grid2(. ~ statistic, scales = "free", independent = "all")
 
 # compute correlations
 
