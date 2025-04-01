@@ -164,7 +164,7 @@ vector compute_absdir_weights_fixed_kappa(int n, int n_targets,
   return(w);
 }
 
-vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) {
+vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta, real d0) {
 
   vector[n_targets] w;
 
@@ -173,7 +173,7 @@ vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) 
   // now start computing the weights
   if (n > 1) {
     // for the second selected target, weight by distance from the first
-    w = -rho_delta * delta;
+    w = -rho_delta * d0 * delta;
     
   }
 

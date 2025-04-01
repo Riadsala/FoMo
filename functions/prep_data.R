@@ -79,7 +79,7 @@ add_priors_to_d_list <- function(dl, modelver="1.1", model_path = "../models/") 
 }
 
 prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"), 
-                               remove_last_found = FALSE) {
+                               remove_last_found = FALSE, d0 = 20) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
@@ -227,6 +227,9 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
   
   ## add in angular offset
   d_list$grid_offset = rep(0, d_list$K)
+  
+  ## d0 - the scalar for delta (default = 20)
+  d_list$d0 = d0
   
   return(d_list)
   
