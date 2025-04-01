@@ -1,5 +1,5 @@
 library(tidyverse)
-
+library(cmdstanr)
 
 # This script reads evaluates model accuracy and computes summaries
 # allowing us to compare human and model run statistics and inter-
@@ -18,26 +18,32 @@ datasets <- "kristjansson2014plos"
 
 ############################################################################
 
-get_models_in_dir <- function(folder, mode) {
-  
-  models <- unlist(dir(folder))
-  models <- models[str_detect(models, mode)]
-  models <- str_extract(models, "1_[0-9]")
-  
-  return(models)
-
-}
 
 extract_and_save_predictions <- function(dataset) {
+  
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
   
-  d <- import_data(dataset)
+ 
   
   # get list of model versions to compute over
-  folder <- paste0("scratch/models/", dataset, "/")
-  mode <- "train"
+  folder <- paste0("scratch/models/", dataset, "/sim/")
+  models <- dir(folder, ".csv")
   models <- get_models_in_dir(folder, mode)
+  m <- read_cmdstan_csv(paste0(folder, models))
+  
+  # tidy
+  as_tibble(m$generated_quantities) %>%
+    pivot_longer(everything(), names_to = "param") %>%
+    separate(param, into = c("draw", "param"), sep = "\\.") %>%
+    separate(param, into = c("param", "row"), sep = "\\[") %>%
+    mutate(draw = parse_integer(draw),
+           row = parse_number(row)) -> genquant
+  
+  genquant %>% 
+    filter(param != "Q") %>%
+    pivot_wider(names_from = "param")
+  
   
   # create output folder
   outfolder <- paste0("scratch/post/", dataset)
@@ -56,11 +62,11 @@ extract_and_save_predictions <- function(dataset) {
   {
     print(paste("... model version ", modelver))
     
-    m <- readRDS(paste0("scratch/models/", dataset, "/train", modelver, ".model"))
-    t <- readRDS(paste0("scratch/models/", dataset, "/test", modelver, ".model"))
+ 
+    dataset <- "kristjansson2014plos"
     
     # get all model predictions
-    pred <- extract_pred(list(training = m, testing = t), d)
+    pred <- extract_pred(dataset, modelver)
     
     pred$dataset <- dataset
     pred$model_ver <- modelver

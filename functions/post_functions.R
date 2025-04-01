@@ -13,7 +13,7 @@ extract_post <- function(m, d) {
   # extract ALL parameters and collect into a list
   # to ensure that we have the same draws for each part,
   # extract everything and then filter
-  
+
   # First of all, are we dealing with a multi-level model?
   vars <- m$metadata()$stan_variables
   multi_level <- if_else(sum(str_detect(vars, "z_u")) == 1, TRUE, FALSE)
@@ -206,31 +206,29 @@ extract_post_random <- function(m, cl) {
 # extracting post predictions
 ################################################################################################
 
-extract_pred <- function(m, d) {
+extract_pred <- function(dataset, fomo_ver, mode = "all") {
   
+  ################################################################################################
   # This function computes the item-by-item accuracy from the model's generated quantities{} block
   # and joins it with the empirical data so that we can measure accuracy
+  ################################################################################################
   
-  # first, deal with m being either one model or a list
-  if (unique(class(m)=="list")) {
-    
-    # m has been input as a list, presumably:
-    # i) a model to to training data
-    # ii) test set predictions
-    mode <- "train_test"
-    mtr <- m$training
-    mte <- m$testing
-    
-  } else {
-    
-    mode <- "all"
-    mtr <- m
-    training <- d
-    
+  ################################################################################################
+  # getting set up, etc
+  
+  # load in model simulations
+  m_sim <- readRDS(paste0("scratch/models/", dataset, "/test", fomo_ver, ".model"))
+  
+  # load in data
+  d <- import_data(dataset)
+  
+  if (mode != "all") {
+    d <- get_train_test_split(d)
+    d <- d$testing
   }
   
   # get list of variables in the model:
-  vars <- mte$metadata()$stan_variables
+  vars <- m_sim$metadata()$stan_variables
   
   # get item-selection predictions
   # sometimes we might want to extract W (loglik) 
@@ -238,49 +236,17 @@ extract_pred <- function(m, d) {
   pvars <- vars[str_detect(vars, "^P")]
   
   # do the trial level simulations exist?
-  get_sim = ("Q" %in% vars)
+  # get_sim = ("Q" %in% vars)
   
   # determine if m is a multi-level model or not
   multi_level <- ("z_u" %in% vars)
   
-  if (mode == "train_test") {
-    
-    # get the training/test data split
-    dtt <- get_train_test_split(d)
-    training <- dtt$training
-    testing <- dtt$testing
-    rm(dtt)
-    
-    # get training set predictions
-    # pred_tr <- extract_item_pred(mtr, training, pvars) %>% mutate(split = "training")
-    # now we also need to get the test set predictions
-    pred <- extract_item_pred(mte, testing, pvars) %>% mutate(split = "testing")
-    
-    # pred <- bind_rows(pred_tr,pred_te)
-    
-    # rm(pred_tr, pred_te)
-    
-  } else {
-    
-    # get training set predictions
-    pred <- extract_item_pred(mtr, d, pvars)
-    
-  }
   
-  if (get_sim) {
+  itemwise <- extract_item_pred(m_sim, d, pvars)
+  trialwise <- extract_trial_pred(m_sim, d$stim)
     
-    sim <- extract_trial_pred(mte, testing$stim)
-    
-    # define output list
-    list_out <- list(itemwise = pred, trialwise = sim)
-    
-  } else {
-    
-    # define output list
-    list_out <- list(itemwise = pred)
-  }
-  
-  return(list_out)
+  return(list(itemwise = itemwise, 
+              trialwise = trialwise))
   
 }
 
