@@ -13,7 +13,7 @@ functions {
   vector compute_weights(
     real u_a, real u_s, real u_delta, real u_psi,
     vector item_class, vector match_prev_item, vector delta, vector psi,
-    int n, int n_targets, vector remaining_items) {
+    int n, int n_targets, vector remaining_items, real d0) {
 
     vector[n_targets] weights;
     
@@ -27,7 +27,8 @@ functions {
     weights += compute_spatial_weights(
       n, n_targets, 
       u_delta, u_psi, 
-      delta, psi);
+      delta, psi,
+      d0);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -39,7 +40,8 @@ functions {
   vector compute_spatial_weights(
     int n, int n_targets, 
     real rho_delta, real rho_psi, 
-    vector delta, vector psi) {
+    vector delta, vector psi,
+    real d0) {
 
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
@@ -47,7 +49,7 @@ functions {
 
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta);
+                                 rho_delta, delta, d0);
     
     reldir_weights = compute_reldir_weights(n, n_targets, 
                                  rho_psi, psi);
@@ -87,6 +89,9 @@ data {
   array[N] vector<lower = 0>[n_targets] delta; // distance measures
   array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
+
+  // hyper parameters
+  real d0; // scale parameter to get rho_delta to ~ 1
 
 }
 
@@ -183,7 +188,7 @@ generated quantities {
       weights = compute_weights(
         u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
         to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
-        found_order[ii], n_targets, remaining_items[ii]); 
+        found_order[ii], n_targets, remaining_items[ii], d0); 
 
       P[ii] = categorical_rng(weights);
       log_lik[ii] = log(weights[Y[ii]]);
@@ -242,7 +247,7 @@ generated quantities {
         weights = compute_weights(
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
           to_vector(item_class[t]), S_q, delta_q, psi_q,
-          found_order[ii], n_targets, remaining_items_q); 
+          found_order[ii], n_targets, remaining_items_q, d0); 
 
         // sample an item to select
         Q[t, ii] = categorical_rng(weights);
