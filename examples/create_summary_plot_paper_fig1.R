@@ -76,7 +76,6 @@ trl_stats %>%
          statistic = fct_relevel(statistic, 
                                  "number of runs", "max(run length)", "pao")) -> trl_stats
 
-
 ggplot(trl_stats, aes(observed, predicted, colour = condition)) + 
   geom_point() + 
   geom_abline(linetype = 2) + 
