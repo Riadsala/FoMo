@@ -45,6 +45,10 @@ extract_and_save_predictions <- function(dataset) {
   
   d <- import_data(dataset)
   
+  # we only want to calcualte these on the test data
+  d <- get_train_test_split(d)
+  d <- d$testing
+  
   # compute empirical run statistics
   rl <- get_run_info_over_trials(d$found) %>%
     group_by(person, condition) %>%
@@ -90,21 +94,38 @@ extract_and_save_predictions <- function(dataset) {
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
-                .groups = "drop")
+                .groups = "drop") %>% 
+      mutate(z = paste0("v",  modelver))
     
-    rl %>% bind_rows(rlp %>% mutate(z = paste0("v",  modelver))) -> rl
+    rl %>% bind_rows(rlp) -> rl
+    
+    
+    # compute empirical run statistics
+    iisvp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
+      mutate(z = paste0("v",  modelver))
+    
+    iisv %>% bind_rows(iisvp) -> iisv
+    
     rm(pred) 
     
   }
   
   # tidy up run statistics model
-  rl %>% 
+  rl %>%  
     select(-.draw) %>%
     pivot_longer(c(max_run_length, num_runs, mean_bestr, mean_pao), names_to = "statistic") %>%
     pivot_wider(names_from = z) -> rl
   
+  # round iisv to 3dp
+  iisv %>% mutate(x = round(x, 3), 
+                  y = round(y, 3),
+                  d2 = round(d2, 3), 
+                  theta = round(theta, 3), 
+                  psi = round(psi, 3)) -> iisv
+  
   # save run statistics
-  write_csv(rl, paste0(outfolder, "/run_statistics.csv"))
+  write_csv(rl,   paste0(outfolder, "/run_statistics.csv"))
+  write_csv(iisv, paste0(outfolder, "/iisv_statistics.csv"))
   
 }
 

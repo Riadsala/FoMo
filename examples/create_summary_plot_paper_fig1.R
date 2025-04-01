@@ -39,25 +39,6 @@ plt_acc <- plot_model_accuracy(acc)
 
 rm(acc)
 
-#############################################################################
-# plot posterior densities
-#############################################################################
-
-
-m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver, ".model"))
-post <- extract_post(m, d)
-post_plt <- plot_model_fixed(post)
-
-plot_model_theta(post, nrow = 2)
-ggsave("theta_fixed.png", width = 4, height = 6)
-
-plot_model_theta(post, per_person = TRUE, nrow = 10)
-ggsave("test.png", width = 10, height = 20)
-
-#############################################################################
-# create plot
-#############################################################################
-acc_plt / post_plt
 
 #############################################################################
 # compare run statistics
@@ -79,7 +60,8 @@ trl_stats %>%
 ggplot(trl_stats, aes(observed, predicted, colour = condition)) + 
   geom_point() + 
   geom_abline(linetype = 2) + 
-  ggh4x::facet_grid2(. ~ statistic, scales = "free", independent = "all")
+  facet_wrap( ~ statistic, nrow = 2, scales = "free") +
+  theme(legend.position = "none") -> plt_runs
 
 # compute correlations
 
@@ -109,4 +91,58 @@ pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
 # compute & compare iisv statistics
 #############################################################################
 
+iisv <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+  mutate(z = if_else(str_detect(z, "v1_0"), "predicted", "observed")) %>%
+  rename(data = "z")
 
+iisv %>% 
+  filter(is.finite(d2)) %>%
+  group_by(found, data, condition, person) %>%
+  summarise(d2 = mean(d2)) %>%
+  summarise(d2 = mean(d2)) %>%
+  ggplot(aes(found, d2, colour = data)) +
+  geom_path(alpha = 0.5) +
+  facet_wrap(~condition) + 
+  paletteer::scale_colour_paletteer_d("fishualize::Acanthurus_sohal") +
+  theme(legend.position = "none") +
+  scale_x_continuous("item selection")-> plt_delta
+
+iisv %>% 
+  filter(is.finite(psi)) %>%
+  ggplot(aes(psi, fill = data)) + 
+  geom_histogram(position = position_identity(),
+                 breaks = seq(0, 1, 0.2),
+                 alpha = 0.5) + 
+  paletteer::scale_fill_paletteer_d("fishualize::Acanthurus_sohal") -> plt_psi
+
+iisv %>% 
+  filter(is.finite(theta)) %>%
+  ggplot(aes(theta, fill = data)) + 
+  geom_histogram(position = position_identity(),
+                 breaks = seq(-pi, pi, pi/8),
+                 alpha = 0.5) + 
+  paletteer::scale_fill_paletteer_d("fishualize::Acanthurus_sohal") -> plt_phi
+
+#############################################################################
+#assemble plot
+#############################################################################
+ 
+plt_top <- plt_acc / plt_runs + plot_layout(heights = c(2,3), guides = "collect")
+plt_bot <- plt_delta / (plt_psi + plt_phi) + plot_layout(guides = "collect")
+
+ggsave("scratch/old_model_stat_runs.pdf", plt_top, width = 5, height = 6)
+ggsave("scratch/old_model_stat_iisv.pdf", plt_bot, width = 5, height = 3)
+
+#############################################################################
+# plot posterior densities
+#############################################################################
+
+m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver, ".model"))
+post <- extract_post(m, d)
+post_plt <- plot_model_fixed(post)
+
+plot_model_theta(post, nrow = 2)
+ggsave("theta_fixed.png", width = 4, height = 6)
+
+plot_model_theta(post, per_person = TRUE, nrow = 10)
+ggsave("test.png", width = 10, height = 20)
