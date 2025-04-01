@@ -206,7 +206,7 @@ extract_post_random <- function(m, cl) {
 # extracting post predictions
 ################################################################################################
 
-extract_pred <- function(dataset, fomo_ver, mode = "all") {
+extract_pred <- function(dataset, fomo_ver, folder, mode = "split") {
   
   ################################################################################################
   # This function computes the item-by-item accuracy from the model's generated quantities{} block
@@ -216,76 +216,68 @@ extract_pred <- function(dataset, fomo_ver, mode = "all") {
   ################################################################################################
   # getting set up, etc
   
-  # load in model simulations
-  m_sim <- readRDS(paste0("scratch/models/", dataset, "/test", fomo_ver, ".model"))
-  
   # load in data
   d <- import_data(dataset)
   
+  # if we aren't in model==all, then we only need the test data
   if (mode != "all") {
     d <- get_train_test_split(d)
     d <- d$testing
   }
   
-  # get list of variables in the model:
-  vars <- m_sim$metadata()$stan_variables
+  # load model csvfile
+  # do we always want the hardcoded -1 here? (ie, chain 1 I think)
+  m <- read_cmdstan_csv(paste0(folder, dataset, fomo_ver, "-1.csv"))
   
-  # get item-selection predictions
-  # sometimes we might want to extract W (loglik) 
-  # not done at present as naming inconsistent
-  pvars <- vars[str_detect(vars, "^P")]
+  # convert to tibble and tidy
+  as_tibble(m$generated_quantities) %>%
+    mutate(.draw = 1:n()) %>%
+    pivot_longer(-.draw, names_to = "param") -> genquant
   
-  # do the trial level simulations exist?
-  # get_sim = ("Q" %in% vars)
+  # extract item-to-item predictions
+  itemwise <- extract_item_pred(genquant, d)
   
-  # determine if m is a multi-level model or not
-  multi_level <- ("z_u" %in% vars)
-  
-  
-  itemwise <- extract_item_pred(m_sim, d, pvars)
-  trialwise <- extract_trial_pred(m_sim, d$stim)
+  # extract whole-trial predictions
+  trialwise <- extract_trial_pred(genquant, d$stim)
+
+  # we no longer need genquant or m
+  rm(m, genquant)
     
   return(list(itemwise = itemwise, 
-              trialwise = trialwise))
+              trialwise = trialwise,
+              dataset <- dataset,
+              model_ver <- fomo_ver))
   
 }
 
-extract_item_pred <- function(my_model, my_data, pv, chains = 1) {
+extract_item_pred <- function(gq, my_data) {
   
-  my_model$draws(pv, format = "df") %>% 
-    filter(.chain == chains) %>%
-    # sample_frac(sample_frac) %>%
-    as_tibble() %>%
-    select(-.chain, -.iteration) %>%
-    pivot_longer(-.draw) %>%
-    mutate(n = parse_number(name),
-           name = str_remove(name, "\\[\\d*\\]")) %>%
-    pivot_wider(names_from = "name", values_from = "value") -> pred
+  gq %>%
+    rename(P = "value") %>%
+    filter(str_detect(param, "P")) %>%
+    separate(param, into = c("chain", "param"), sep = "\\.") %>%
+    separate(param, into = c("param", "row"), sep = "\\[") %>%
+    select(-chain, -param) %>%
+    mutate(row = parse_number(row)) -> pred
   
-  pred <- full_join(my_data$found %>% mutate(n = 1:n()), 
-                    pred, by = join_by(n)) %>%
-    select(-any_of(c("n", "item_class", "x", "y", "rt"))) %>%
+  pred <- full_join(my_data$found %>% mutate(row = 1:n()), 
+                    pred, 
+                    by = join_by(row)) %>%
+    select(-any_of(c("row", "item_class", "x", "y", "rt"))) %>%
     mutate(model_correct = (P == id))
   
   return(pred)
   
 }
 
-extract_trial_pred <- function(my_model, d_stim, mode, chains = 1) {
-  
-  # do not call directly..
-  # this is run by summarise_postpred()
+extract_trial_pred <- function(gq, d_stim) {
   
   # first, we extract Q from the model
-  sim <- my_model$draws("Q", format = "df")  %>%
-    filter(.chain == chains) %>%
-    as_tibble() %>%
-    select(-.chain, -.iteration) %>%
-    pivot_longer(-.draw, values_to = "id") %>%
-    separate(name, 
-             c("trial", "found"), 
-             sep = ",", convert = TRUE) %>%
-    mutate(trial = parse_number(trial), 
+  gq %>%
+    rename(id = "value") %>%
+    filter(str_detect(param, "Q")) %>%
+    separate(param, into = c("trial", "found"), sep = ",") %>%
+    mutate(trial = parse_number(str_extract(trial, "(?<=\\[)\\d*")),
            found = parse_number(found)) -> sim
   
   # now merge with d_stim to obtain x, y, item_class info etc

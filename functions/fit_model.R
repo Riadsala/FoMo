@@ -122,7 +122,6 @@ get_paths <- function(ds) {
     dir.create(paste0(outpt_path, "/fit/"))
     dir.create(paste0(outpt_path, "/sim/"))
 
-  
   return(list(model = model_path, 
               simul = simul_path,
               out_fit = paste0(outpt_path, "/fit/"),
