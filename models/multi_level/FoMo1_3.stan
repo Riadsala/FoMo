@@ -16,7 +16,8 @@ functions {
   vector compute_weights(
     real u_a, real u_s, real u_delta, real u_psi, vector log_theta, real kappa,
     vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
-    int n, int n_targets, vector remaining_items, real os) {
+    int n, int n_targets, vector remaining_items, 
+    real os, real d0) {
 
     vector[n_targets] weights;
     
@@ -30,7 +31,8 @@ functions {
     weights += compute_spatial_weights(
       n, n_targets, os,
       u_delta, u_psi, log_theta, kappa,
-      delta, psi, phi);
+      delta, psi, phi,
+      d0);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
@@ -42,7 +44,8 @@ functions {
   vector compute_spatial_weights(
     int n, int n_targets, real os,
     real rho_delta, real rho_psi, vector log_theta, real kappa,
-    vector delta, vector psi, vector phi) {
+    vector delta, vector psi, vector phi,
+    real d0) {
 
     // computes spatial weights
     // for FoMo1.0, this includes proximity and relative direction
@@ -50,7 +53,7 @@ functions {
 
     // apply spatial weighting
     prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta);
+                                 rho_delta, delta, d0);
     
     reldir_weights = compute_reldir_weights(n, n_targets, 
                                  rho_psi, psi);
@@ -108,7 +111,7 @@ data {
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
   array[K] real grid_offset; // angular grid offset (ie, should we rotate our coordiante acis)
-
+  real d0; // scale parameter to get rho_delta to ~ 1
 
 }
 
@@ -228,7 +231,7 @@ model {
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], psi[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii],
-      grid_offset[x]); 
+      grid_offset[x], d0); 
 
     // get likelihood of item selection
     target += log(weights[Y[ii]]);
