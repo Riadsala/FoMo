@@ -31,7 +31,7 @@ functions {
     weights += compute_spatial_weights(
       n, n_targets, os,
       u_delta, u_psi, log_theta, kappa,
-      delta, psi, phi);
+      delta, psi, phi, d0);
         
     // remove already-selected items, and standarise to sum = 1 
     weights = standarise_weights(exp(weights), n_targets, remaining_items); 
