@@ -1,4 +1,4 @@
 ﻿param,mu,sd
-b_a,0,1.5
-b_stick,0,1.5
+b_a,0,1
+b_stick,0,1
 rho_delta,15,5
