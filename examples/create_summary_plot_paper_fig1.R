@@ -137,7 +137,7 @@ ggsave("scratch/old_model_stat_iisv.pdf", plt_bot, width = 5, height = 3)
 # plot posterior densities
 #############################################################################
 
-m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/train", model_ver, ".model"))
+m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/fit/", model_ver, ".model"))
 post <- extract_post(m, d)
 post_plt <- plot_model_fixed(post)
 
