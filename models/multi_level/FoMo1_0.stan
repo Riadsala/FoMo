@@ -132,7 +132,6 @@ parameters {
   // random effect variances: 
   // 4*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[4*K] sigma_u;
-  // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[4*K] L_u;
   // random effect matrix
   matrix[4*K,L] z_u; 
@@ -148,8 +147,7 @@ transformed parameters {
 
   // this transform random effects so that they have the correlation
   // matrix specified by the correlation matrix above
-  matrix[4*K, L] u;
-  u = diag_pre_multiply(sigma_u, L_u) * z_u;
+  matrix[4*K, L] u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
   array[K] vector[L] u_a, u_stick, u_delta, u_psi;
