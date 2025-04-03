@@ -92,17 +92,6 @@ data {
   array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
-  // read in priors
-  // suggested values given in comments
-  real prior_mu_b_a; // = 0, prior for salience of item class A compared to B
-  real prior_sd_b_a; // = 1, uncertainty for b_a prior
-  real prior_mu_b_stick; // = 0, prior for b_s, item class sticking v switching
-  real prior_sd_b_stick; // = 1, uncertainty for b_s prior
-  real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
-  real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
-  real prior_mu_rho_psi; // = 0, "momentum"
-  real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
-
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
 
@@ -192,11 +181,6 @@ model {
 }
 
 generated quantities {
-  // here we  can output our prior distritions
-  real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
-  real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
-  real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 
   //////////////////////////////////////////////////////////////////////////////
   /* 
