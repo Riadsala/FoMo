@@ -1,4 +1,4 @@
-# minimum working example for FoMo 1.0, 1.1 & 1.2
+# minimum working example for FoMo 1.3 and higher (includes direction weight plots etc)
 
 # 1) simulate some data (one person, one condition, multiple trials)
 # 2) prep data
@@ -23,7 +23,7 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 # lets simulate some data - this is for the TEST dataset
 ######################################################################
-n_trials_per_cond <- 50
+n_trials_per_cond <- 25
 
 stimuli_params <- list(n_item_class = 4,
                        n_item_per_class = c(20, 20, 10, 10), 
@@ -46,7 +46,7 @@ d <- sim_foraging_multiple_trials(person = 1,
 # prep data
 ######################################################################
 
-modelver <- "1.0"
+modelver <- "1.3"
 modelver_str <- str_replace(modelver, "\\.", "_" )
 
 dl <- prep_data_for_stan(d)
