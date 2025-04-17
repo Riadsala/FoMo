@@ -14,6 +14,7 @@ source("../../functions/plot_model.R")
 source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
+source("../../functions/compute_summary_stats.R")
 
 options(mc.cores = 4)
 
@@ -23,7 +24,7 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 # lets simulate some data - this is for the TEST dataset
 ######################################################################
-n_trials_per_cond <- 25
+n_trials_per_cond <- 50
 
 stimuli_params <- list(
   n_item_class = 4,
@@ -37,7 +38,7 @@ foraging_params <- list(
   rho_psi = -0.5)
 
 absdir_params = list(
-  kappa = rep(15, 4), theta = c(10, 1, 5, 1))
+  kappa = rep(20, 4), theta = c(25, 0, 25, 0))
 
 # plot absolute tuning curve
 d <- tibble(phi = seq(1, 360),
@@ -55,7 +56,11 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   isp = "off")
 
 # check empirical distribution
+iisv <- get_iisv_over_trials(d$found)
 
+iisv %>% ggplot(aes(theta)) + geom_histogram()
+
+plot_a_trial(d$stim, d$found, 1)
 
 
 ######################################################################
@@ -73,7 +78,8 @@ dl <- add_priors_to_d_list(dl, modelver = modelver)
 ######################################################################
 
 iter = 500
-mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"))
+mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"),
+                     force = T)
 m <- mod$sample(data = dl, 
                 iter_warmup  = iter, iter_sampling = iter)
 
@@ -90,7 +96,7 @@ plot_model_fixed(post, foraging_params)
 # plot directional component
 plot_model_theta(post)
 
-post$theta %>% ggplot(aes(comp, log(theta))) +
+post$theta %>% ggplot(aes(comp, (theta))) +
   stat_interval()
 ######################################################################
 # diagnostics
