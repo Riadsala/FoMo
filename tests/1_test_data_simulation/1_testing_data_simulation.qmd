@@ -305,7 +305,7 @@ d$dp %>%
 ```
 
 
-## Do people with a higher $b_stick$ have fewer runs?
+## Do people with a higher $b_s$ have fewer runs?
 
 We can again sense check our simulation: here, we can see that participants who have a stronger preference to forage in runs (i.e. a higher `b_stick` value) have a smaller number of runs. Note as well that condition B has a smaller `b_stick` value on average, leading to more runs.
 
