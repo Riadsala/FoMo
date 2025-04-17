@@ -25,22 +25,38 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 n_trials_per_cond <- 25
 
-stimuli_params <- list(n_item_class = 4,
-                       n_item_per_class = c(20, 20, 10, 10), 
-                       item_labels = c("a", "b", "d1", "d2"))
+stimuli_params <- list(
+  n_item_class = 4,
+  n_item_per_class = c(20, 20, 10, 10), 
+  item_labels = c("a", "b", "d1", "d2"))
 
 foraging_params <- list(
   b_a = 0.5, 
-  b_s = 2, 
-  rho_delta = 1.5,
+  b_s = 1, 
+  rho_delta = 1,
   rho_psi = -0.5)
 
+absdir_params = list(
+  kappa = rep(15, 4), theta = c(10, 1, 5, 1))
+
+# plot absolute tuning curve
+d <- tibble(phi = seq(1, 360),
+            z = compute_all_von_mises(phi=phi, absdir_params$theta, absdir_params$kappa))
+
+ggplot(d, aes(phi, z)) + geom_path()
+
+# simulate data
 d <- sim_foraging_multiple_trials(person = 1, 
                                   n_trials_per_cond = n_trials_per_cond,
                                   condition = "test",
                                   sp = stimuli_params,
                                   fp = foraging_params,
-                                  adp = "off", isp = "off")
+                                  adp = absdir_params, 
+                                  isp = "off")
+
+# check empirical distribution
+
+
 
 ######################################################################
 # prep data
@@ -67,8 +83,15 @@ m <- mod$sample(data = dl,
 
 m$summary() %>% knitr::kable(digits = 2) 
 post <- extract_post(m, d)
+
+# plot core parameters
 plot_model_fixed(post, foraging_params)
 
+# plot directional component
+plot_model_theta(post)
+
+post$theta %>% ggplot(aes(comp, log(theta))) +
+  stat_interval()
 ######################################################################
 # diagnostics
 ######################################################################

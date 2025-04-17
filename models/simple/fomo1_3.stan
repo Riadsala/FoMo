@@ -94,10 +94,10 @@ model {
   for (kk in 1:K) {
     // priors for fixed effects
     target += normal_lpdf(b_a[kk]       | 0, prior_sd_b_a);
-    target += normal_lpdf(b_s[kk]   | 0, prior_sd_b_s);
+    target += normal_lpdf(b_s[kk]       | 0, prior_sd_b_s);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[kk]   | prior_mu_rho_psi, prior_sd_rho_psi);
-    target += normal_lpdf(log_theta[kk] | 0, 2);
+    target += normal_lpdf(log_theta[kk] | 0, prior_theta_lambda);
   }
 
   //////////////////////////////////////////////////

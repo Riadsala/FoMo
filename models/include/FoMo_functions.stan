@@ -193,16 +193,8 @@ real mod(real a, real b) {
 
 }
 
-vector standarise_weights(vector w, int n_targets, vector remaining_items) {
-
-    /* set weights of found items to 0 and divide by the sum of 
-    remaining weights so that they sum to 1 */
-    vector[n_targets] w_s = w .* remaining_items;  
-    w_s = w_s / sum(w_s);
-    return(w_s);
-  }
   
-  vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
+vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
     vector log_theta, real kappa, vector phi, real os) {
 
     // this is a version of the function with only 4 directional components, used in model 1.3, for testing
@@ -211,7 +203,7 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
     vector[n_targets] w;
     vector[4] theta = exp(log_theta);
 
-    w = rep_vector(0, n_targets); 
+    w = rep_vector(1, n_targets); 
 
     if (n > 1) {
 
@@ -223,7 +215,7 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
        +  1);
     }
 
-    return(w);
+    return(log(w));
   }
 
   vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
