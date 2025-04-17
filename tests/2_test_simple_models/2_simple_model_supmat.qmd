@@ -1,0 +1,152 @@
+---
+title: "Testing simple models"
+author: "A D F Clarke & A Excellent Hughes"
+format: html
+fig_height: 2
+editor: source
+---
+
+```{r, message=FALSE, warning = FALSE}
+library(tidyverse)
+library(cmdstanr)
+library(loo)
+
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
+
+options(mc.cores = 4)
+
+# set global ggplot theme
+theme_set(ggthemes::theme_tufte())
+
+# create scratch folder if it does not yet exist
+if (!file.exists("scratch"))  dir.create("scratch")
+  
+```
+
+# Fitting Model to Simulated Data
+
+- **Model 1.0**: the original model first detailed in Clarke et al (2022), reimplemented in new code. The only other edit is to correctly calculate absolute proximity (we previously scaled before calculating inter-item distances, which led to expansion of vertical distances compared to the horizontal in cases where foraging stimuli were arranged on a rectangular grid - this minor edit makes little difference to the overall fit of the model).
+- **Model 1.1**: the same as model 1.0 except it uses relative proximity - for each item selection, we divide all inter-target distances by the distance to the closest item. The idea behind this is that it may allow the model's proximity weighting to cope better towards the end of a trial when the items are sparser. [CURRENTLY NOT SHOW IN QMD]
+- **Model 1.2**: the same as 1.0 except it has no parameter for relative direction.
+- **Model 1.3**: the same as 1.0 except it adds in an absolute direction parameter, with 4 components.
+
+## A very simple simulation
+
+```{r}
+
+n_trials_per_cond <- 25
+
+stimuli_params <- list(n_item_class = 4,
+                       n_item_per_class = c(10, 10, 10, 10), 
+                       item_labels = c("a", "b", "d1", "d2"))
+
+foraging_params <- list(
+  b_a = 0, 
+  b_s = 0, 
+  rho_delta = 1,
+  rho_psi = 0)
+
+```
+
+Our first simple simulation will involve 1 target class, with 20 target items on screen, and 25 trials. See above for the stimulus and foraging. parameters. For now, we simulate data for just one person.
+
+### Loading in our models
+
+We pre-run our data simulation and model fits in `fit_model_script.R`.
+
+```{r}
+
+m10 <- readRDS("scratch/test_1_0.model")
+m12 <- readRDS("scratch/test_1_2.model")
+m13 <- readRDS("scratch/test_1_3.model")
+
+d <- readRDS('scratch/data/test_data.RDS')
+
+```
+
+### Posterior fits
+
+```{r}
+
+m10$summary() %>% knitr::kable(digits = 2) 
+m12$summary() %>% knitr::kable(digits = 2) 
+m13$summary() %>% knitr::kable(digits = 2) 
+
+```
+
+### Plotting the fixed effects
+
+We can plot the fixed effects of the models (and can confirm that we are able to recover the parameters we put into the simulation). Below, we demonstrate for model V1.0.
+
+```{r}
+
+post <- extract_post(m10, d)
+plot_model_fixed(post, foraging_params)
+
+
+```
+
+### Accuracies
+
+?
+
+## A simulation with two conditions
+
+```{r}
+
+experiment_params <- list(n_people = 1, 
+                          n_conditions = 2,
+                          condition_labels = c("A", "B"),
+                          n_trials_per_cond = 25)
+
+stimuli_params <- list(n_item_class = 4,
+                       n_item_per_class = c(10, 10, 10, 10), 
+                       item_labels = c("a", "b", "d1", "d2"))
+
+foraging_params <- list(b_a = c(0, 1), 
+                        b_s = c(2, 0), 
+                        rho_delta = c(1, 1),
+                        rho_psi = c(-1, 1))
+
+variance_params <- list(b_a = c(0.1, 0.1), 
+                        b_s = c(0.1, 0.1), 
+                        rho_delta = c(0.1, 0.1),
+                        rho_psi = c(0.1, 0.1))
+
+absdir_params <- "off"
+initsel_params <- "off"
+
+params <- list(e = experiment_params,
+               s = stimuli_params,
+               f = foraging_params,
+               v = variance_params,
+               a = absdir_params,
+               i = initsel_params)
+
+
+```
+
+We need slightly more complicated code to simulate multi-condition data. As we only have one person, we have set the variance parameters to be fairly small.
+
+We can pre-run the models and plot the fixed effects in exactly the same way as before. Here, we show V1.2.
+
+```{r}
+
+mm10 <- readRDS("scratch/test_multicond_1_0.model")
+mm12 <- readRDS("scratch/test_multicond_1_2.model")
+mm13 <- readRDS("scratch/test_multicond_1_3.model")
+
+d2 <- readRDS('scratch/data/test_multicond_data.RDS')
+
+
+post <- extract_post(mm12, d2)
+plot_model_fixed(post, foraging_params)
+
+
+```

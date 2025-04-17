@@ -1,3 +1,91 @@
+vector compute_weights_v13(
+
+  // compute weights for FoMo v1.3
+  // this is  v1.2 + absolute (up/down/left/right) phi weights
+
+  real b_a, real b_s, real rho_delta, real rho_psi, vector log_theta, real kappa,
+  vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
+  int n, int n_targets, vector remaining_items, 
+  real os) {
+
+  // set the weight of each target to be its class weight
+  vector[n_targets] weights = log_inv_logit(b_a * to_vector(item_class));
+
+  //  weights by stick/switch preference
+  weights += log_inv_logit(b_s * match_prev_item); 
+
+  // apply proximity weights
+  weights += -rho_delta * delta - rho_psi * psi;
+
+  // apply abs. dir. weights
+  weights += compute_absdir_weights_fixed_kappa4(n, n_targets, 
+                                 log_theta, kappa, phi, os);
+
+  // remove already-selected items, and standarise to sum = 1 
+  weights += log(remaining_items);
+  weights -= log_sum_exp(weights);
+
+  return(weights);
+
+}
+
+vector compute_weights_v12(
+
+  // compute weights for FoMo v1.1
+  // this is the same as v1.0 but ignores psi
+
+  real b_a, real b_s, real rho_delta,
+  vector item_class, vector match_prev_item, vector delta,
+  int n, int n_targets, vector remaining_items) {
+
+  // set the weight of each target to be its class weight
+  vector[n_targets] weights = log_inv_logit(b_a * to_vector(item_class));
+
+  //  weights by stick/switch preference
+  weights += log_inv_logit(b_s * match_prev_item); 
+
+  // apply proximity weights
+  weights += -rho_delta * delta;
+
+  // remove already-selected items, and standarise to sum = 1 
+  weights += log(remaining_items);
+  weights -= log_sum_exp(weights);
+
+  return(weights);
+
+}
+
+vector compute_weights_v10(
+
+  // compute weights for FoMo v1.0
+  // this is our baseline Clarke et al (2022) Comp Bio model
+
+  real b_a, real b_s, real rho_delta, real rho_psi,
+  vector item_class, vector match_prev_item, vector delta, vector psi,
+  int n, int n_targets, vector remaining_items) {
+
+  // set the weight of each target to be its class weight
+  vector[n_targets] weights = log_inv_logit(b_a * to_vector(item_class));
+
+  //  weights by stick/switch preference
+  weights += log_inv_logit(b_s * match_prev_item); 
+
+  // apply proximity and rel-dir preference
+  weights += -rho_delta * delta - rho_psi * psi;
+
+  // remove already-selected items, and standarise to sum = 1 
+  weights += log(remaining_items);
+  weights -= log_sum_exp(weights);
+
+  return(weights);
+
+}
+
+
+////////////////////////////////////////////////
+// helper functions
+////////////////////////////////////////////////
+
 vector compute_prox(vector x, vector y, int n_targets, array [ ] int Q, int jj) {
 
   vector[n_targets] delta;
@@ -54,8 +142,7 @@ vector compute_absdir(vector x, vector y, int n_targets, array [ ] int Q, int jj
   if (jj > 1) {
 
     phi = atan2((y - y[Q[jj-1]]), (x - x[Q[jj-1]])) * 180 / pi();
-                    
-    
+
   }
 
   return(phi);
@@ -70,9 +157,9 @@ vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj
   if (jj > 2) {
 
     psi = atan2((y - y[Q[jj-1]]), (x - x[Q[jj-1]])) * 180 / pi();
-                    
+
     psi = psi - atan2((y[Q[jj-1]] - y[Q[jj-2]]), (x[Q[jj-1]] - x[Q[jj-2]])) * 180 / pi();
-                    
+
     for (tt in 1:n_targets) {
       psi[tt] = fmin(abs(mod(psi[tt], 360)), abs(mod(-psi[tt], 360)))/180;
     }
@@ -87,17 +174,17 @@ vector compute_matching(array [ ] int item_class, int n_targets, array [ ] int Q
   // S: which items match the previously selected item?
   vector[n_targets] S;
 
- 
-  for (tt in 1:n_targets) {
-      
-     if (item_class[tt] == item_class[Q[jj-1]]) {
-      S[tt] = 1;
-    } else {
-      S[tt] = -1;
-    }
-  }
 
-  return(S);
+  for (tt in 1:n_targets) {
+
+   if (item_class[tt] == item_class[Q[jj-1]]) {
+    S[tt] = 1;
+  } else {
+    S[tt] = -1;
+  }
+}
+
+return(S);
 }
 
 real mod(real a, real b) {
@@ -115,105 +202,86 @@ vector standarise_weights(vector w, int n_targets, vector remaining_items) {
     return(w_s);
   }
   
-vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
-  vector log_theta, real kappa, vector phi, real os) {
-    
+  vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
+    vector log_theta, real kappa, vector phi, real os) {
+
     // this is a version of the function with only 4 directional components, used in model 1.3, for testing
     // in general, use the version with 8
 
-  vector[n_targets] w;
-  vector[4] theta = exp(log_theta);
+    vector[n_targets] w;
+    vector[4] theta = exp(log_theta);
 
-  w = rep_vector(1, n_targets); 
+    w = rep_vector(0, n_targets); 
 
-  if (n > 1) {
+    if (n > 1) {
 
-    w = w 
-           .* (theta[1]*exp(kappa * cos(phi            - os))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[2]*exp(kappa * cos(phi - 2*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[3]*exp(kappa * cos(phi - 4*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[4]*exp(kappa * cos(phi - 6*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa)) 
-           +  1);
+      w = w 
+      .* (theta[1]*exp(kappa * cos(phi            - os))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[2]*exp(kappa * cos(phi - 2*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[3]*exp(kappa * cos(phi - 4*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[4]*exp(kappa * cos(phi - 6*pi()/4) - os)./(2*pi()*modified_bessel_first_kind(0, kappa)) 
+       +  1);
+    }
+
+    return(w);
   }
 
-  return(w);
-}
+  vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
+    vector log_theta, real kappa, vector phi) {
 
-vector compute_absdir_weights_fixed_kappa(int n, int n_targets, 
-  vector log_theta, real kappa, vector phi) {
+    vector[n_targets] w;
+    vector[8] theta = exp(log_theta);
 
-  vector[n_targets] w;
-  vector[8] theta = exp(log_theta);
+    w = rep_vector(0, n_targets); 
 
-  w = rep_vector(1, n_targets); 
+    if (n > 1) {
 
-  if (n > 1) {
+      w = w 
+      .* (theta[1]*exp(kappa * cos(phi           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[2]*exp(kappa * cos(phi - 1*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[3]*exp(kappa * cos(phi - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[4]*exp(kappa * cos(phi - 3*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[5]*exp(kappa * cos(phi - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[6]*exp(kappa * cos(phi - 5*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[7]*exp(kappa * cos(phi - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  theta[8]*exp(kappa * cos(phi - 7*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
+       +  1);
+    }
 
-    w = w 
-          .* (theta[1]*exp(kappa * cos(phi           ))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[2]*exp(kappa * cos(phi - 1*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[3]*exp(kappa * cos(phi - 2*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[4]*exp(kappa * cos(phi - 3*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[5]*exp(kappa * cos(phi - 4*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[6]*exp(kappa * cos(phi - 5*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[7]*exp(kappa * cos(phi - 6*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  theta[8]*exp(kappa * cos(phi - 7*pi()/4))./(2*pi()*modified_bessel_first_kind(0, kappa))
-           +  1);
+    return(w);
   }
 
-  return(w);
-}
+  vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) {
 
-vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta, real d0) {
-
-  vector[n_targets] w;
-
-  w = rep_vector(1, n_targets); 
-  
-  // now start computing the weights
-  if (n > 1) {
-    // for the second selected target, weight by distance from the first
-    w = -rho_delta * d0 * delta;
-    
+    vector[n_targets] w = -rho_delta * delta;
+    return(w);
   }
 
-  return(w);
-}
+  vector compute_reldir_weights(int n, int n_targets, real rho_psi, vector psi) {
 
-vector compute_reldir_weights(int n, int n_targets, real rho_psi, vector psi) {
-
-  vector[n_targets] w;
-
-  w = rep_vector(1, n_targets); 
-
-  // now start computing the weights
-  if (n > 2) {
-
-      // for all later targets, also weight by direciton
-      w = - rho_psi * psi;
+    vector[n_targets] w = - rho_psi * psi;
+    return(w);
   }
-  return(w);
-}
 
-array[ ] vector calc_remaining_items(int N, int n_targets, array[ ] int Y, array[ ] int found_order) {
+  array[ ] vector calc_remaining_items(int N, int n_targets, array[ ] int Y, array[ ] int found_order) {
 
-  array[N] vector[n_targets] remaining_items;
+    array[N] vector[n_targets] remaining_items;
 
-  for (n in 1:N) {
+    for (n in 1:N) {
     // check if we are at the start of a new trial
     // if we are, initialise a load of things
-    if (found_order[n] == 1) {
-             
+      if (found_order[n] == 1) {
+
       // as we're at the start of a new trial, reset the remaining_items tracker
-      remaining_items[n] = rep_vector(1, n_targets);
+        remaining_items[n] = rep_vector(1, n_targets);
 
-    } else {
+      } else {
 
-      remaining_items[n] = remaining_items[n-1];
-      remaining_items[n][Y[n-1]] = 0;
-      
+        remaining_items[n] = remaining_items[n-1];
+        remaining_items[n][Y[n-1]] = 0.0000;
+
+      }
     }
-  }
 
-  return(remaining_items);
-}
+    return(remaining_items);
+  }

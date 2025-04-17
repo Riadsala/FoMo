@@ -1,33 +1,31 @@
- fomo_preprocess <- function(dataset, model_components = c("spatial", "item_class")) {
-   
-   # this file creates the d_list input data for FoMo.
-   # it will do this three times,
-   #   i) all data
-   #  ii) training data
-   # iii) test data
-   
-   # first, import dataset
-   d <- import_data(dataset)
-   
-   folder <- paste0("scratch/d_list/", dataset, "/")
-   dir.create(folder)
-   
-   # compute d_list on ALL the data
-   d_list <- prep_data_for_stan(d, model_components)
-   saveRDS(d_list, paste0(folder, "all.rds"))
-   rm(d_list)
-   
-   # now compute for training/testing split
-   d_list <- prep_train_test_data_for_stan(d, model_components)
-   saveRDS(d_list$training, paste0(folder, "train.rds"))
-   saveRDS(d_list$testing, paste0(folder, "test.rds"))
+fomo_preprocess <- function(dataset, delta0) {
+  
+  # this file creates the d_list input data for FoMo.
+  # it will do this three times,
+  #   i) all data
+  #  ii) training data
+  # iii) test data
+  
+  # first, import dataset
+  d <- import_data(dataset)
+  
+  folder <- paste0("scratch/d_list/", dataset, "/")
+  dir.create(folder)
+  
+  # compute d_list on ALL the data
+  d_list <- prep_data_for_stan(d, delta0)
+  saveRDS(d_list, paste0(folder, "all.rds"))
+  rm(d_list)
+  
+  # now compute for training/testing split
+  d_list <- prep_train_test_data_for_stan(d, delta0)
+  saveRDS(d_list$training, paste0(folder, "train.rds"))
+  saveRDS(d_list$testing, paste0(folder, "test.rds"))
+  
+  rm(d, folder, d_list)
+}
 
-   rm(d, folder, d_list)
- }
-
-prep_train_test_data_for_stan <- function(d, 
-                                          model_components = c("spatial", "item_class"), 
-                                          remove_last_found = FALSE) {
+prep_train_test_data_for_stan <- function(d, delta0) {
   
   # runs the same as prep_data_for_stan, but outputs a list of lists
   # ie, training set and test set
@@ -42,26 +40,38 @@ prep_train_test_data_for_stan <- function(d,
   training <- d$training
   testing <- d$testing
   
-  training_list <- prep_data_for_stan(training,
-                                      model_components, remove_last_found) 
+  training_list <- prep_data_for_stan(training, delta0) 
   
-  testing_list <- prep_data_for_stan(testing, 
-                                     model_components, remove_last_found) 
+  testing_list <- prep_data_for_stan(testing, delta0) 
   
   return(list(training = training_list,
               testing  = testing_list))
   
 }
 
-add_priors_to_d_list <- function(dl, modelver="1.1", model_path = "../models/") {
+add_priors_to_d_list <- function(dl, modelver="1.0") {
   
-  filename <- paste0("priors_model", modelver, ".csv")
+  # find path
+  # get model directory path
+  prior_path <- "../"
+  
+  for (ii in 1:3) {
+    
+    if ("models" %in% dir(prior_path)) {
+      prior_path <- paste0(prior_path, "models/priors/")
+      break
+    } else {
+      prior_path <- paste0(prior_path, "../")
+    }
+  }
+  
+  filename <- paste0(prior_path, "priors_model", modelver, ".csv")
   
   # first, remove any priors that have already been added
   dl <- dl[!str_detect(names(dl), "prior_") ]
   
   # add in priors
-  priors <- read_csv(paste0(model_path, filename), show_col_types = FALSE) %>%
+  priors <- read_csv(paste0(prior_path, filename), show_col_types = FALSE) %>%
     pivot_longer(-param, names_to = "stat", values_to = "value") %>%
     mutate(param = paste("prior", stat, param, sep="_")) %>%
     select(-stat) %>%
@@ -78,43 +88,22 @@ add_priors_to_d_list <- function(dl, modelver="1.1", model_path = "../models/") 
   
 }
 
-prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"), 
-                               remove_last_found = FALSE, d0 = 20) {
+prep_data_for_stan <- function(d, d0 = 20) {
   
   # df and ds should match d$found and d$stim, which are output by import_data()
   # model_components tells us which model_components to include
   
   # if we don't, lets compute it
-  df = d$found
-  ds = d$stim
+  df = d$found #%>% arrange(person, condition, trial)
+  ds = d$stim # %>% arrange(person, condition, trial)
   rm(d)
   
-  if (class(remove_last_found) != "logical") {
-    
-    print("error")
-    break 
-  }
-  
-  ###################################################
+  ##############################################################################
   # first, do some processing that everything requires
   
-  # unsure where to put this... 
   # remove distracters, as current model ignores them
   ds %>% 
     filter(item_class %in% c(1, 2)) -> ds
-  
-  if (remove_last_found) {
-    
-    df %>%
-      filter(found != max(found)) -> df
-  }
-  
-  # extract stimulus parameters
-  n_people <- length(unique(df$person))
-  n_trials <- length(unique(df$trial))
-  
-  # we will be trying to predict the item IDs, so lets save them as Y
-  Y <- as.numeric(df$id)
   
   # get condition info
   # this is a little more complicated than it looks as we may have some missing data
@@ -127,11 +116,25 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
   d_trl <- filter(d_trl, trial %in% (df %>% group_by(trial) %>% 
                                        summarise(n=n(), .groups = "drop"))$trial)
   
+  # we want to remove any last-remaining item selections - these aren't informative
+  full_join(df, d_trl,
+            by = join_by(person, condition, trial)) %>% 
+    filter(found < n_items) %>%
+    select(-n_items) -> df
+  
+  ##############################################################################
+  # some global input parameters 
+  
+  n_people <- length(unique(df$person))
+  n_trials <- length(unique(df$trial))
   n_targets <- unique(d_trl$n_items)
   
+  # Y is the item IDs that there selected
+  # X is condition
+  # Z is participant
+  Y <- as.numeric(df$id)
   X <- as.numeric(d_trl$condition)
-  
-  Z <- (ds %>% group_by(trial) %>% summarise(person = unique(person)))$person
+  Z <- as.numeric(d_trl$person)
   
   # add  these to list
   d_list <- list(
@@ -145,85 +148,58 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
     Z = Z,
     found_order = df$found)  
   
-  rm(d_trl, X)
+  rm(d_trl, X, Z)
   
-  if ("spatial" %in% model_components) {
-    
-    # We are assuming (x, y) are already on some sensible scale
-    
-    # pre-compute direction and distance data
-    spatial <- compute_inter_item_directions_and_distances(Y, df, ds)
-    
-    # pre-compute relative direction data
-    rel_direction <- compute_inter_sel_direction(Y, df, ds) 
-    
-    # rescale x and y to be both in the (0, 1) range
-    ds %>% mutate(x = as.vector(scales::rescale(x, to = c(0.01, 0.99))),
-                  y = as.vector(scales::rescale(y, to = c(0.01, 0.99)))) -> ds
-    
-    # get x y coords of all items
-    ds %>% ungroup() %>% select(person, trial, id, x) %>%  
-      pivot_wider(names_from = "id", values_from = "x") %>%
-      select(-person, -trial) -> itemX
-    
-    ds %>% ungroup() %>% select(person, trial, id, y) %>%  
-      pivot_wider(names_from = "id", values_from = "y") %>%
-      select(-person, -trial) -> itemY
-    
-    d_list <- append(d_list, list(item_x = itemX,
-                                  item_y = itemY,
-                                  delta = spatial$distances,
-                                  phi = spatial$directions,
-                                  psi = rel_direction))
-    
-    rm(spatial, rel_direction)
-  }
+  ##############################################################################
+  # now compute spatial components 
+  # We are assuming (x, y) are already on some sensible scale
   
-  if ("item_class" %in% model_components) { 
-    
-    # Used for categorical model_components, i.e., items are of one class or another
-    # We want to extract the number of classes, the number of targets per class, 
-    # class ID of each item, and whether the ith selected item matches the i-1 selected item
-    
-    n_item_class <- length(unique(ds$item_class))
-    n_item_per_class <- length(unique(ds$id))/n_item_class
-    
-    item_class = t(array(as.numeric(ds$item_class), dim = c(n_item_per_class*n_item_class, n_trials)))
-    item_class[which(item_class==2)] =  -1
-    
-    # work out which targets match previous target
-    matching <- does_item_match_prev_target(Y, df, item_class, n_item_per_class, n_item_class)
-    
-    d_list <- append(d_list, list(n_classes = n_item_class,
-                                  item_class = item_class,
-                                  S = matching))
-  }
+  # pre-compute direction and distance data
+  spatial <- compute_inter_item_directions_and_distances2(df, ds)
   
-  if ("cts" %in% model_components) {
-    
-    # Used when we have continuous model_components, i.e, the items have model_components vectors that take on a range of values
-    # special exception: circular model_components (colour, orientation) are dealt with separately 
-    
-    # we need to think asbout variable names
-    
-    item_cols <- t(array(as.numeric(ds$col), dim = c(n_targets, n_trials)))
-    
-    d_list <- append(d_list, list(item_colour = item_cols))
-    
-  }
+  # pre-compute relative direction data
+  rel_direction <- compute_inter_sel_direction(Y, df, ds) 
   
-  if ("circ" %in% model_components) {
-    
-    # Used when we have continuous circular model_components, i.e, values on a colour wheel, orientations
-    # For now, we extract the distance matrix for such model_components
-    
-    col_dist <- compute_inter_item_colour_dist(Y, df, ds)
-    
-    d_list <- append(d_list, list(col_dist = col_dist))
-  }
+  # rescale x and y to be both in the (0, 1) range
+  # ds %>% mutate(x = as.vector(scales::rescale(x, to = c(0.01, 0.99))),
+  #               y = as.vector(scales::rescale(y, to = c(0.01, 0.99)))) -> ds
+  
+  # get x y coords of all items
+  ds %>% ungroup() %>% select(person, trial, id, x) %>%  
+    pivot_wider(names_from = "id", values_from = "x") %>%
+    select(-person, -trial) -> itemX
+  
+  ds %>% ungroup() %>% select(person, trial, id, y) %>%  
+    pivot_wider(names_from = "id", values_from = "y") %>%
+    select(-person, -trial) -> itemY
+  
+  d_list <- append(d_list, list(item_x = itemX,
+                                item_y = itemY,
+                                delta = d0 * spatial$distances,
+                                phi = spatial$directions,
+                               #psi2 = spatial$rel_directions,
+                                psi = rel_direction))
+  
+  rm(spatial, rel_direction)
+  
+  # Used for categorical model_components, i.e., items are of one class or another
+  # We want to extract the number of classes, the number of targets per class, 
+  # class ID of each item, and whether the ith selected item matches the i-1 selected item
+  
+  n_item_class <- length(unique(ds$item_class))
+  n_item_per_class <- length(unique(ds$id))/n_item_class
+  
+  item_class = t(array(as.numeric(ds$item_class), dim = c(n_item_per_class*n_item_class, n_trials)))
+  item_class[which(item_class==2)] =  -1
+  
+  # work out which targets match previous target
+  matching <- does_item_match_prev_target(Y, df, item_class, n_item_per_class, n_item_class)
+  
+  d_list <- append(d_list, list(n_classes = n_item_class,
+                                item_class = item_class,
+                                S = matching))
   
   d_list$trial = df$trial
-  
   
   ## add in angular offset
   d_list$grid_offset = rep(0, d_list$K)
@@ -233,6 +209,66 @@ prep_data_for_stan <- function(d, model_components = c("spatial", "item_class"),
   
   return(d_list)
   
+}
+
+compute_inter_item_directions_and_distances2 <- function(df, ds) {
+  
+  # pivot to wide format: two rows for each trial (one for x dim, one for y)
+  ds %>% 
+    select(trial, id, x, y) %>%
+    pivot_longer(-c(trial, id), names_to = "dim") %>%
+    pivot_wider(names_from = "id") -> ds
+  
+  # compute current heading
+  df %>%
+    mutate(x0 = lag(x), y0 = lag(y),
+           phi = atan2(y-y0, x-x0)) %>%
+    select(trial, found, x, y, phi) %>%
+    mutate(x = lag(x), y = lag(y), phi = lag(phi)) %>%
+    pivot_longer(-c(trial, found), names_to = "dim",  values_to = "selected") %>%
+    mutate(selected = if_else(found == 1, NA, selected)) -> df
+  
+  # phi0 <- df %>% filter(dim == "phi") %>%
+  #   select(trial, found, phi0 = selected)
+  
+  df %>% filter(dim != "phi") -> df
+  
+  full_join(df, ds, by = join_by(trial, dim)) %>%
+    pivot_longer(-c(trial, found, dim, selected), names_to = "id") %>%
+    mutate(diff = selected - value, .keep = "unused") %>%
+    pivot_wider(names_from = "dim", values_from = "diff") %>%
+    mutate(delta = if_else(found == 1, 0, sqrt(x^2 + y^2)),
+           phi = if_else(found == 1, 0, atan2(y, x))) %>%
+    select(-x, -y) -> spatial_features
+  
+  spatial_features %>%
+    select(-phi) %>%
+    pivot_wider(names_from = id, values_from = "delta") %>%
+    select(-trial, -found) %>%
+    as.matrix() -> delta
+  
+  spatial_features %>%
+    select(-delta) %>%
+    pivot_wider(names_from = id, values_from = "phi") %>%
+    select(-trial, -found) %>%
+    as.matrix() -> phi
+  
+  # pi2 <- 2*pi
+  # 
+  # spatial_features %>%
+  #   select(-delta) %>%
+  #   left_join(phi0) %>%
+  #   mutate(psi = phi - phi0, 
+  #          psi = pmin(abs((psi %% (pi2))), abs((-psi %% pi2))),
+  #          psi = if_else(found == 1, 0, psi/pi)) %>%
+  #   select(trial, found, id, psi) %>%
+  #   pivot_wider(names_from = id, values_from = "psi") %>%
+  #   select(-trial, -found) %>%
+  #   as.matrix() -> psi
+  
+  return(list(directions = phi, 
+              # rel_directions = psi,
+              distances  = delta))
 }
 
 compute_inter_item_directions_and_distances <- function(Y, df, ds) {
@@ -252,14 +288,14 @@ compute_inter_item_directions_and_distances <- function(Y, df, ds) {
       # as first target in trial, distance and direction will be 0
       # these should be NA, but not supported by Stan
       directions <- rbind(directions, rep(0, nrow(trl_dat)))
-      distances <- rbind(distances, rep(0, nrow(trl_dat)))
+      distances  <- rbind(distances, rep(0, nrow(trl_dat)))
       
     } else {
       
       x <- trl_dat$x - trl_dat$x[Y[ii-1]]
       y <- trl_dat$y - trl_dat$y[Y[ii-1]]
       
-      distances <- rbind(distances, sqrt(x^2 + y^2))
+      distances  <- rbind(distances, sqrt(x^2 + y^2))
       directions <- rbind(directions, atan2(y, x))
     }
   }

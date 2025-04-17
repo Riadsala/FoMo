@@ -1,7 +1,11 @@
-/* FoMo v1.0 - multi-level
+/* 
+
+FoMo V1.0 (multi-level: generated quantities)
+
+This is the new implementation of the model from 
+Clarke et al (2022), Comp Bio.
 
 Includes the core parameters:
-
 b_a, b_stick, rho_delta, rho_psi
 
 */
@@ -10,54 +14,6 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
-  vector compute_weights(
-    real u_a, real u_s, real u_delta, real u_psi,
-    vector item_class, vector match_prev_item, vector delta, vector psi,
-    int n, int n_targets, vector remaining_items, real d0) {
-
-    vector[n_targets] weights;
-    
-    // set the weight of each target to be its class weight
-    weights = log_inv_logit(u_a * to_vector(item_class));
-    
-    // multiply weights by stick/switch preference
-    weights += log_inv_logit(u_s * match_prev_item); 
-
-    // calculate by spatial weights
-    weights += compute_spatial_weights(
-      n, n_targets, 
-      u_delta, u_psi, 
-      delta, psi,
-      d0);
-        
-    // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(exp(weights), n_targets, remaining_items); 
-
-    return(weights);
-
-  }
-
-  vector compute_spatial_weights(
-    int n, int n_targets, 
-    real rho_delta, real rho_psi, 
-    vector delta, vector psi,
-    real d0) {
-
-    // computes spatial weights
-    // for FoMo1.0, this includes proximity and relative direction
-    vector[n_targets] prox_weights, reldir_weights;
-
-    // apply spatial weighting
-    prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta, d0);
-    
-    reldir_weights = compute_reldir_weights(n, n_targets, 
-                                 rho_psi, psi);
-
-    // return the dot product of the weights
-    return(prox_weights + reldir_weights);
-
-  }
 }
 
 
@@ -185,13 +141,17 @@ generated quantities {
       z = Z[t];
       x = X[t];
 
-      weights = compute_weights(
+      weights = compute_weights_v10(
         u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
         to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
-        found_order[ii], n_targets, remaining_items[ii], d0); 
+        found_order[ii], n_targets, remaining_items[ii]); 
 
-      P[ii] = categorical_rng(weights);
-      log_lik[ii] = log(weights[Y[ii]]);
+
+      P[ii] = categorical_rng(exp(weights));
+      log_lik[ii] = weights[Y[ii]];
+
+      //print("Y = ", Y[ii], ", w(Y) = ", exp(weights[Y[ii]]), ", max(w) = ", exp(max(weights)));
+      //print(exp(weights));
 
     }
   }
@@ -240,17 +200,17 @@ generated quantities {
         if (ii > 1) 
         {
           S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
-          delta_q =     compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+          delta_q =   d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
           psi_q   =   compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
         }
 
-        weights = compute_weights(
+        weights = compute_weights_v10(
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
           to_vector(item_class[t]), S_q, delta_q, psi_q,
-          found_order[ii], n_targets, remaining_items_q, d0); 
+          found_order[ii], n_targets, remaining_items_q); 
 
         // sample an item to select
-        Q[t, ii] = categorical_rng(weights);
+        Q[t, ii] = categorical_rng(exp(weights));
 
         // update remaining_items_q
         remaining_items_q[Q[t, ii]] = 0;

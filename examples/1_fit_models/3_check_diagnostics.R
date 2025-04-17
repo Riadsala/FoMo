@@ -5,11 +5,11 @@ library(posterior)
 # this script (or QMD) checks previously fitted models and assesses how well they fit
 
 dataset <- "kristjansson2014plos"
-folder <- paste0("scratch/models/", dataset, "/")
+folder <- paste0("scratch/models/", dataset, "/fit/")
 mode <- "train"
 
 models <- unlist(dir(folder))
-models <- models[str_detect(models, mode)]
+models <- models[str_detect(models, "model")]
 
 d <- tibble()
 

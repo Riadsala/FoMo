@@ -1,0 +1,4 @@
+﻿param,mu,sd
+b_a,0,1
+b_s,0,1
+rho_delta,1,0.25

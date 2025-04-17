@@ -12,7 +12,7 @@ source("../../functions/post_functions.R")
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
-# datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
+#datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") 
 datasets <- "kristjansson2014plos"
 ############################################################################
 
@@ -128,7 +128,6 @@ extract_and_save_predictions <- function(dataset) {
   write_csv(iisv, paste0(outfolder, "/iisv_statistics.csv"))
   
 }
-
 
 ############################################################################
 # extract model predictions

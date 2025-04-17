@@ -50,7 +50,7 @@ extract_post <- function(m, d) {
   }
   
   # if theta is in model fit, extract
-  if (sum(str_detect(vars, "log_theta")) > 1) {
+  if (sum(str_detect(vars, "log_theta")) >= 1) {
     
     post_theta <- extrat_post_theta(m, cl)
     post_list <- append(post_list, list(theta = post_theta))
@@ -102,6 +102,8 @@ extrat_post_theta <- function(m, cl) {
   n_directions = length(unique(post_absdir$phi))
   
   # get variances in direction
+  if ("sigma_w" %in% names(m$draws(format = "df"))) {
+  
   m$draws("sigma_w", format = "df") %>%
     as_tibble() %>%
     pivot_longer(starts_with("sigma_w"), names_to = "comp", values_to = "sigma") %>%
@@ -116,6 +118,8 @@ extrat_post_theta <- function(m, cl) {
   
   post_absdir <- left_join(post_absdir, post_theta_sigma, 
             by = join_by(.draw, condition, comp))
+  
+  } 
   
   
   return(post_absdir)
@@ -259,6 +263,13 @@ extract_item_pred <- function(gq, my_data) {
     separate(param, into = c("param", "row"), sep = "\\[") %>%
     select(-chain, -param) %>%
     mutate(row = parse_number(row)) -> pred
+  
+  # check if we should remove the last item to be selected from my_data
+  if (nrow(pred) != nrow(my_data$found)) {
+    
+    max_found = max(my_data$found$found)
+    my_data$found %>% filter(found < max_found) -> my_data$found
+  }
   
   pred <- full_join(my_data$found %>% mutate(row = 1:n()), 
                     pred, 

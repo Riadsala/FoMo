@@ -1,249 +1,74 @@
+################################################################################
 # Simulate foraging data
-
-# the main function is sim_foraging_trial() which does what is says.
-# sim_foraging_people() allows us to simulate a whole dataset (multiple people, conditions and trials)
-
-sim_foraging_people <- function(params,
-                                rel_proximity = FALSE,
-                                filename = "sim") {
-  
-  ## if some params have been specified as a constant, replicate over conditions.
-  # b_stick <- check_and_rep_param(b_stick, n_conditions)
-  # rho_delta <- check_and_rep_param(rho_delta, n_conditions)
-  # sig_theta <- check_and_rep_param(sig_theta, n_conditions)
-  # n_trials_per_cond <- check_and_rep_param(n_trials_per_cond, n_conditions)
-  
-  n_people <- params$exp$n_people
-  n_conditions <- params$exp$n_conditions
-  cond_lab <- params$exp$condition_name
-  n_trials_per_cond <- params$exp$n_trials_per_cond
-  n_item_class <- params$exp$n_item_class
-  n_item_per_class <- params$exp$n_item_per_class
-  
-  mu_cw <- filter(params$foraging, param == "bA")$mu
-  sd_bA <- filter(params$foraging, param == "bA")$sd[[1]]
-  
-  b_stick <- filter(params$foraging, param == "bS")$mu[[1]]
-  sd_b_stick <- filter(params$foraging, param == "bS")$sd[[1]]
-  
-  rho_delta <- filter(params$foraging, param == "rho_delta")$mu[[1]]
-  sd_rho_delta <- filter(params$foraging, param == "rho_delta")$sd[[1]]
-  
-  rho_psi <- filter(params$foraging, param == "rho_psi")$mu[[1]]
-  sd_rho_psi <- filter(params$foraging, param == "rho_psi")$sd[[1]]
-  
-  # generate random effects
-  dpeeps <- tibble(person = rep(1:n_people, n_conditions),
-                   condition  = rep(cond_lab, each = n_people),
-                   mu_cw = rep(mu_cw, each = n_people),
-                   sd_bA = sd_bA,
-                   b_stick = rep(b_stick, each = n_people),
-                   sd_b_stick = sd_b_stick,
-                   rho_delta = rep(rho_delta, each = n_people),
-                   sd_rho_delta = sd_rho_delta,
-                   rho_psi = rep(rho_psi, each = n_people),
-                   sd_rho_psi = sd_rho_psi)
-  
-  dpeeps <- pmap_df(dpeeps, gen_random_fx)
-  
-  d <- pmap(dpeeps, sim_foraging_multiple_trials,
-            n_trials_per_cond = n_trials_per_cond,
-            n_item_class = n_item_class, n_item_per_class = n_item_per_class,
-            abs_dir_tuning = abs_dir_tuning,
-            inital_sel_params = inital_sel_params,
-            item_labels = item_labels, b_memory = 0,
-            rel_proximity = rel_proximity,
-            .progress = TRUE)
-  
-  # rearrange list structure
-  df <- 1:nrow(dpeeps) %>% map_df(~d[[.x]]$found) %>%
-    mutate(trial_p = trial,
-           trial = paste(as.numeric(person), as.numeric(condition), trial),
-           trial = as_factor(trial),
-           trial = as.numeric(trial))
-  
-  ds <- 1:nrow(dpeeps) %>% map_df(~d[[.x]]$stim) %>%
-    mutate(trial_p = trial,
-           trial = paste(as.numeric(person), as.numeric(condition), trial),
-           trial = as_factor(trial),
-           trial = as.numeric(trial))
-  
-  d <- list(stim = ds, found = df,
-            name = filename,
-            dp = dpeeps,
-            params = params)
-  
-  # create save folder if it doesn't yet exist
-  if(!dir.exists("scratch/data")) {
-    dir.create("scratch/data")
-  }
-  
-  saveRDS(d, paste0("scratch/data/", d$name, ".RDS"))
-  
-  return(d)
-  
-}
-
-gen_random_fx <- function(person, condition,
-                          mu_cw, sd_bA,
-                          b_stick, sd_b_stick,
-                          rho_delta, sd_rho_delta,
-                          rho_psi, sd_rho_psi,
-                          inital_sel_params) 
-{
-  
-  mu_cw[1] <- mu_cw[1] + rnorm(1, 0, sd_bA)
-  mu_cw[1] <- if_else(mu_cw[1]<0, 0, mu_cw[1])
-  
-  init_sel_lambda <- runif(1)
-  
-  dout <- tibble(person, condition,
-                 item_class_weights = list(mu_cw),
-                 b_stick = rnorm(1, b_stick, sd_b_stick),
-                 rho_delta = rnorm(1, rho_delta, sd_rho_delta),
-                 rho_psi = rnorm(1, rho_psi, sd_rho_psi),
-                 init_sel_lambda = init_sel_lambda)
-  
-  return(dout)
-}
-
-sim_foraging_multiple_trials <- function(person = 1,
-                                         condition = "control", n_trials_per_cond = 10,
-                                         n_item_class =  n_item_class, n_item_per_class = n_item_per_class,
-                                         item_class_weights = item_class_weights, item_labels =  item_labels,
-                                         b_stick = b_stick, 
-                                         rho_delta = rho_delta, 
-                                         rho_psi = rho_psi, 
-                                         abs_dir_tuning = abs_tuning,
-                                         b_memory,
-                                         inital_sel_params,
-                                         init_sel_lambda = 0.25,
-                                         rel_proximity = FALSE) 
-{
-  
-  # Generate a number of trials with identical sim params. 
-  
-  trls <- 1:n_trials_per_cond
-  
-  d <- map(trls, sim_foraging_trial, 
-           n_item_class =  n_item_class, 
-           n_item_per_class = n_item_per_class,
-           item_class_weights = item_class_weights, 
-           item_labels =  item_labels,
-           b_stick = b_stick, 
-           rho_delta = rho_delta, 
-           rho_psi = rho_psi, 
-           abs_dir_tuning = abs_dir_tuning,
-           b_memory = b_memory,
-           inital_sel_params = inital_sel_params,
-           init_sel_lambda = init_sel_lambda,
-           rel_proximity = rel_proximity) 
-  
-  # rearrange the list structure
-  df <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$found) %>%
-    mutate(condition = condition,
-           condition = as_factor(condition),
-           person = person) %>%
-    relocate(person, condition)
-  
-  ds <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$stim) %>%
-    mutate(condition = condition,
-           condition = as_factor(condition),
-           person = person) %>%
-    relocate(person, condition)
-  
-  # correctly label trial and trial_p
-  ds <- fix_trial_index(ds)
-  df <- fix_trial_index(df)
- 
-  
-  return(list(stim = ds, found = df))
-}
-
-fix_trial_index <- function(dat) {
-  
-  if ("person" %in% names(dat)) {
-    
-    dat %>% mutate(
-      trial_p = trial,
-      trial = paste(as.numeric(person), as.numeric(condition), trial)) -> dat
-    
-    
-  } else {
-    
-    dat %>% mutate(
-      trial_p = trial,
-      trial = paste(as.numeric(condition), trial)) -> dat
-  }
-  
-  dat %>% mutate(
-    trial = as_factor(trial),
-    trial = as.numeric(trial)) -> dat
-  
-  return(dat)
-  
-}
-
+#
+# the main function is sim_foraging_trial() which does what is says
+# 
+# sim_foraging_people() allows us to simulate a whole dataset 
+# - multiple people, conditions and trials
+# - different people have their own random simulation parameters
+#
+# utility functions are found in subfunctions/spatial_features.R and are shared 
+# with prep_data.R (hopefully)
+#
+################################################################################
 
 sim_foraging_trial <- function(trl = 1, 
-                               n_item_class = 4, 
-                               n_item_per_class = c(10, 10, 10, 10), 
-                               item_class_weights = c(0.5, 0.5, 0, 0),
-                               item_labels = c("A", "B", "d1", "d2"),
-                               b_stick = 0, # stick weights
-                               rho_delta = 0, 
-                               rho_psi = 0,
-                               abs_dir_tuning = list(kappa = rep(0, 4), theta = rep(1, 4)),
-                               omi_dir = 0,
-                               b_memory = 0,
-                               inital_sel_params,
-                               init_sel_lambda,
+                               sp = list(
+                                 n_item_class = 4, 
+                                 n_item_per_class = c(10, 10, 10, 10), 
+                                 item_labels = c("a", "b", "d1", "d2")),
+                               fp = list(
+                                 b_a = 0, b_s = 0, rho_delta = 1, rho_psi = 0),
+                               adp = "off", isp = "off",
                                items = NULL,
-                               dev_output = FALSE,
-                               rel_proximity = FALSE)  
+                               dev_output = FALSE, 
+                               d0 = 20)  
 {
   
-  # n_class is the number of different target classes
-  # n_per_type is the number of target's per class
-  n_item_per_class <- check_and_rep_param(n_item_per_class, n_item_class)
+  ##############################################################################
+  # trl is the trial number (useful when generating many trials!)
+  # sp contains details for simualting stimulus   
+  # fp contains our four main foraging parameters:
+  # - b_a, 
+  # - b_stick
+  # - rho_delta
+  # - rho_psi
+  # adp is either "off" or contains details for abs dir behaviour
+  # isp is either "off" or contains details for initial selection
+  # items: pass in pre-generated items (not yet supported)
+  # dev_output: include simulation parameters in output
+  # d0: delta scaling to get rho_delta onto a sensible scale ~ 1
+  ##############################################################################
   
-  # item_class_weights is the salience score for target type
-  item_class_weights <- check_and_rep_param(item_class_weights, n_item_class)
-  # normalise
-  item_class_weights <- item_class_weights / sum(item_class_weights)
+  # first create stimulus
+  d_stim <- get_stimulus(sp, items, trl)
   
-  # b_stick is the stick v switch preference
-  # rho_delta and sig_theta define the spatial bias
-  # trl is the trial number
+  # create item class weights based on b_a
+  item_class_weights <- c(plogis(fp$b_a), 1 - plogis(fp$b_a), 0, 0)
   
-  # calculate total number of items
-  n <- sum(n_item_per_class) 
-  
-  d_stim <- get_stimulus(items, n, n_item_class, n_item_per_class)
-  d_stim$trial <- trl
-  
-  # pick a first point at random, 
-  # b is based only on the item_class_weights
-  
+  # initialize dataframe for tracking which items remain:
   d_remain <- d_stim %>%
-    mutate(found = -1, delta = 0,  phi = 0, psi = 0, 
+    mutate(found = -1, delta = 0, phi = 0, psi = 0, 
            prox = 0, rel_dir = 0, abs_dir_tuning = 0, b = item_class_weights[d_stim$item_class])  %>%
-    mutate(W = b/sum(b),
-           Wprev = 0,
-           Wnew = 0)
+    mutate(W = b/sum(b))
   
-  # pick a first point at random
-  t <- 1 # t is for the "t-th target selection
-  
+  ##############################################################################
   # initial item selection
-  # d_remain %>% mutate(
-  #   w1 = dbeta(x, inital_sel_params$a1x, inital_sel_params$b1x) * dbeta(y, inital_sel_params$a1y, inital_sel_params$b1y),
-  #   w2 = dbeta(x, inital_sel_params$a2x, inital_sel_params$b2x) * dbeta(y, inital_sel_params$a2y, inital_sel_params$b2y),
-  #   W = W * (init_sel_lambda * w1 + (init_sel_lambda - 1) * w2),
-  #   W = W / sum(W)) -> d_remain
-   
-  d_found <- sample_n(d_remain, 1, weight = W) %>%
-    mutate(found = 1)
+  t <- 1 
+  
+  if (isp == "off") {
+    
+    d_found <- sample_n(d_remain, 1, weight = W) %>%
+      mutate(found = 1)
+    
+  } else {
+    print("not yet implemented - check code")
+    # d_remain %>% mutate(
+    #   w1 = dbeta(x, inital_sel_params$a1x, inital_sel_params$b1x) * dbeta(y, inital_sel_params$a1y, inital_sel_params$b1y),
+    #   w2 = dbeta(x, inital_sel_params$a2x, inital_sel_params$b2x) * dbeta(y, inital_sel_params$a2y, inital_sel_params$b2y),
+    #   W = W * (init_sel_lambda * w1 + (init_sel_lambda - 1) * w2),
+    #   W = W / sum(W)) -> d_remain
+  }
   
   # make a note that we have found this target
   d_stim$found[d_found$id[1]] <- 1
@@ -251,52 +76,45 @@ sim_foraging_trial <- function(trl = 1,
   # remove this point from the stimuli
   d_remain <- filter(d_remain, id != d_found$id)
   
-  # Now decide if we are stopping already:
-  # this could be replaced with a more sophisticated stopping rule
+  ##############################################################################
   keep_searching <- TRUE
   
   while(keep_searching) {
     
     t <- t + 1 # we want to find the next item
     
-    # compare to previous target
-    prev_targ <- d_found$item_class[t-1]
-    match_prev = if_else(d_remain$item_class == prev_targ, 1, -1)
+    # compare to item classes to previously selected item class:
+    match_prev = if_else(d_remain$item_class == d_found$item_class[t-1], 1, -1)
     
     # calculate distances from each item to the previously select item
     # then compute the prox and direction weights for each item
     d_remain <- compute_delta_and_phi(d_remain, d_found, t,
-                                      rho_delta, abs_dir_tuning, rho_psi,
-                                      rel_proximity)
+                                      fp, adp, d0)
     
     d_remain %>% 
       mutate(
-        Wprev = W,
-        W = b * plogis(b_stick * match_prev),
-        W = W * prox * rel_dir * abs_dir_tuning) -> d_remain
+        W = log(b) + log(plogis(fp$b_s * match_prev)),
+        W = W + prox + rel_dir) -> d_remain
     
-    # new weights should be a weighted sum of old weights and current weights
-    d_remain %>% 
-      mutate(Wnew = W + b_memory * Wprev) -> d_remain
+    # add in absolute direction tuning if we are using it
+    if (class(adp) == "list") d_remain$W = d_remain$W + d_remain$abs_dir_tuning
+    
+    # normalise
+    d_remain$W = d_remain$W - matrixStats::logSumExp(d_remain$W)
     
     # if at least some items have > 0 weight, select one!
     # otherwise, quit search
-    
-    if (sum(d_remain$Wnew) > 0) {
-      
-      # normalise selection weights
-      d_remain$Wnew = d_remain$Wnew / sum(d_remain$Wnew) 
+   if (is.finite(sum(exp(d_remain$W)))) {
       
       # sample the next target
       d_found %>% add_row(
-        sample_n(d_remain, 1, weight = Wnew)) -> d_found
+        sample_n(d_remain, 1, weight = exp(W))) -> d_found
       
       d_found$found[t] <- t
       d_stim$found[d_found$id[t]] <- t
       
-      d_remain <- filter(d_remain, id != d_found$id[t])
-      
       # remove target from those that remain
+      d_remain <- filter(d_remain, id != d_found$id[t])
       
     } else {
       keep_searching <- FALSE
@@ -318,6 +136,284 @@ sim_foraging_trial <- function(trl = 1,
   return(list(stim = d_stim, found = d_found))
 }
 
+################################################################################
+# wrapper functions for simulation multiple trials and/or people
+
+sim_foraging_multiple_trials <- function(person = 1,
+                                         condition = "control",
+                                         n_trials_per_cond = 10,
+                                         sp = list(
+                                           n_item_class = 4, 
+                                           n_item_per_class = c(10, 10, 10, 10), 
+                                           item_labels = c("a", "b", "d1", "d2")),
+                                         fp = list(
+                                           b_a = 0, b_s = 0, rho_delta = 1, rho_psi = 0),
+                                         adp = "off", isp = "off",
+                                         items = NULL,
+                                         dev_output = FALSE, 
+                                         d0 = 20,
+                                         rel_proximity = FALSE) 
+{
+  
+  ##############################################################################
+  # person is the person id (useful when generating many people!)
+  # condition is a label   
+  # fp contains our four main foraging parameters:
+  # - b_a, 
+  # - b_stick
+  # - rho_delta
+  # - rho_psi
+  # adp is either "off" or contains details for abs dir behaviour
+  # isp is either "off" or contains details for initial selection
+  # items: pass in pre-generated items (not yet supported)
+  # dev_output: include simulation parameters in output
+  # d0: delta scaling to get rho_delta onto a sensible scale ~ 1
+  ##############################################################################
+  
+  # Generate a number of trials with identical sim params. 
+  trls <- 1:n_trials_per_cond
+  
+  d <- map(trls, sim_foraging_trial, 
+           fp = fp, sp = sp) 
+  
+  # rearrange the list structure
+  df <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$found) %>%
+    mutate(condition = condition,
+           condition = as_factor(condition),
+           person = person) %>%
+    relocate(person, condition)
+  
+  ds <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$stim) %>%
+    mutate(condition = condition,
+           condition = as_factor(condition),
+           person = person) %>%
+    relocate(person, condition)
+  
+  # correctly label trial and trial_p
+  ds <- fix_trial_index(ds)
+  df <- fix_trial_index(df)
+  
+  return(list(stim = ds, found = df))
+}
+
+sim_foraging_people <- function(params,
+                                rel_proximity = FALSE,
+                                filename = "sim") {
+  
+  # extract experiment parameters
+  n <- params$e$n_people
+  n_conditions <- params$e$n_conditions
+  cond_labels <- params$e$condition_labels
+  n_trials_per_cond <- params$e$n_trials_per_cond
+
+  # generate random effects
+  dpeeps <- tibble(person      = rep(1:n, n_conditions),
+                   condition   = rep(cond_labels, each = n),
+                   b_a      = rep(params$f$b_a, each = n),
+                   sd_a      = rep(params$v$b_a, each = n),
+                   b_s     = rep(params$f$b_s, each = n),
+                   sd_s  = rep(params$v$b_s, each = n),
+                   rho_delta   = rep(params$f$rho_delta, each = n),
+                   sd_delta= rep(params$v$rho_delta, each = n),
+                   rho_psi     = rep(params$f$rho_psi, each = n),
+                   sd_psi  = rep(params$v$rho_psi, each = n),)
+  
+  dpeeps <- pmap_df(dpeeps, gen_random_fx, params$s) %>%
+    arrange(person, condition)
+  
+  dpeeps %>% pmap(sim_person_condition, 
+                  stimulus_params = params$s,
+                  n_trials = n_trials_per_cond, .progress = TRUE) -> d
+  
+  # rearrange list structure
+  df <- 1:nrow(dpeeps) %>% map_df(~d[[.x]]$found) %>%
+    mutate(trial_p = trial,
+           trial = paste(as.numeric(person), as.numeric(condition), trial),
+           trial = as_factor(trial),
+           trial = as.numeric(trial))
+  
+  ds <- 1:nrow(dpeeps) %>% map_df(~d[[.x]]$stim) %>%
+    mutate(trial_p = trial,
+           trial = paste(as.numeric(person), as.numeric(condition), trial),
+           trial = as_factor(trial),
+           trial = as.numeric(trial))
+  
+  d <- list(stim = ds, found = df,
+            name = filename,
+            dp = dpeeps,
+            params = params)
+  
+  # create save folder if it doesn't yet exist
+  
+  if(!dir.exists("scratch")) {
+    dir.create("scratch")
+  }
+  
+  if(!dir.exists("scratch/data")) {
+    dir.create("scratch/data")
+  }
+  
+  saveRDS(d, paste0("scratch/data/", d$name, ".RDS"))
+  
+  return(d)
+  
+}
+
+sim_person_condition <- function(person, condition, 
+                                 b_a, b_s, rho_delta, rho_psi,
+                                 stimulus_params,
+                                 n_trials) {
+  
+  foraging_params <- list(b_a = b_a, 
+                          b_s = b_s,
+                          rho_delta = rho_delta,
+                          rho_psi = rho_psi)
+  
+  d <- sim_foraging_multiple_trials(person, condition, 
+                                    fp = foraging_params,
+                                    sp = stimulus_params,
+                                    n_trials_per_cond = n_trials)
+  
+  return(d)
+  
+}
+
+gen_random_fx <- function(person, condition,
+                          b_a, sd_a,
+                          b_s, sd_s,
+                          rho_delta, sd_delta,
+                          rho_psi, sd_psi,
+                          stimulus_params) 
+{
+  
+
+  dout <- tibble(person = person, condition = condition, 
+                 b_a = rnorm(1, b_a, sd_a),
+                 b_s = rnorm(1, b_s, sd_s),
+                 rho_delta = rnorm(1, rho_delta, sd_delta),
+                 rho_psi = rnorm(1, rho_psi, sd_psi))
+  
+  return(dout)
+}
+
+
+################################################################################
+# helper functions for simulating a trial
+
+get_stimulus <- function(sp, items, trl) {
+  
+  # set up dataframe for storing things
+  # if we have passed in `items`, use that.
+  # otherwise generate a new random stimulus
+  if (is.null(items)) {
+    
+    d_stim <- gen_stimulus(sp)
+    
+  } else {
+    
+    d_stim = items
+    
+  }
+  
+  d_stim$found = -1
+  d_stim$trial = trl
+  
+  return(d_stim)
+  
+}
+
+gen_stimulus <- function(sp) {
+  
+  n <- sum(sp$n_item_per_class)
+  
+  d_stim <- 
+    tibble(
+      id = 1:n,
+      item_class = rep(1:sp$n_item_class, sp$n_item_per_class))
+  
+  #class_lab = as_factor(rep(item_labels, n_item_per_class)))
+  
+  # generate (x, y) locations....
+  # we should make this more sophisticated
+  d_stim$x <- runif(n, 0, 1)
+  d_stim$y <- runif(n, 0, 1)
+  
+  d_stim %>% mutate(x = x - min(x),
+                    y = y - min(y),
+                    x = x/max(x),
+                    y = y/max(y)) -> d_stim
+  
+  return(d_stim)
+}
+
+compute_delta_and_phi <- function(dr, df, t, fp, adp, d0) {
+  
+  # for each item, compute - 
+  # delta: distance from the previously selected 
+  # phi: angle from the previously selected item
+  # psi: angle from t-2 selected item to previously selected item 
+  
+  dr %>% mutate(
+    delta = d0 *sqrt((df$x[t-1] - x)^2 + (df$y[t-1] - y)^2),
+    phi = 180 * atan2((y - df$y[t-1]), (x - df$x[t-1]))/pi) -> dr
+  
+  if (t > 2)
+  {
+    dr$psi <- 180 *atan2((df$y[t-1] - df$y[t-2]), (df$x[t-1] - df$x[t-2])) / pi
+  } else { 
+    dr$psi <- NA
+  }
+    
+  # psi is updated to be difference between psi and phi
+  # shift angles to positive
+  dr %>% mutate(psi = psi - phi,
+                phi = pmin(abs((phi %% 360)), abs((-phi %% 360))),
+                psi = pmin(abs((psi %% 360)), abs((-psi %% 360))),
+                psi = psi/180) -> dr
+  
+  # compute proximity of remaining targets from current target
+  dr %>% mutate(
+    prox = - fp$rho_delta * delta,
+    rel_dir = if_else(is.finite(psi), - fp$rho_psi * psi, 0)) -> dr
+  
+  if (class(adp) == "list") {
+    
+    dr %>% mutate(
+      abs_dir_tuning = compute_all_von_mises(adp$theta, adp$kappa, phi)) -> dr
+    
+  } else {
+    
+    dr %>% mutate(abs_dir_tuning = 0) -> dr
+    
+  } 
+    
+  return(dr)
+  
+}
+
+fix_trial_index <- function(dat) {
+  
+  if ("person" %in% names(dat)) {
+    
+    dat %>% mutate(
+      trial_p = trial,
+      trial = paste(as.numeric(person), as.numeric(condition), trial)) -> dat
+    
+  } else {
+    
+    dat %>% mutate(
+      trial_p = trial,
+      trial = paste(as.numeric(condition), trial)) -> dat
+  }
+  
+  dat %>% mutate(
+    trial = as_factor(trial),
+    trial = as.numeric(trial)) -> dat
+  
+  return(dat)
+  
+}
+
 check_and_rep_param <- function(p, r) {
   
   if (length(p) == 1) {
@@ -327,50 +423,6 @@ check_and_rep_param <- function(p, r) {
   return(p)
 }
 
-compute_delta_and_phi <- function(dr, df, t, pt, adt, rdt, rel_proximity) {
-  
-  
-  # for each item, compute - 
-  # delta: distance from the previously selected 
-  # phi: angle from the previously selected item
-  # psi: angle from t-2 selected item to previously selected item 
-  
-  dr %>% mutate(
-    delta = sqrt((df$x[t-1] - x)^2 + (df$y[t-1] - y)^2),
-    phi = 180 * atan2((y - df$y[t-1]), (x - df$x[t-1]))/pi) -> dr
-  
-  if (t > 2) {
-    
-    dr$psi = 180 *atan2((df$y[t-1] - df$y[t-2]), (df$x[t-1] - df$x[t-2])) / pi
-    
-  } else {
-    
-    dr$psi = NA
-  }
-  
-  # psi is updated to be difference between psi and phi
-  # shift angles to positive
-  dr %>% mutate(psi = psi - phi,
-                phi = pmin(abs((phi %% 360)), abs((-phi %% 360))),
-                psi = pmin(abs((psi %% 360)), abs((-psi %% 360))),
-                psi = psi/180) -> dr
-  
-  # convert to rel_proximity if toggle is on
-  if (rel_proximity & nrow(dr)>0 ) {
-    
-    min_delta <- min(dr$delta)
-    dr$delta <- dr$delta / min_delta
-  }
-  
-  # compute proximity of remaining targets from current target
-  dr %>% mutate(
-    prox = exp(-pt * delta),
-    rel_dir = if_else(is.finite(psi), exp(-rdt * psi), 1),
-    abs_dir_tuning = compute_all_von_mises(adt$theta, adt$kappa, phi)) -> dr
-  
-  return(dr)
-  
-}
 
 compute_all_von_mises <- function(theta, kappa, phi) {
   
@@ -395,49 +447,6 @@ compute_von_mises <- function(x, phi, theta, kappa) {
   z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
   return(z)
   
-}
-
-get_stimulus <- function(items, n, n_item_class, n_item_per_class) {
-  
-  # set up dataframe for storing things
-  # if we have passed in `items`, use that.
-  # otherwise generate a new random stimulus
-  if (is.null(items)) {
-    
-    d_stim <- gen_stimulus(n, n_item_class, n_item_per_class)
-
-  } else {
-    
-    d_stim = items
-    
-  }
-  
-  d_stim$found = -1
-  
-  return(d_stim)
-  
-}
-
-gen_stimulus <- function(n, n_item_class, n_item_per_class) {
-  
-  d_stim <- 
-    tibble(
-      id = 1:n,
-      item_class = rep(1:n_item_class, n_item_per_class))
-  
-  #class_lab = as_factor(rep(item_labels, n_item_per_class)))
-  
-  # generate (x, y) locations....
-  # we should make this more sophisticated
-  d_stim$x <- runif(n, 0, 1)
-  d_stim$y <- runif(n, 0, 1)
-  
-  d_stim %>% mutate(  x = x - min(x),
-                      y = y - min(y),
-                      x = x/max(x),
-                      y = y/max(y)) -> d_stim
-  
-  return(d_stim)
 }
 
 merge_two_simple_d <- function(d1, d2, lab) {

@@ -15,7 +15,7 @@ for (i in 1:length(datasets)){
   dataset <- datasets[i]
   print(paste0("currently processing ", dataset))
   
-  fomo_preprocess(dataset)
+  fomo_preprocess(dataset, delta0 = 20)
   
 }
 

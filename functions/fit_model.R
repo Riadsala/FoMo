@@ -53,24 +53,30 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   # load the pre-computed d_list and add required priors
   d_list <- get_list(dataset, mode, "training")
-  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver, model_path = paths$model)
+  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
   
   if (fomo_ver_str == "1_3") {
     d_list$grid_offset <- c(0, 0)
   }
   
+  print("****************************************************************************")
+  print(paste("Fitting FoMo version", fomo_ver, "to dataset", dataset_name))
+  print("****************************************************************************")
+  
   # fit the model
   m <- mod_fit$sample(data = d_list,
                   chains = 4, parallel_chains = 4, threads = 4,
-                  refresh = 10,
+                  refresh = 50,
                   iter_warmup = iter, iter_sampling = iter,
                   sig_figs = 3,
                   fixed_param = fxdp,
                   output_dir = paths$out_fit,
                   output_basename = paste(dataset_name, fomo_ver_str, sep=""))
-  
+
   # now save
   m$save_object(paste0(paths$out_fit, fomo_ver_str, ".model"))
+  
+  # m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
   
   ###########################################################################
   # now create generated quantities from fitted model
@@ -82,7 +88,9 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   
   # randomly sample some draws to calculate generated quantities for
   draws_matrix <- posterior::as_draws_matrix(m$draws())
-  idx <- sample(nrow(draws_matrix), iter_genquant)
+  idx <- sample(nrow(draws_matrix), 1) #iter_genquant
+  
+  print("computing generated quantities")
     
   p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,], 
                                         data = d_list, 
@@ -91,6 +99,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
                                         output_basename = paste(dataset_name, fomo_ver_str, sep=""))
     
   p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
+  
 
 }
 
@@ -117,6 +126,10 @@ get_paths <- function(ds) {
   # now sort out output path
   outpt_path <- paste0("scratch/models/", ds)
   # create save folder if it doesn't yet exist
+  if (!dir.exists("scratch/models/")) {
+    dir.create("scratch/models/")
+    
+  }
 
     dir.create(outpt_path)
     dir.create(paste0(outpt_path, "/fit/"))

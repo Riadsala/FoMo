@@ -6,13 +6,7 @@
 /tests/2_test_simple_models/1_test_simple_models_files
 *.png
 *.model
-/examples/3_test_old_model_old_data/3_testing_FoMO_old_datasets_cache
-/examples/1_test_old_model_old_data/scratch
-/examples/1_test_old_model_old_data/4_testing_FoMO_old_datasets_cache
-/examples/1_test_old_model_old_data/scratch
-examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
-examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
-examples/1_test_old_model_old_data/scratch/post_acc_tagu2022cog.csv
-examples/1_test_old_model_old_data/scratch/post_acc_kristjansson2014plos.csv
-*.csv
 examples/1_fit_models/.Rhistory
+/examples/1_fit_models/scratch
+/tests/1_test_data_simulation/1_testing_data_simulation_files
+/tests/1_test_data_simulation/1_testing_data_simulation_files

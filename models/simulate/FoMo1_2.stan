@@ -1,7 +1,10 @@
-/* FoMo v1.2 - multi-level
+/* 
 
-Removes rel direction (momentum):
+FoMo V1.2 (multi-level: generated quantities)
 
+This model removes relative direction (psi)
+
+Includes the core parameters:
 b_a, b_stick, rho_delta
 
 */
@@ -10,49 +13,6 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
-  vector compute_weights(
-    real u_a, real u_s, real u_delta, 
-    vector item_class, vector match_prev_item, vector delta,
-    int n, int n_targets, vector remaining_items) {
-
-    vector[n_targets] weights;
-    
-    // set the weight of each target to be its class weight
-    weights = log_inv_logit(u_a * to_vector(item_class));
-    
-    // multiply weights by stick/switch preference
-    weights += log_inv_logit(u_s * match_prev_item); 
-
-    // calculate by spatial weights
-    weights += compute_spatial_weights(
-      n, n_targets, 
-      u_delta, 
-      delta);
-        
-    // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(exp(weights), n_targets, remaining_items); 
-
-    return(weights);
-
-  }
-
-  vector compute_spatial_weights(
-    int n, int n_targets, 
-    real rho_delta,
-    vector delta) {
-
-    // computes spatial weights
-    // for FoMo1.0, this includes proximity and relative direction
-    vector[n_targets] prox_weights, reldir_weights;
-
-    // apply spatial weighting
-    prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta);
-
-    // return the dot product of the weights
-    return(prox_weights);
-
-  }
 }
 
 data {
@@ -83,6 +43,9 @@ data {
   array[N] vector<lower = 0>[n_targets] delta; // distance measures
   array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
+
+  // hyper parameters
+  real d0; // scale parameter to get rho_delta to ~ 1
 }
 
 transformed data {
@@ -130,7 +93,7 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_stick, u_delta, u_psi;
+  array[K] vector[L] u_a, u_stick, u_delta;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
@@ -173,7 +136,7 @@ generated quantities {
       z = Z[t];
       x = X[t];
 
-      weights = compute_weights(
+      weights = compute_weights_v12(
         u_a[x, z], u_stick[x, z], u_delta[x, z], 
         to_vector(item_class[t]), S[ii], delta[ii], 
         found_order[ii], n_targets, remaining_items[ii]); 
@@ -201,7 +164,7 @@ generated quantities {
     // create some variables
     vector[n_targets] weights;
     int z, x; // trial, person, and condition
-    /* we need new remaining_items and features (S, psi, delta) as
+    /* we need new remaining_items and features (S, delta) as
     these features will update dynamically as we carry out a new 
     simulated foraging trial */
     vector[n_targets] remaining_items_q;
@@ -227,10 +190,10 @@ generated quantities {
         if (ii > 1) 
         {
           S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
-          delta_q =     compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+          delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
         }
 
-        weights = compute_weights(
+        weights = compute_weights_v12(
           u_a[x, z], u_stick[x, z], u_delta[x, z], 
           to_vector(item_class[t]), S_q, delta_q, 
           found_order[ii], n_targets, remaining_items_q); 

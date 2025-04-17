@@ -51,7 +51,9 @@ plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
   
   if (!is.null(gt)) {
     
-    plt <- plt + geom_vline(xintercept = gt[[var]], linetype = 2, colour = "darkred")
+    plt <- plt + geom_vline(
+      data = gt %>% filter(parameter == var),
+      aes(xintercept = value, colour = condition), linetype = 2)
     
   }
   

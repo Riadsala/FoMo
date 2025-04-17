@@ -1,11 +1,14 @@
-/* FoMo v1.0 - multi-level
+/* 
 
-Add in absolute direction:
+FoMo V1.3 (multi-level)
 
-b_a, b_stick, rho_delta, rho_psi
-theta
+This model adds absolute direction (psi)
 
-requires input of angular offset per condition
+Includes the core parameters:
+b_a, b_stick, rho_delta, rho_psi and 
+a set of theta mixture weights
+
+kappa is passed in as a hyper parameter
 
 */
 
@@ -13,58 +16,6 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
-  vector compute_weights(
-    real u_a, real u_s, real u_delta, real u_psi, vector log_theta, real kappa,
-    vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
-    int n, int n_targets, vector remaining_items, 
-    real os, real d0) {
-
-    vector[n_targets] weights;
-    
-    // set the weight of each target to be its class weight
-    weights = log_inv_logit(u_a * to_vector(item_class));
-    
-    // multiply weights by stick/switch preference
-    weights += log_inv_logit(u_s * match_prev_item); 
-
-    // calculate by spatial weights
-    weights += compute_spatial_weights(
-      n, n_targets, os,
-      u_delta, u_psi, log_theta, kappa,
-      delta, psi, phi,
-      d0);
-        
-    // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(exp(weights), n_targets, remaining_items); 
-
-    return(weights);
-
-  }
-
-  vector compute_spatial_weights(
-    int n, int n_targets, real os,
-    real rho_delta, real rho_psi, vector log_theta, real kappa,
-    vector delta, vector psi, vector phi,
-    real d0) {
-
-    // computes spatial weights
-    // for FoMo1.0, this includes proximity and relative direction
-    vector[n_targets] prox_weights, reldir_weights, absdir_weights;
-
-    // apply spatial weighting
-    prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta, d0);
-    
-    reldir_weights = compute_reldir_weights(n, n_targets, 
-                                 rho_psi, psi);
-
-    absdir_weights = compute_absdir_weights_fixed_kappa4(n, n_targets, 
-                                 log_theta, kappa, phi, os);
-
-    // return the dot product of the weights
-    return(prox_weights + absdir_weights + reldir_weights);
-
-  }
 }
 
 
@@ -227,11 +178,11 @@ model {
     z = Z[t];
     x = X[t];
  
-    weights = compute_weights(
+    weights = compute_weights_v13(
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], psi[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii],
-      grid_offset[x], d0); 
+      grid_offset[x]); 
 
     // get likelihood of item selection
     target += log(weights[Y[ii]]);

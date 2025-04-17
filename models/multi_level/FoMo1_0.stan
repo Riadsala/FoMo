@@ -1,8 +1,12 @@
-/* FoMo v1.0 - multi-level
+/* 
+
+FoMo V1.0 (multi-level)
+
+This is the new implementation of the model from 
+Clarke et al (2022), Comp Bio.
 
 Includes the core parameters:
-
-b_a, b_stick, rho_delta, rho_psi
+b_a, b_s, rho_delta, rho_psi
 
 */
 
@@ -10,55 +14,6 @@ functions {
 
   #include /../include/FoMo_functions.stan
 
-  vector compute_weights(
-    real u_a, real u_s, real u_delta, real u_psi,
-    vector item_class, vector match_prev_item, vector delta, vector psi,
-    int n, int n_targets, vector remaining_items,
-    real d0) {
-
-    vector[n_targets] weights;
-    
-    // set the weight of each target to be its class weight
-    weights = log_inv_logit(u_a * to_vector(item_class));
-    
-    // multiply weights by stick/switch preference
-    weights += log_inv_logit(u_s * match_prev_item); 
-
-    // calculate by spatial weights
-    weights += compute_spatial_weights(
-      n, n_targets, 
-      u_delta, u_psi, 
-      delta, psi,
-      d0);
-        
-    // remove already-selected items, and standarise to sum = 1 
-    weights = standarise_weights(exp(weights), n_targets, remaining_items); 
-
-    return(weights);
-
-  }
-
-  vector compute_spatial_weights(
-    int n, int n_targets, 
-    real rho_delta, real rho_psi, 
-    vector delta, vector psi,
-    real d0) {
-
-    // computes spatial weights
-    // for FoMo1.0, this includes proximity and relative direction
-    vector[n_targets] prox_weights, reldir_weights;
-
-    // apply spatial weighting
-    prox_weights   = compute_prox_weights(n, n_targets, 
-                                 rho_delta, delta, d0);
-    
-    reldir_weights = compute_reldir_weights(n, n_targets, 
-                                 rho_psi, psi);
-
-    // return the dot product of the weights
-    return(prox_weights + reldir_weights);
-
-  }
 }
 
 data {
@@ -94,15 +49,12 @@ data {
   // suggested values given in comments
   real prior_mu_b_a; // = 0, prior for salience of item class A compared to B
   real prior_sd_b_a; // = 1, uncertainty for b_a prior
-  real prior_mu_b_stick; // = 0, prior for b_s, item class sticking v switching
-  real prior_sd_b_stick; // = 1, uncertainty for b_s prior
+  real prior_mu_b_s; // = 0, prior for b_s, item class sticking v switching
+  real prior_sd_b_s; // = 1, uncertainty for b_s prior
   real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
   real prior_mu_rho_psi; // = 0, "momentum"
   real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
-
-  // hyper parameters
-  real d0; // scale parameter to get rho_delta to ~ 1
 
 }
 
@@ -122,7 +74,7 @@ parameters {
   // fixed effects
   ////////////////////////////////////
   array[K] real b_a; // weights for class A compared to B  
-  array[K] real b_stick; // stick-switch rates 
+  array[K] real b_s; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
   array[K] real rho_psi; // direction tuning
 
@@ -154,7 +106,7 @@ transformed parameters {
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[4*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_stick[kk]   + u[4*(kk-1)+2]);
+    u_stick[kk] = to_vector(b_s[kk]       + u[4*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[4*(kk-1)+3]);
     u_psi[kk]   = to_vector(rho_psi[kk]   + u[4*(kk-1)+4]);
   }
@@ -168,13 +120,13 @@ model {
 
   // priors for random effects
   sigma_u ~ exponential(1);
-  L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
+  L_u ~ lkj_corr_cholesky(2); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
 
   // priors for fixed effects
   for (kk in 1:K) {
     target += normal_lpdf(b_a[kk]       | prior_mu_b_a, prior_sd_b_a);
-    target += normal_lpdf(b_stick[kk]   | prior_mu_b_stick, prior_sd_b_stick);
+    target += normal_lpdf(b_s[kk]       | prior_mu_b_s, prior_sd_b_s);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
     target += normal_lpdf(rho_psi[kk]   | prior_mu_rho_psi, prior_sd_rho_psi);
   }
@@ -192,14 +144,13 @@ model {
     z = Z[t];
     x = X[t];
  
-    weights = compute_weights(
+    weights = compute_weights_v10(
       u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
       to_vector(item_class[t]), S[ii], delta[ii], psi[ii],
-      found_order[ii], n_targets, remaining_items[ii],
-      d0); 
+      found_order[ii], n_targets, remaining_items[ii]); 
 
     // get likelihood of item selection
-    target += log(weights[Y[ii]]);
+    target += weights[Y[ii]];
    
   }
 }
@@ -207,7 +158,7 @@ model {
 generated quantities {
   // here we  can output our prior distritions
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
+  real prior_b_s = normal_rng(prior_mu_b_s, prior_sd_b_s);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
   real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 }

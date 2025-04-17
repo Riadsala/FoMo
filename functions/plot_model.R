@@ -188,18 +188,22 @@ plot_model_accuracy <- function(acc) {
 plot_model_fixed <- function(post, gt=NULL, clist=NULL, nrow = 1) {
   
   # sort out groudtruth params if passed in as sim params
-  if ("foraging" %in% names(gt)) {
+  if ("f" %in% names(gt)) {
     
-    gt <- gt$foraging
+    gt <- gt$f
     
-    gt <- list(b_a = qlogis(filter(gt, param == "bA")$mu[[1]][1]),
-               b_stick = filter(gt, param == "bS")$mu[[1]],
-               rho_delta = filter(gt, param == "rho_delta")$mu[[1]],
-               rho_psi = filter(gt, param == "rho_psi")$mu[[1]])
+    gt <- list(b_a = params$f$b_a,
+               b_s = params$f$b_s,
+               rho_delta = params$f$rho_delta,
+               rho_psi = params$f$rho_psi)
     
     print(gt)
     
   }
+  
+  gt %>% as_tibble() %>%
+    mutate(condition = levels(post$fixed$condition)) %>%
+    pivot_longer(-condition, names_to = "parameter") -> gt
   
   my_widths <- c(0.53, 0.97)
   
