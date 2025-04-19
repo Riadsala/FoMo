@@ -7,8 +7,8 @@ source("../../functions/prep_data.R")
 dir.create("scratch")
 dir.create("scratch/d_list/")
 
+datasets <- c("hughes2024rsos", "kristjansson2014plos", "tagu2022cog")
 
-datasets <- c("hughes2024rsos", "clarke2022qjep", "kristjansson2014plos", "tagu2022cog")
 
 for (i in 1:length(datasets)){
   

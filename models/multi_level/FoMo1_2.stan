@@ -47,8 +47,8 @@ data {
   // suggested values given in comments
   real prior_mu_b_a; // = 0, prior for salience of item class A compared to B
   real prior_sd_b_a; // = 1, uncertainty for b_a prior
-  real prior_mu_b_stick; // = 0, prior for b_s, item class sticking v switching
-  real prior_sd_b_stick; // = 1, uncertainty for b_s prior
+  real prior_mu_b_s; // = 0, prior for b_s, item class sticking v switching
+  real prior_sd_b_s; // = 1, uncertainty for b_s prior
   real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
 }
@@ -69,7 +69,7 @@ parameters {
   // fixed effects
   ////////////////////////////////////
   array[K] real b_a; // weights for class A compared to B  
-  array[K] real b_stick; // stick-switch rates 
+  array[K] real b_s; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
 
   ///////////////////////////////
@@ -98,11 +98,11 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_stick, u_delta
+  array[K] vector[L] u_a, u_stick, u_delta;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_stick[kk]   + u[3*(kk-1)+2]);
+    u_stick[kk] = to_vector(b_s[kk]   + u[3*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
   }
 }
@@ -121,7 +121,7 @@ model {
   // priors for fixed effects
   for (kk in 1:K) {
     target += normal_lpdf(b_a[kk]       | prior_mu_b_a, prior_sd_b_a);
-    target += normal_lpdf(b_stick[kk]   | prior_mu_b_stick, prior_sd_b_stick);
+    target += normal_lpdf(b_s[kk]   | prior_mu_b_s, prior_sd_b_s);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
     }
 
@@ -152,6 +152,6 @@ model {
 generated quantities {
   // here we  can output our prior distritions
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_stick = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
+  real prior_b_s = normal_rng(prior_mu_b_s, prior_sd_b_s);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
 }
