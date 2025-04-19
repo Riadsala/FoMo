@@ -81,25 +81,25 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   ###########################################################################
   # now create generated quantities from fitted model
 
-  # do we need to load in a new d_list for testing?
-  if (mode %in%  c("split", "traintest")) {
-    d_list <- get_list(dataset, mode, "testing")
-  }
-  
-  # randomly sample some draws to calculate generated quantities for
-  draws_matrix <- posterior::as_draws_matrix(m$draws())
-  idx <- sample(nrow(draws_matrix), 1) #iter_genquant
-  
-  print("computing generated quantities")
-    
-  p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,], 
-                                        data = d_list, 
-                                        seed = 123,
-                                        output_dir = paths$out_sim,
-                                        output_basename = paste(dataset_name, fomo_ver_str, sep=""))
-    
-  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
-  
+  # # do we need to load in a new d_list for testing?
+  # if (mode %in%  c("split", "traintest")) {
+  #   d_list <- get_list(dataset, mode, "testing")
+  # }
+  # 
+  # # randomly sample some draws to calculate generated quantities for
+  # draws_matrix <- posterior::as_draws_matrix(m$draws())
+  # idx <- sample(nrow(draws_matrix), 1) #iter_genquant
+  # 
+  # print("computing generated quantities")
+  #   
+  # p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,], 
+  #                                       data = d_list, 
+  #                                       seed = 123,
+  #                                       output_dir = paths$out_sim,
+  #                                       output_basename = paste(dataset_name, fomo_ver_str, sep=""))
+  #   
+  # p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
+  # 
 
 }
 
