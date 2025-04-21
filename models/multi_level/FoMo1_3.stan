@@ -185,7 +185,7 @@ model {
       grid_offset[x]); 
 
     // get likelihood of item selection
-    target += log(weights[Y[ii]]);
+    target += weights[Y[ii]];
    
   }
 }

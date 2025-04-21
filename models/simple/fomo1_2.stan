@@ -5,7 +5,7 @@ FoMo V1.2 (single-level)
 This model removes relative direction (psi)
 
 Includes the core parameters:
-b_a, b_stick, rho_delta
+b_a, b_s, rho_delta
 
 */
 
@@ -44,8 +44,8 @@ data {
   // read in priors
   real prior_mu_b_a; // param for class weight prior
   real prior_sd_b_a; // param for class weight prior
-  real prior_mu_b_stick; // prior for sd for bS
-  real prior_sd_b_stick; // prior for sd for bS
+  real prior_mu_b_s; // prior for sd for bS
+  real prior_sd_b_s; // prior for sd for bS
   real prior_mu_rho_delta;
   real prior_sd_rho_delta;
 
@@ -80,7 +80,7 @@ model {
   for (kk in 1:K) {
     // priors for fixed effects
     target += normal_lpdf(b_a[kk]       | 0, prior_sd_b_a);
-    target += normal_lpdf(b_s[kk]       | 0, prior_sd_b_stick);
+    target += normal_lpdf(b_s[kk]       | 0, prior_sd_b_s);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
   }
 
@@ -111,7 +111,7 @@ generated quantities {
   
   // here we  can output our prior distritions
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_s = normal_rng(prior_mu_b_stick, prior_sd_b_stick);
+  real prior_b_s = normal_rng(prior_mu_b_s, prior_sd_b_s);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
 
 }

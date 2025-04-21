@@ -12,7 +12,6 @@ kappa is passed in as a hyper parameter
 
 */
 
-
 functions {
 
   #include /../include/FoMo_functions.stan

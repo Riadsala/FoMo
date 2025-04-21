@@ -46,7 +46,7 @@ d <- sim_foraging_multiple_trials(person = 1,
 # prep data
 ######################################################################
 
-modelver <- "1.0"
+modelver <- "1.2"
 modelver_str <- str_replace(modelver, "\\.", "_" )
 
 dl <- prep_data_for_stan(d)

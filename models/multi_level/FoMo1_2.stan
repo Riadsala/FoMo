@@ -144,7 +144,7 @@ model {
       found_order[ii], n_targets, remaining_items[ii]); 
 
     // get likelihood of item selection
-    target += log(weights[Y[ii]]);
+    target += weights[Y[ii]];
    
   }
 }

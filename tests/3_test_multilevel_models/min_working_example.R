@@ -48,10 +48,10 @@ d <- sim_foraging_people(params)
 ######################################################################
 
 dl <- prep_data_for_stan(d)
-dl <- add_priors_to_d_list(dl, modelver = "1.0")
+dl <- add_priors_to_d_list(dl, modelver = "1.2")
 
 iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan",
+mod <- cmdstan_model("../../models/multi_level/FoMo1_2.stan",
                      cpp_options = list(stan_threads = TRUE))
 
 m <- mod$sample(data = dl, 
