@@ -2,7 +2,7 @@ library(cmdstanr)
 
 
 fit_model <- function(dataset, fomo_ver, mode = "all",
-                      iter = 1000,) {
+                      iter = 1000) {
   
   #######################################################################
   # wrapper function for loading d_list, fitting model, training

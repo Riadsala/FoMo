@@ -5,7 +5,7 @@ FoMo V1.2 (multi-level: generated quantities)
 This model removes relative direction (psi)
 
 Includes the core parameters:
-b_a, b_stick, rho_delta
+b_a, b_s, rho_delta
 
 */
 
@@ -64,7 +64,7 @@ parameters {
   // fixed effects
   ////////////////////////////////////
   array[K] real b_a; // weights for class A compared to B  
-  array[K] real b_stick; // stick-switch rates 
+  array[K] real b_s; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
 
   ///////////////////////////////
@@ -97,7 +97,7 @@ transformed parameters {
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_stick[kk]   + u[3*(kk-1)+2]);
+    u_stick[kk] = to_vector(b_s[kk]   + u[3*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
   }
 }
