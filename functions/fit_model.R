@@ -2,18 +2,16 @@ library(cmdstanr)
 
 
 fit_model <- function(dataset, fomo_ver, mode = "all",
-                      iter = 1000, iter_genquant = 10) {
+                      iter = 1000,) {
   
   #######################################################################
-  # wrapper function for loading d_list, fitting model, train, test etc. 
+  # wrapper function for loading d_list, fitting model, training
   
   # - dataset should be either a label, or a list containing dataset$name
   # - mode = "all" means that training and testing will be be done on all 
   # the data. "split" or "traintest" means that training and testing 
   # take place on separate partitions of the data
   # - iter = number of iterations during model fitting
-  # - iter_genquant = number of posterior prediction/simulation samples
-  # - required
   #######################################################################
   
   #######################################################################
@@ -37,10 +35,9 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   # Change 1.x to 1_x if required
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   
-  # load the two stan files
+  # load the stan file
   mod_fit <- cmdstan_model(paste0(paths$model, "FoMo", fomo_ver_str, ".stan"))
-  mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
-  
+
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
     fxdp = TRUE
@@ -75,33 +72,86 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 
   # now save
   m$save_object(paste0(paths$out_fit, fomo_ver_str, ".model"))
+
+}
+
+
+
+gen_quant <- function(dataset, fomo_ver, mode = "all",
+                      iter_genquant = 10) {
   
-  # m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
+  #######################################################################
+  # wrapper function for geneating quantities (predictions)
+  #######################################################################
+  
+  #######################################################################
+  # getting setup etc.
+  
+  # check that if dataset is a list, did we provide a name?
+  if (class(dataset) == "list") {
+    if (is.null(dataset$name)) {
+      print("ERROR: please provide a dataset name in d")
+      return()
+    }
+  }
+  
+  # get dataset name
+  dataset_name <- get_dataset_name(dataset)
+  
+  # get filepath for the stan files for fitting multi-level model 
+  # for for simulating new data
+  paths <- get_paths(dataset_name)
+  
+  # Change 1.x to 1_x if required
+  fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
+  
+  # load the stan file
+  mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
+  
+  # check if we are carrying out a prior model only
+  if (fomo_ver_str == "0_0") {
+    fxdp = TRUE
+  } else {
+    fxdp = FALSE
+  }
+  
+ 
+  # load data and model
+  
+  # load the pre-computed d_list and add required priors
+  d_list <- get_list(dataset, mode, "training")
+  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+  
+  if (fomo_ver_str == "1_3") {
+    d_list$grid_offset <- c(0, 0)
+  }
+  
+ m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
   
   ###########################################################################
   # now create generated quantities from fitted model
+  
+  # do we need to load in a new d_list for testing?
+  if (mode %in%  c("split", "traintest")) {
+    d_list <- get_list(dataset, mode, "testing")
+  }
 
-  # # do we need to load in a new d_list for testing?
-  # if (mode %in%  c("split", "traintest")) {
-  #   d_list <- get_list(dataset, mode, "testing")
-  # }
-  # 
-  # # randomly sample some draws to calculate generated quantities for
-  # draws_matrix <- posterior::as_draws_matrix(m$draws())
-  # idx <- sample(nrow(draws_matrix), 1) #iter_genquant
-  # 
-  # print("computing generated quantities")
-  #   
-  # p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,], 
-  #                                       data = d_list, 
-  #                                       seed = 123,
-  #                                       output_dir = paths$out_sim,
-  #                                       output_basename = paste(dataset_name, fomo_ver_str, sep=""))
-  #   
-  # p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
-  # 
+  # randomly sample some draws to calculate generated quantities for
+  draws_matrix <- posterior::as_draws_matrix(m$draws())
+  idx <- sample(nrow(draws_matrix), 1) #iter_genquant
+
+  print("computing generated quantities")
+
+  p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
+                                        data = d_list,
+                                        seed = 123,
+                                        output_dir = paths$out_sim,
+                                        output_basename = paste(dataset_name, fomo_ver_str, sep=""))
+
+  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
 
 }
+
 
 get_paths <- function(ds) {
   
