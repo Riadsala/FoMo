@@ -174,7 +174,8 @@ sim_foraging_multiple_trials <- function(person = 1,
   trls <- 1:n_trials_per_cond
   
   d <- map(trls, sim_foraging_trial, 
-           fp = fp, sp = sp, adp = adp) 
+           fp = fp, sp = sp, adp = adp,
+           dev_output = dev_output) 
   
   # rearrange the list structure
   df <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$found) %>%
@@ -355,11 +356,11 @@ compute_delta_and_phi <- function(dr, df, t, fp, adp, d0) {
   
   dr %>% mutate(
     delta = d0 *sqrt((df$x[t-1] - x)^2 + (df$y[t-1] - y)^2),
-    phi = 180 * atan2((y - df$y[t-1]), (x - df$x[t-1]))/pi) -> dr
+    phi = atan2((y - df$y[t-1]), (x - df$x[t-1]))) -> dr
   
   if (t > 2)
   {
-    dr$psi <- 180 *atan2((df$y[t-1] - df$y[t-2]), (df$x[t-1] - df$x[t-2])) / pi
+    dr$psi <- atan2((df$y[t-1] - df$y[t-2]), (df$x[t-1] - df$x[t-2]))
   } else { 
     dr$psi <- NA
   }
@@ -367,9 +368,8 @@ compute_delta_and_phi <- function(dr, df, t, fp, adp, d0) {
   # psi is updated to be difference between psi and phi
   # shift angles to positive
   dr %>% mutate(psi = psi - phi,
-                phi = pmin(abs((phi %% 360)), abs((-phi %% 360))),
-                psi = pmin(abs((psi %% 360)), abs((-psi %% 360))),
-                psi = psi/180) -> dr
+                psi = pmin(abs((psi %% 2*pi)), abs((-psi %% 2*pi))),
+                psi = psi/pi) -> dr
   
   # compute proximity of remaining targets from current target
   dr %>% mutate(
@@ -425,11 +425,8 @@ check_and_rep_param <- function(p, r) {
 
 compute_all_von_mises <- function(theta, kappa, phi) {
   
-  # convert from degrees to radians
-  phi <- pi*phi/180
-  
   # normalise theta weights
- # theta <- theta/(sum(theta) + 1)
+  # theta <- theta/(sum(theta) + 1)
   
   z <- compute_von_mises(0,      phi, theta[1], kappa[1]) + 
        compute_von_mises(pi/2,   phi, theta[2], kappa[2]) +
