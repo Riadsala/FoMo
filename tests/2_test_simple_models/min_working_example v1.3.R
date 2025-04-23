@@ -73,7 +73,8 @@ dl <- add_priors_to_d_list(dl, modelver = modelver)
 ######################################################################
 
 iter = 500
-mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"))
+mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"),
+                     force = T)
 m <- mod$sample(data = dl, 
                 iter_warmup  = iter, iter_sampling = iter)
 

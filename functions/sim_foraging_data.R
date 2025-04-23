@@ -423,7 +423,6 @@ check_and_rep_param <- function(p, r) {
   return(p)
 }
 
-
 compute_all_von_mises <- function(theta, kappa, phi) {
   
   # convert from degrees to radians
@@ -432,7 +431,7 @@ compute_all_von_mises <- function(theta, kappa, phi) {
   # normalise theta weights
  # theta <- theta/(sum(theta) + 1)
   
-  z <- compute_von_mises(0,   phi, theta[1], kappa[1]) + 
+  z <- compute_von_mises(0,      phi, theta[1], kappa[1]) + 
        compute_von_mises(pi/2,   phi, theta[2], kappa[2]) +
        compute_von_mises(pi,     phi, theta[3], kappa[3]) +
        compute_von_mises(3*pi/2, phi, theta[4], kappa[4]) +
@@ -442,9 +441,9 @@ compute_all_von_mises <- function(theta, kappa, phi) {
   
 }
 
-compute_von_mises <- function(x, phi, theta, kappa) {
+compute_von_mises <- function(mu, phi, theta, kappa) {
   
-  z <- theta * exp(kappa * cos(phi-x)) / (2*pi*besselI(kappa,0))
+  z <- theta * exp(kappa * cos(phi-mu)) / (2*pi*besselI(kappa,0))
   return(z)
   
 }
