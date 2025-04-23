@@ -14,7 +14,6 @@ source("../../functions/plot_model.R")
 source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
-source("../../functions/compute_summary_stats.R")
 
 options(mc.cores = 4)
 
@@ -24,7 +23,7 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 # lets simulate some data - this is for the TEST dataset
 ######################################################################
-n_trials_per_cond <- 50
+n_trials_per_cond <- 25
 
 stimuli_params <- list(
   n_item_class = 4,
@@ -34,17 +33,18 @@ stimuli_params <- list(
 foraging_params <- list(
   b_a = 0.5, 
   b_s = 1, 
-  rho_delta = 1,
-  rho_psi = -0.5)
+  rho_delta = 0,
+  rho_psi = 0)
 
 absdir_params = list(
-  kappa = rep(20, 4), theta = c(25, 0, 25, 0))
+  kappa = rep(25, 4), theta = c(10, 1, 2, 1))
 
 # plot absolute tuning curve
 d <- tibble(phi = seq(1, 360),
             z = compute_all_von_mises(phi=phi, absdir_params$theta, absdir_params$kappa))
 
 ggplot(d, aes(phi, z)) + geom_path()
+
 
 # simulate data
 d <- sim_foraging_multiple_trials(person = 1, 
@@ -56,12 +56,7 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   isp = "off")
 
 # check empirical distribution
-iisv <- get_iisv_over_trials(d$found)
-
-iisv %>% ggplot(aes(theta)) + geom_histogram()
-
 plot_a_trial(d$stim, d$found, 1)
-
 
 ######################################################################
 # prep data
@@ -78,8 +73,7 @@ dl <- add_priors_to_d_list(dl, modelver = modelver)
 ######################################################################
 
 iter = 500
-mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"),
-                     force = T)
+mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"))
 m <- mod$sample(data = dl, 
                 iter_warmup  = iter, iter_sampling = iter)
 
@@ -96,7 +90,7 @@ plot_model_fixed(post, foraging_params)
 # plot directional component
 plot_model_theta(post)
 
-post$theta %>% ggplot(aes(comp, (theta))) +
+post$theta %>% ggplot(aes(comp, log(theta))) +
   stat_interval()
 ######################################################################
 # diagnostics

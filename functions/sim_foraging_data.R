@@ -174,7 +174,7 @@ sim_foraging_multiple_trials <- function(person = 1,
   trls <- 1:n_trials_per_cond
   
   d <- map(trls, sim_foraging_trial, 
-           fp = fp, sp = sp) 
+           fp = fp, sp = sp, adp = adp) 
   
   # rearrange the list structure
   df <- 1:n_trials_per_cond %>% map_df(~d[[.x]]$found) %>%
