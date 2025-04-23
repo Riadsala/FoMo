@@ -23,27 +23,29 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 # lets simulate some data - this is for the TEST dataset
 ######################################################################
-n_trials_per_cond <- 25
+n_trials_per_cond <- 10
+n_items_per_class <- 14
 
 stimuli_params <- list(
   n_item_class = 4,
-  n_item_per_class = c(20, 20, 10, 10), 
+  n_item_per_class = c(n_items_per_class, n_items_per_class, n_items_per_class, n_items_per_class), 
   item_labels = c("a", "b", "d1", "d2"))
 
 foraging_params <- list(
   b_a = 0.5, 
   b_s = 1, 
   rho_delta = 1,
-  rho_psi = -0.5)
+  rho_psi = 0)
 
 absdir_params = list(
-  kappa = rep(15, 4), theta = c(10, 1, 5, 1))
+  kappa = rep(25, 4), theta = c(5, 3, 5, 3))
 
-# plot absolute tuning curve
-d <- tibble(phi = seq(1, 360),
-            z = compute_all_von_mises(phi=phi, absdir_params$theta, absdir_params$kappa))
+# # plot absolute tuning curve
+# d <- tibble(phi = seq(0, 2*pi, 0.01),
+#             z = compute_all_von_mises(phi=phi, absdir_params$theta, absdir_params$kappa))
+# 
+# ggplot(d, aes(phi, z)) + geom_path()
 
-ggplot(d, aes(phi, z)) + geom_path()
 
 # simulate data
 d <- sim_foraging_multiple_trials(person = 1, 
@@ -52,11 +54,11 @@ d <- sim_foraging_multiple_trials(person = 1,
                                   sp = stimuli_params,
                                   fp = foraging_params,
                                   adp = absdir_params, 
-                                  isp = "off")
+                                  isp = "off",
+                                  dev_output = TRUE)
 
 # check empirical distribution
-
-
+plot_a_trial(d$stim, d$found, 1, segLabel = "phi")
 
 ######################################################################
 # prep data

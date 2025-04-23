@@ -156,6 +156,7 @@ prep_data_for_stan <- function(d, d0 = 20) {
   
   # pre-compute direction and distance data
   spatial <- compute_inter_item_directions_and_distances2(df, ds)
+
   
   # pre-compute relative direction data
   rel_direction <- compute_inter_sel_direction(Y, df, ds) 
@@ -221,21 +222,17 @@ compute_inter_item_directions_and_distances2 <- function(df, ds) {
   
   # compute current heading
   df %>%
-    mutate(x0 = lag(x), y0 = lag(y),
-           phi = atan2(y-y0, x-x0)) %>%
-    select(trial, found, x, y, phi) %>%
-    mutate(x = lag(x), y = lag(y), phi = lag(phi)) %>%
+    mutate(x0 = lag(x), y0 = lag(y)) %>%
+    select(trial, found, x="x0", y="y0") %>%
     pivot_longer(-c(trial, found), names_to = "dim",  values_to = "selected") %>%
     mutate(selected = if_else(found == 1, NA, selected)) -> df
   
   # phi0 <- df %>% filter(dim == "phi") %>%
   #   select(trial, found, phi0 = selected)
   
-  df %>% filter(dim != "phi") -> df
-  
   full_join(df, ds, by = join_by(trial, dim)) %>%
     pivot_longer(-c(trial, found, dim, selected), names_to = "id") %>%
-    mutate(diff = selected - value, .keep = "unused") %>%
+    mutate(diff = value - selected, .keep = "unused") %>%
     pivot_wider(names_from = "dim", values_from = "diff") %>%
     mutate(delta = if_else(found == 1, 0, sqrt(x^2 + y^2)),
            phi = if_else(found == 1, 0, atan2(y, x))) %>%
