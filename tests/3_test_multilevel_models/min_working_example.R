@@ -5,6 +5,7 @@ source("../../functions/sim_foraging_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/prep_data.R")
 source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
 
 options(mc.cores = 8)
 
@@ -21,9 +22,9 @@ stimuli_params <- list(n_item_class = 4,
                        n_item_per_class = c(20, 20, 10, 10), 
                        item_labels = c("a", "b", "d1", "d2"))
 
-foraging_params <- list(b_a = c(0, 0.5), 
+foraging_params <- list(b_a = c(0, 0.25), 
                         b_s = c(0.5, 2.5), 
-                        rho_delta = c(1.5, 1),
+                        rho_delta = c(1, 0.8),
                         rho_psi = c(-0.5, 0.5))
 
 variance_params <- list(b_a = c(0.1, 0.1), 
@@ -31,7 +32,9 @@ variance_params <- list(b_a = c(0.1, 0.1),
                         rho_delta = c(0.1, 0.1),
                         rho_psi = c(0.1, 0.1))
 
-absdir_params <- "off"
+absdir_params <- list(
+  kappa = rep(20, 4), theta = c(5, 1, 5, 1))
+
 initsel_params <- "off"
 
 params <- list(e = experiment_params,
@@ -43,15 +46,17 @@ params <- list(e = experiment_params,
 
 d <- sim_foraging_people(params) 
 
+plot_a_trial(d$stim, d$found, 1)
+
 ######################################################################
 # fit model
 ######################################################################
 
 dl <- prep_data_for_stan(d)
-dl <- add_priors_to_d_list(dl, modelver = "1.2")
+dl <- add_priors_to_d_list(dl, modelver = "1.3")
 
 iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_2.stan",
+mod <- cmdstan_model("../../models/multi_level/FoMo1_3.stan",
                      cpp_options = list(stan_threads = TRUE))
 
 m <- mod$sample(data = dl, 
@@ -68,5 +73,7 @@ m$summary()
 
 post <- extract_post(m, d)
 plot_model_fixed(post, gt = params)
+
+plot_model_theta(post)
 
 bayesplot::mcmc_trace(m$draws(), par = "lp__")
