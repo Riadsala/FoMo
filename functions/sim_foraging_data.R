@@ -224,6 +224,7 @@ sim_foraging_people <- function(params,
   
   dpeeps %>% pmap(sim_person_condition, 
                   stimulus_params = params$s,
+                  params$a,
                   n_trials = n_trials_per_cond, .progress = TRUE) -> d
   
   # rearrange list structure
@@ -263,6 +264,7 @@ sim_foraging_people <- function(params,
 sim_person_condition <- function(person, condition, 
                                  b_a, b_s, rho_delta, rho_psi,
                                  stimulus_params,
+                                 adp,
                                  n_trials) {
   
   foraging_params <- list(b_a = b_a, 
@@ -273,6 +275,7 @@ sim_person_condition <- function(person, condition,
   d <- sim_foraging_multiple_trials(person, condition, 
                                     fp = foraging_params,
                                     sp = stimulus_params,
+                                    adp = adp,
                                     n_trials_per_cond = n_trials)
   
   return(d)
