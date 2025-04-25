@@ -16,10 +16,10 @@ options(mc.cores = 8)
 experiment_params <- list(n_people = 8, 
                           n_conditions = 2,
                           condition_labels = c("A", "B"),
-                          n_trials_per_cond = 10)
+                          n_trials_per_cond = 5)
 
 stimuli_params <- list(n_item_class = 4,
-                       n_item_per_class = c(20, 20, 10, 10), 
+                       n_item_per_class = c(10, 10, 10, 10), 
                        item_labels = c("a", "b", "d1", "d2"))
 
 foraging_params <- list(b_a = c(0, 0.25), 
@@ -73,6 +73,8 @@ m$summary()
 
 post <- extract_post(m, d)
 plot_model_fixed(post, gt = params)
+
+plot_model_random(post)
 
 plot_model_theta(post)
 
