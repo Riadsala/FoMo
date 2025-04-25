@@ -171,8 +171,8 @@ generated quantities {
         found_order[ii], n_targets, remaining_items[ii],
         grid_offset[x]); 
 
-      P[ii] = categorical_rng(weights);
-      log_lik[ii] = log(weights[Y[ii]]);
+      P[ii] = categorical_rng(exp(weights));
+      log_lik[ii] = weights[Y[ii]];
 
     }
   }
@@ -234,7 +234,7 @@ generated quantities {
           grid_offset[x]); 
 
         // sample an item to select
-        Q[t, ii] = categorical_rng(weights);
+        Q[t, ii] = categorical_rng(exp(weights));
 
         // update remaining_items_q
         remaining_items_q[Q[t, ii]] = 0;
