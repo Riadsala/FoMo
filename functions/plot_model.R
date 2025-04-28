@@ -57,17 +57,17 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
     
     folder <- paste0(scratch_folder, "/post/", ds, "/")
     
-    acc1 <- readRDS(paste0(folder, "pred_train", v1, ".rds"))$itemwise %>%
+    acc1 <- readRDS(paste0(folder, "pred_", v1, ".rds"))$itemwise %>%
       mutate(version = v1) %>%
-      filter(found > 1, found < 40, split == "testing") %>%
+      filter(found > 1, found < 40) %>%
       group_by(version, person, condition, .draw) %>%
       summarise(accuracy = mean(model_correct),
                 .groups = "drop_last") %>%
       median_hdci(accuracy)
     
-    acc2 <- readRDS(paste0(folder, "pred_train", v2, ".rds"))$itemwise %>%
+    acc2 <- readRDS(paste0(folder, "pred_", v2, ".rds"))$itemwise %>%
       mutate(version = v2) %>%
-      filter(found > 1, found < 40, split == "testing") %>%
+      filter(found > 1, found < 40) %>%
       group_by(version, person, condition, .draw) %>%
       summarise(accuracy = mean(model_correct),
                 .groups = "drop_last") %>%
@@ -109,7 +109,7 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
   
 }
 
-plot_models_accuracy <- function(ds, scratch_folder = "scratch") {
+plot_models_accuracy <- function(ds, scratch_folder = "1_fit_models/scratch") {
   
   # function to compare accuracy over models on the same dataset
   # ds is a dataset label
@@ -117,35 +117,27 @@ plot_models_accuracy <- function(ds, scratch_folder = "scratch") {
   
   # find list of models
   files <- dir(paste0(scratch_folder, "/post/", ds))
-  files <- files[str_detect(files,"acc")]
+  files <- files[str_detect(files,"pred")]
   
   d <- tibble()
   
-  my_cols <- cols(
-    split = col_character(),
-    condition = col_character(),
-    found = col_double(),
-    .draw = col_double(),
-    accuracy = col_double()
-  )
   
   for (ff in files) {
     
-    a <- read_csv(paste0(scratch_folder, "/post/", ds, "/", ff),
-                  col_types = my_cols)
-    a$model_ver <- str_extract(ff, "[0-1]*_[0-9]")
+    a <- readRDS(paste0(scratch_folder, "/post/", ds, "/", ff))
     
-    d <- bind_rows(d, a)
+    a$itemwise$model_ver <- a[[4]]
+    
+    d <- bind_rows(d, a$itemwise)
     
   }
   
   # create our plot
   d %>% 
-    mutate(split = fct_relevel(split, "training")) %>%
-    group_by(model_ver, split, condition, .draw) %>%
-    summarise(accuracy = mean(accuracy)) %>%
-    ggplot(aes(model_ver, accuracy, colour = split)) +
-    stat_interval(alpha = 0.5, position = position_dodge(0.3), .width = c(0.53, 0.97)) + 
+    group_by(model_ver, condition, .draw) %>%
+    summarise(accuracy = mean(model_correct)) %>%
+    ggplot(aes(model_ver, accuracy)) +
+    geom_col() + 
     facet_wrap(~condition)
   
 }

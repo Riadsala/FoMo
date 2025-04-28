@@ -11,7 +11,6 @@ source("../functions/compute_summary_stats.R")
 source("../functions/post_functions.R")
 source("../functions/plot_model.R")
 
-
 options(mc.cores = 1, digits = 2)
 
 # set global ggplot theme
