@@ -10,10 +10,10 @@ source("../../functions/plot_data.R")
 options(mc.cores = 8)
 
 ######################################################################
-# lets simulate some data - this is for the TEST MULTICOND dataset
+# lets simulate some data 
 ######################################################################
 
-experiment_params <- list(n_people = 8, 
+experiment_params <- list(n_people = 4, 
                           n_conditions = 2,
                           condition_labels = c("A", "B"),
                           n_trials_per_cond = 5)
@@ -44,38 +44,67 @@ params <- list(e = experiment_params,
                a = absdir_params,
                i = initsel_params)
 
-d <- sim_foraging_people(params) 
+d <- sim_foraging_people(params, filename = "data_for_qmd") 
 
-plot_a_trial(d$stim, d$found, 1)
-
-######################################################################
-# fit model
-######################################################################
-
-dl <- prep_data_for_stan(d)
-dl <- add_priors_to_d_list(dl, modelver = "1.3")
-
-iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_3.stan",
-                     cpp_options = list(stan_threads = TRUE))
-
-m <- mod$sample(data = dl, 
-                iter_warmup  = iter, iter_sampling = iter,
-                chains = 4, 
-                parallel_chains = 8,
-                threads_per_chain = 2)
 
 ######################################################################
-# check model posterior
+# fit model, generated quantities
 ######################################################################
 
-m$summary()
+modelver <- c("1.3")
+modelname <- "qmd_model"
 
-post <- extract_post(m, d)
-plot_model_fixed(post, gt = params)
+for (mv in modelver) { 
+  
+  modelver_str <- str_replace(mv, "\\.", "_" )
+  
+  dl <- prep_data_for_stan(d)
+  dl <- add_priors_to_d_list(dl, modelver = mv)
 
-plot_model_random(post)
+  iter = 500
+  mod <- cmdstan_model(paste0("../../models/multi_level/FoMo", modelver_str, ".stan"),
+                      cpp_options = list(stan_threads = TRUE))
 
-plot_model_theta(post)
+  m <- mod$sample(data = dl, 
+                  iter_warmup  = iter, iter_sampling = iter,
+                  chains = 4, 
+                  parallel_chains = 8,
+                  threads_per_chain = 2)
 
-bayesplot::mcmc_trace(m$draws(), par = "lp__")
+  m$save_object(paste0("scratch/fit/", modelname, "_", modelver_str, ".model"))
+  
+  # generated quantities
+  
+  draws_matrix <- posterior::as_draws_matrix(m$draws())
+  idx <- sample(nrow(draws_matrix), 100) #iter_genquant
+  
+  mod_sim <- cmdstan_model(paste0("../../models/simulate/FoMo", modelver_str, ".stan"))
+  
+  p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
+                                   data = dl,
+                                   seed = 123,
+                                   output_dir = "scratch/sim",
+                                   output_basename = paste(modelname, "_", modelver_str, sep=""))
+  
+  p$save_object(paste0("scratch/sim/", modelname, "_", modelver_str, ".model"))
+  
+
+}
+
+######################################################################
+# extract predictions
+######################################################################
+
+# compute empirical run statistics
+rl <- get_run_info_over_trials(d$found) %>%
+  group_by(person, condition) %>%
+  summarise(max_run_length = mean(max_run_length),
+            num_runs = mean(n_runs),
+            mean_bestr = mean(best_r),
+            mean_pao = mean(pao),
+            .groups = "drop") %>%
+  mutate(z = "observed")
+
+# compute empirical run statistics
+iisv <- get_iisv_over_trials(d$found) %>%
+  mutate(z = "observed")
