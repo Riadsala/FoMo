@@ -92,7 +92,8 @@ pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
 #############################################################################
 
 iisv <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
-  mutate(z = if_else(str_detect(z, "v1_0"), "predicted", "observed")) %>%
+  filter(z %in% c("observed", paste0("v", model_ver))) %>%
+  mutate(z = if_else(str_detect(z, model_ver), "predicted", "observed")) %>%
   rename(data = "z")
 
 iisv %>% 
@@ -130,8 +131,8 @@ iisv %>%
 plt_top <- plt_acc / plt_runs + plot_layout(heights = c(2,3), guides = "collect")
 plt_bot <- plt_delta / (plt_psi + plt_phi) + plot_layout(guides = "collect")
 
-ggsave("scratch/old_model_stat_runs.pdf", plt_top, width = 5, height = 6)
-ggsave("scratch/old_model_stat_iisv.pdf", plt_bot, width = 5, height = 3)
+# ggsave("scratch/old_model_stat_runs.pdf", plt_top, width = 5, height = 6)
+# ggsave("scratch/old_model_stat_iisv.pdf", plt_bot, width = 5, height = 3)
 
 #############################################################################
 # plot posterior densities
@@ -143,6 +144,3 @@ post_plt <- plot_model_fixed(post)
 
 plot_model_theta(post, nrow = 2)
 ggsave("theta_fixed.png", width = 4, height = 6)
-
-plot_model_theta(post, per_person = TRUE, nrow = 10)
-ggsave("test.png", width = 10, height = 20)

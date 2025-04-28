@@ -201,9 +201,11 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL, nrow = 1) {
     
   }
   
-  gt %>% as_tibble() %>%
-    mutate(condition = levels(post$fixed$condition)) %>%
-    pivot_longer(-condition, names_to = "parameter") -> gt
+  if (!is.null(gt)) {
+    gt %>% as_tibble() %>%
+      mutate(condition = levels(post$fixed$condition)) %>%
+      pivot_longer(-condition, names_to = "parameter") -> gt
+  }
   
   my_widths <- c(0.53, 0.97)
   
