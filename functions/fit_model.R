@@ -120,13 +120,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   
   # load the pre-computed d_list and add required priors
   d_list <- get_list(dataset, mode, "training")
-  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
-  
-  if (fomo_ver_str == "1_3") {
-    d_list$grid_offset <- c(0, 0)
-  }
-  
- m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
+  m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
   
   ###########################################################################
   # now create generated quantities from fitted model
@@ -134,6 +128,12 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   # do we need to load in a new d_list for testing?
   if (mode %in%  c("split", "traintest")) {
     d_list <- get_list(dataset, mode, "testing")
+  }
+  
+  d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+  
+  if (fomo_ver_str == "1_3") {
+    d_list$grid_offset <- c(0, 0)
   }
 
   # randomly sample some draws to calculate generated quantities for
