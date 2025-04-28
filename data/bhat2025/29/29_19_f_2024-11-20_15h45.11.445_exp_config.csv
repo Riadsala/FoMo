@@ -1,0 +1,12 @@
+,attribute,value
+0,scrn_width,1920
+1,scrn_height,1080
+2,width_border,600
+3,height_border,180
+4,jiggle,17
+5,block_style,counter_balanced
+6,global_practice,none
+7,intro_expt,This experiment is divided into two parts with two sections. In the first part of the each section you will get the chance to practice the task
+8,outro_expt,Thank you for taking part!
+9,track_eyes,track
+10,screenshot,FALSE

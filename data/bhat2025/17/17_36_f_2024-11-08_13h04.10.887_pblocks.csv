@@ -1,0 +1,8 @@
+,attribute,block1,block2
+0,label,prac_feat,prac2_conj
+1,conditions,feat_grid,conj_grid
+2,n_trials_per_cond,2,2
+3,group,none,none
+4,intro_text,Your task is to collect ALL the WHITE AND ORANGE SQUARES as quickly as you can. You will use the mouse with your right hand to steer the cursor on the screen and the left-click button to collect the targets. Let’s practice!,Your task is to collect ALL the BLUE SQUARES and WHITE TRIANGLES as quickly as you can. You will use the mouse with your right hand to steer the cursor on the screen and the left-click button to collect the targets. Let’s practice!
+5,outro_text,Well done! Now you will complete 10 trials of the real-deal,Well done! Now you will complete 10 trials of the real-deal
+6,practice,none,none
