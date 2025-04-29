@@ -10,13 +10,13 @@ editor: source
 library(tidyverse)
 library(cmdstanr)
 
-source("../../functions/import_data.R")
-source("../../functions/prep_data.R")
-source("../../functions/compute_summary_stats.R")
-source("../../functions/plot_model.R")
-source("../../functions/plot_data.R")
-source("../../functions/post_functions.R")
-source("../../functions/sim_foraging_data.R")
+source("../functions/import_data.R")
+source("../functions/prep_data.R")
+source("../functions/compute_summary_stats.R")
+source("../functions/plot_model.R")
+source("../functions/plot_data.R")
+source("../functions/post_functions.R")
+source("../functions/sim_foraging_data.R")
 
 options(mc.cores = 1, digits = 2)
 
@@ -24,207 +24,108 @@ options(mc.cores = 1, digits = 2)
 theme_set(ggthemes::theme_tufte())
 ```
 
-these are fit by script `fit_all_models.R` and run on our cluster/big-chungus.
 
-We then compute accuracy for each model using script `2_`
+See the `1_fit_models` folder for scripts that pre-compute everything
+
+```{r}
+sf <- "1_fit_models/scratch"
+```
+
 
 # Which model fits best 
 
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog") #, "hughes2024rsos"  "clarke2022qjep
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos") #,   "clarke2022qjep
 ```
 
-## Prediction Accuracy
-
-Compute chance base-rates for each dataset
-
-- Should these calculations include initial and last selection?
+## Overall Prediction Accuracy
 
 ```{r}
-
-baseline <- tibble()
-
-for (dataset in datasets) {
-  
-  d <- import_data(dataset)
-  
-  d$stim %>% group_by(person, trial) %>%
-    summarise(n = n(), .groups = "drop") -> dn
-  
-  items <- seq(1, unique(dn$n))
-  items_left <- unique(dn$n) - items + 1
-  
-  n_conditions <- length(levels(d$stim$condition))
-  
-  d_baseline <- tibble(data = rep(dataset, n_conditions),
-                       condition = levels(d$stim$condition),
-                       accuracy = rep(mean(1/items_left), n_conditions))
-  
-  baseline <- bind_rows(baseline, d_baseline)
+for (ds in datasets) {
+  plt <- plot_models_accuracy(ds, scratch_folder = sf) + theme_bw() + ggtitle(ds)
+  print(plt)
 }
-
-baseline <- bind_rows(baseline %>% mutate(split = "training"),
-                      baseline %>% mutate(split = "testing")) %>%
-  mutate(model = "baseline")
-
-rm(d, items, items_left)
 ```
 
-Now get all the pre-computed training/test split accuracies
+The improvements in overall accuracy appear modest at best. 
+
+## Per-Person Prediction Accuracy
+
+However, we can see a larger improvement if we compare how well models do at predicting individuals.
 
 ```{r}
-get_acc <- function(dataset) {
+v1 <- "1_0"
+v2 <- "1_3"
 
-  acc <- read_csv(paste0("scratch/post_acc_", dataset, ".csv"),
-                  show_col_types = FALSE) %>%
-    group_by(split, condition, model, data, .draw) %>%
-    summarise(accuracy = median(accuracy), .groups = "drop_last")
-  
-  return(acc)
 
+for (ds in datasets) {
+  plt <- plot_model_accuracy_comparison(ds, v1, v2, scratch_folder = sf) 
+  print(plt)
 }
-
-d_acc <- map_df(datasets, get_acc)
-
-rm(get_acc)
 ```
 
-```{r}
-#| label: compute-all_acc
+## Accuracy throughout a trial
 
-d_acc %>% 
-  ungroup() %>%
-  group_by(data, model, split) %>%
-  summarise(accuracy = mean(accuracy)) %>%
-  select(data, model, split, accuracy) %>% 
-  filter(split == "testing") %>%
-  pivot_wider(names_from = model, values_from = accuracy) %>%
-  knitr::kable()
-
-
-# combine this with baseline
-d_acc %>% 
-    median_hdci(accuracy, .width = c(0.53, 0.97)) %>%
-  mutate(model = factor(model),
-                split = factor(split, levels = c("training", "testing"))) -> d_acc
-
-d_acc %>% ggplot(aes(model, accuracy, colour = condition,
-                     ymin = .lower, ymax = .upper)) +
-  geom_interval(position = position_dodge(0.1), alpha = 0.5) +
-  geom_line(aes(x = as.numeric(as_factor(model)))) +
-  ggh4x::facet_grid2(split~data, scales = "free_y") +
-  scale_color_viridis_d("dataset - condition") + 
-  theme(legend.position = "none")
-```
-
-## ELPD? 
-
-# Posterior Densities
+For model 1.3? 
 
 ```{r}
-#| warning: false
-#| echo: false
-
-# write a helpful wrapper function
-
-get_plot <- function(d, dataset, modelver) {
+for (ds in datasets) {
+  folder <- paste0(sf, "/post/", ds, "/")
+  pred <- readRDS(paste0(folder, "pred_1_3.rds"))
   
-  m <- readRDS(paste0("scratch/", dataset, "_train_", modelver, ".model"))
+  pred$itemwise %>% 
+    group_by(condition, found, .draw, person) %>%
+    summarise(person_acc = mean(model_correct), .groups = "drop_last") %>%
+    summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
+  
+  plt_acc <- plot_model_accuracy(acc)
+  print(plt_acc)
+}
+```
+
+
+# Posterior Density 
+
+
+```{r}
+
+model_ver <- "1_3"
+```
+
+## Main parameters
+
+```{r}
+
+
+for (ds in datasets) {
+  folder <- paste0(sf, "/models/", ds, "/fit/")
+  m <- readRDS(paste0(folder, model_ver, ".model"))
+  d <- import_data(ds)
   post <- extract_post(m, d)
-  plt <- plot_model_fixed(post)
-  
-  return(plt)
-  
+  post_plt <- plot_model_fixed(post) + ggtitle(ds)
+  print(post_plt)
+}
+
+
+```
+
+## Directional parameters
+
+
+```{r}
+for (ds in datasets) {
+  folder <- paste0(sf, "/models/", ds, "/fit/")
+  m <- readRDS(paste0(folder, model_ver, ".model"))
+  d <- import_data(ds)
+  post <- extract_post(m, d)
+  plt <- plot_model_theta(post, nrow = 1) + ggtitle(ds)
+  print(plt)
 }
 ```
 
-## kristjansson2014plos
-
-```{r}
-
-dataset <- "kristjansson2014plos"
-d <- import_data(dataset)
-
-get_plot(d, "kristjansson2014plos", "1_0") / 
-  get_plot(d, "kristjansson2014plos", "1_1")  / 
-  get_plot(d, "kristjansson2014plos", "1_2") + 
-  plot_layout(guides = "collect")
-
-```
-
-## hughes2024rsos
-
-```{r}
-
-dataset <- "hughes2024rsos"
-d <- import_data(dataset)
-
-get_plot(d, "hughes2024rsos", "1_0") / 
-  get_plot(d, "hughes2024rsos", "1_1")  / 
-  get_plot(d, "hughes2024rsos", "1_2") + 
-  plot_layout(guides = "collect")
-
-```
-
-# Posterior Predictions
-
-Compare run statistics and inter-item-selection-vectors
-
-## Run Statistics
-
-```{r}
-#| fig-height: 5
-
-rl10 <- read_csv("scratch/run_statistics1_0.csv", 
-                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.0")
-rl11 <- read_csv("scratch/run_statistics1_1.csv", 
-                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.1")
-rl12 <- read_csv("scratch/run_statistics1_2.csv", 
-                 show_col_types = FALSE) %>% mutate(model = "FoMo 1.2")
-
-bind_rows(rl10, rl11, rl12) %>%
- ggplot(aes(observed, predicted, colour = condition))  +
-  geom_point() + 
-  geom_abline(linetype = 2) + 
-  facet_grid(model ~ dataset) + 
-  coord_fixed() +
-  theme(legend.position = "none")
-```
 
 
-## Inter-Item Selection Distance
 
-```{r}
-#| fig-height: 5
-#|
-
-iisv <- bind_rows(
-  read_csv("scratch/iisv_statistics1_0.csv") %>% mutate(model = "1.0"),
-  read_csv("scratch/iisv_statistics1_1.csv") %>% mutate(model = "1.1"))
-
-iisv %>%
-  group_by(condition, found, x, model, dataset) %>%
-  summarise(d2 = mean(d2)) %>%
- ggplot(aes(found, y = d2, linetype = x, group = interaction(x, condition)))  +
-  geom_path(aes(colour = condition)) + 
-  facet_grid(dataset ~ model) +
-  theme(legend.title = element_blank()) + 
-  scale_y_log10()
-```
-
-## Inter-Item Selection Relative Directions
-
-```{r}
-
-iisv %>%
-  ggplot(aes(psi, linetype = x, group = interaction(x, condition)))  +
-  geom_density(aes(colour = condition)) + 
-  facet_grid(dataset ~ model) +
-  theme(legend.title = element_blank()) + 
-  scale_y_log10()
-```
-
-## Inter-Item Selection Absolute Directions
 
