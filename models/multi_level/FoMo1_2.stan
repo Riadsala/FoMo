@@ -5,7 +5,7 @@ FoMo V1.2 (multi-level)
 This model removes relative direction (psi)
 
 Includes the core parameters:
-b_a, b_stick, rho_delta
+b_a, b_s, rho_delta
 
 */
 functions {
