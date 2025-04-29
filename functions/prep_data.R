@@ -215,13 +215,13 @@ prep_data_for_stan <- function(d, d0 = 20) {
 compute_inter_item_directions_and_distances2 <- function(df, ds) {
   
   # pivot to wide format: two rows for each trial (one for x dim, one for y)
-  ds %>% 
+  ds %>% ungroup() %>%
     select(trial, id, x, y) %>%
     pivot_longer(-c(trial, id), names_to = "dim") %>%
     pivot_wider(names_from = "id") -> ds
   
   # compute current heading
-  df %>%
+  df %>% ungroup() %>%
     mutate(x0 = lag(x), y0 = lag(y)) %>%
     select(trial, found, x="x0", y="y0") %>%
     pivot_longer(-c(trial, found), names_to = "dim",  values_to = "selected") %>%
