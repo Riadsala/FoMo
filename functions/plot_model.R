@@ -98,7 +98,7 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
     geom_errorbarh(alpha = 0.25) + 
     geom_abline(linetype = 2) + 
     facet_grid(dataset ~ condition) + 
-    coord_equal() +
+    # coord_equal() +
     scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
     scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
     scale_color_viridis_d() + 
@@ -121,7 +121,6 @@ plot_models_accuracy <- function(ds, scratch_folder = "1_fit_models/scratch") {
   
   d <- tibble()
   
-  
   for (ff in files) {
     
     a <- readRDS(paste0(scratch_folder, "/post/", ds, "/", ff))
@@ -135,7 +134,8 @@ plot_models_accuracy <- function(ds, scratch_folder = "1_fit_models/scratch") {
   # create our plot
   d %>% 
     group_by(model_ver, condition, .draw) %>%
-    summarise(accuracy = mean(model_correct)) %>%
+    summarise(accuracy = mean(model_correct),
+              .groups = "drop") %>%
     ggplot(aes(model_ver, accuracy)) +
     geom_col() + 
     facet_wrap(~condition)
@@ -220,10 +220,27 @@ plot_model_random <- function(post) {
     group_by(person, condition, param) %>%
     median_hdci(value) -> d_hpdi
   
-  d_hpdi %>% ggplot(aes(person, ymin = .lower, y = value, ymax = .upper, color = condition)) +
-    geom_hline(linetype = 2, yintercept = 0) + 
-    geom_linerange() +
-    facet_wrap(~param, scales = "free") -> plt
+  # remove "stick" notation if still used
+  d_hpdi$param <- str_remove(d_hpdi$param, "tick")
+  d_hpdi %>% mutate(
+    param = factor(param),
+    param = fct_recode(param, b_a = "u_a", b_s = "u_s", rho_delta = "u_delta", rho_psi = "u_psi")
+  ) -> d_hpdi
+  
+  # get hpdi of fixed effect
+  post$fixed %>% 
+    pivot_longer(-c(.draw, condition), names_to = "param") %>%
+    group_by(condition,param) %>%
+    median_hdci() -> d_fixed
+  
+  d_hpdi %>% ggplot(aes(ymin = .lower, y = value, ymax = .upper)) +
+    # geom_hline(linetype = 2, yintercept = 0) + 
+    geom_rect(data = d_fixed, 
+              aes(ymin = .lower, ymax = .upper, fill = condition), 
+              xmin = -Inf, xmax = Inf,
+              alpha = 0.25) + 
+    geom_linerange(aes(person, color = condition)) +
+    facet_wrap(~param, scales = "free", nrow = 1) -> plt
   
   return(plt)
   

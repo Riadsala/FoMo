@@ -157,7 +157,6 @@ prep_data_for_stan <- function(d, d0 = 20) {
   # pre-compute direction and distance data
   spatial <- compute_inter_item_directions_and_distances2(df, ds)
 
-  
   # pre-compute relative direction data
   rel_direction <- compute_inter_sel_direction(Y, df, ds) 
   
