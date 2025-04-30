@@ -405,6 +405,11 @@ import_bhat2025 <- function(data_path = "../data/", small_test) {
   d_rt <- read_csv(paste0(data_path, "bhat2025/bhat2025_rt.csv"),
                       show_col_types = FALSE)
   
+  d_found %>% 
+    mutate(condition = as_factor(condition)) -> d_found
+  
+  d_stim %>% 
+    mutate(condition = as_factor(condition)) -> d_stim
 
     return(list(stim = d_stim,
                 found = d_found,

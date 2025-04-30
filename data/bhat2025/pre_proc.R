@@ -65,6 +65,18 @@ d_found %>% mutate(person = parse_number(person)) -> d_found
 d_stim %>% mutate(person = parse_number(person)) -> d_stim
 d_rt %>% mutate(person = parse_number(person)) -> d_rt
 
+# filter out practice trials (for now?)
+d_stim %>%
+  filter(block != "prac2_conj") %>%
+  filter(block != "prac_feat") -> d_stim
+
+d_found %>%
+  filter(block != "prac2_conj") %>%
+  filter(block != "prac_feat") -> d_found
+
+d_rt %>%
+  filter(block != "prac2_conj") %>%
+  filter(block != "prac_feat") -> d_rt
 
 # take only the highest number attempt 
 d_found %>%
@@ -94,19 +106,6 @@ d_rt %>%
 
 #  sum(d_errors_summary$n)
 
-
-# filter out practice trials (for now?)
-d_stim %>%
-  filter(block != "prac2_conj") %>%
-  filter(block != "prac_feat") -> d_stim
-
-d_found %>%
-  filter(block != "prac2_conj") %>%
-  filter(block != "prac_feat") -> d_found
-
-d_rt %>%
-  filter(block != "prac2_conj") %>%
-  filter(block != "prac2_feat") -> d_rt
 
 d_found  %>%
   mutate(trial = trial + 1) %>%
