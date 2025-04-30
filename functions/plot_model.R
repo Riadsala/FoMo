@@ -137,7 +137,7 @@ plot_models_accuracy <- function(ds, scratch_folder = "1_fit_models/scratch") {
     summarise(accuracy = mean(model_correct),
               .groups = "drop") %>%
     ggplot(aes(model_ver, accuracy)) +
-    geom_col() + 
+    stat_interval(alpha = 0.5) + 
     facet_wrap(~condition)
   
 }
