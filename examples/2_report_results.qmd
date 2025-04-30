@@ -97,7 +97,6 @@ However, we can see a larger improvement if we compare how well models do at pre
 v1 <- "1_0"
 v2 <- "1_3"
 
-
 for (ds in datasets) {
   plt <- plot_model_accuracy_comparison(ds, v1, v2, scratch_folder = sf) 
   print(plt)
@@ -123,19 +122,40 @@ for (ds in datasets) {
 }
 ```
 
+# Generated Quantites
+
+```{r}
+rl <- tibble()
+
+for (ds in datasets) {
+
+  rl <- bind_rows(rl,
+    read_csv(paste0("1_fit_models/scratch/post/", ds, "/run_statistics.csv")) %>%
+      mutate(dataset = ds))
+}
+
+comp_corr <- function(df) {
+  
+  r <- corr.test(df$value, df$observed)$estimate
+  
+}
+
+rl %>% pivot_longer(-c(person, condition, statistic, observed, dataset)) %>%
+  group_split(dataset, statistic)
+```
+
+
 
 # Posterior Density 
 
 
 ```{r}
-
 model_ver <- "1_3"
 ```
 
 ## Main parameters
 
 ```{r}
-
 
 for (ds in datasets) {
   folder <- paste0(sf, "/models/", ds, "/fit/")
@@ -145,7 +165,6 @@ for (ds in datasets) {
   post_plt <- plot_model_fixed(post) + ggtitle(ds)
   print(post_plt)
 }
-
 
 ```
 
