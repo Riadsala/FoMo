@@ -1,4 +1,34 @@
-vector compute_weights_v13(
+
+
+vector compute_weights_v14(
+
+  // compute weights for FoMo v1.3
+  // this is  v1.2 + absolute (up/down/left/right) phi weights
+
+  real b_a, real b_s, real rho_delta, real rho_psi, vector log_theta, real kappa,
+  vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
+  int n, int n_targets, vector remaining_items) {
+
+  // set the weight of each target to be its class weight
+  vector[n_targets] weights = log_inv_logit(b_a * to_vector(item_class));
+
+  //  weights by stick/switch preference
+  weights += log_inv_logit(b_s * match_prev_item); 
+
+  // apply proximity weights
+  weights += -rho_delta * delta - rho_psi * psi;
+
+  // apply abs. dir. weights
+  weights += compute_absdir_weights_fixed_kappa(n, n_targets, 
+                                 log_theta, kappa, phi);
+
+  // remove already-selected items, and standarise to sum = 1 
+  weights += log(remaining_items);
+  weights -= log_sum_exp(weights);
+
+  return(weights);
+
+}vector compute_weights_v13(
 
   // compute weights for FoMo v1.3
   // this is  v1.2 + absolute (up/down/left/right) phi weights

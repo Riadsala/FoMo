@@ -2,7 +2,7 @@ library(tidyverse)
 library(patchwork)
 library(tidybayes)
 library(hrbrthemes)
-
+library(paletteer)
 # load subfunctions for plotting
 
 # first, find data folder... 
@@ -93,17 +93,20 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
                      xmin = xmin, xmax = xmax,
                      ymin = ymin, ymax = ymax,
                      colour = improvement)) +
-    geom_point(alpha = 0.75) + 
+    geom_point(alpha = 0.9) + 
     geom_errorbar(alpha = 0.25) +
     geom_errorbarh(alpha = 0.25) + 
     geom_abline(linetype = 2) + 
-    facet_grid(dataset ~ condition) + 
-    # coord_equal() +
+    coord_equal() +
     scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
     scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
-    scale_color_viridis_d() + 
-    theme_dark() +
-    theme(panel.grid  = element_blank()) -> plt
+    scale_color_paletteer_d("MoMAColors::Abbott", direction = -1) -> plt
+  
+  if (length(dataset) > 1) {
+    plt <- plt + facet_grid(dataset ~ condition) 
+  } else {
+    plt <- plt + facet_grid(. ~ condition) 
+  }
   
   return(plt)
   
