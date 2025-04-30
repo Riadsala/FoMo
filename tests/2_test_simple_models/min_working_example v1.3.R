@@ -23,8 +23,8 @@ theme_set(ggthemes::theme_tufte())
 ######################################################################
 # lets simulate some data - this is for the TEST dataset
 ######################################################################
-n_trials_per_cond <- 10
-n_items_per_class <- 14
+n_trials_per_cond <- 50
+n_items_per_class <- 20
 
 stimuli_params <- list(
   n_item_class = 4,
@@ -38,7 +38,7 @@ foraging_params <- list(
   rho_psi = 0)
 
 absdir_params = list(
-  kappa = rep(25, 4), theta = c(5, 3, 5, 3))
+  kappa = rep(25, 4), theta = c(10, 3, 5, 3))
 
 # # plot absolute tuning curve
 # d <- tibble(phi = seq(0, 2*pi, 0.01),
@@ -75,7 +75,7 @@ dl <- add_priors_to_d_list(dl, modelver = modelver)
 ######################################################################
 
 iter = 500
-mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, ".stan"))
+mod <- cmdstan_model(paste0("../../models/simple/FoMo", modelver_str, "k.stan"))
 m <- mod$sample(data = dl, 
                 iter_warmup  = iter, iter_sampling = iter)
 
@@ -99,3 +99,8 @@ post$theta %>% ggplot(aes(comp, log(theta))) +
 ######################################################################
 
 bayesplot::mcmc_trace(m$draws(), pars = "lp__")
+
+
+
+m$draws(format = "df", variables = "log_theta") %>%
+  pivot_longer(-c(.draw, .iteration, .chain), values_to = "log_theta")
