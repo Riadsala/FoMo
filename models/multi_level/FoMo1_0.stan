@@ -119,7 +119,7 @@ model {
   ////////////////////////////////////////////////////
 
   // priors for random effects
-  sigma_u ~ exponential(1);
+  sigma_u ~ exponential(5);
   L_u ~ lkj_corr_cholesky(2); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
 

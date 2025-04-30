@@ -140,7 +140,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
 
   # randomly sample some draws to calculate generated quantities for
   draws_matrix <- posterior::as_draws_matrix(m$draws())
-  idx <- sample(nrow(draws_matrix), 1) #iter_genquant
+  idx <- sample(nrow(draws_matrix), iter_genquant) 
 
   print("computing generated quantities")
 

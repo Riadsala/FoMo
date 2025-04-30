@@ -9,11 +9,13 @@
 library(tidyverse)
 library(cmdstanr)
 
+
 source("../../functions/prep_data.R")
 source("../../functions/plot_model.R")
 source("../../functions/plot_data.R")
 source("../../functions/post_functions.R")
 source("../../functions/sim_foraging_data.R")
+
 
 options(mc.cores = 4)
 

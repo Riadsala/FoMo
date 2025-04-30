@@ -1,18 +1,23 @@
 /* 
 
-FoMo V1.2 (multi-level)
+FoMo V1.3 (multi-level)
 
-This model removes relative direction (psi)
+This model adds absolute direction (psi)
 
 Includes the core parameters:
-b_a, b_s, rho_delta
+b_a, b_s, rho_delta, rho_psi and 
+a set of theta mixture weights
+
+kappa is passed in as a hyper parameter
 
 */
+
 functions {
 
   #include /../include/FoMo_functions.stan
-  
+
 }
+
 
 data {
   int <lower = 1> N; // total number of selected targets over the whole experiment
@@ -51,6 +56,13 @@ data {
   real prior_sd_b_s; // = 1, uncertainty for b_s prior
   real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
+  real prior_mu_rho_psi; // = 0, "momentum"
+  real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
+
+  // hyper parameters
+  real<lower = 0> kappa; // kappa = 10? concentration of von Mises
+  real d0; // scale parameter to get rho_delta to ~ 1
+
 }
 
 transformed data {
@@ -71,18 +83,25 @@ parameters {
   array[K] real b_a; // weights for class A compared to B  
   array[K] real b_s; // stick-switch rates 
   array[K] real<lower = 0> rho_delta; // distance tuning
+  array[K] real rho_psi; // direction tuning
+
+  // theta is a 4D vector containing the mixture weights for our direction model
+  array[K, 8] real log_theta; // mixing values for directions
+
 
   ///////////////////////////////
   // random effects
   ///////////////////////////////
   // random effect variances: 
-  // 3*K as we have three fixed effect parameters x K conditions
-  vector<lower=0>[3*K] sigma_u;
+  // 4*K as we have four fixed effect parameters x K conditions
+  vector<lower=0>[4*K] sigma_u;
+  // 4*K as we have four directions x K conditions
+  vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
-  cholesky_factor_corr[3*K] L_u;
+  cholesky_factor_corr[4*K] L_u;
   // random effect matrix
-  matrix[3*K,L] z_u; 
-  
+  matrix[4*K,L] z_u; // for main params
+  matrix[8*K, L] z_w; // for directional params
 }
 
 transformed parameters {
@@ -94,16 +113,30 @@ transformed parameters {
 
   // this transform random effects so that they have the correlation
   // matrix specified by the correlation matrix above
-  matrix[3*K, L] u;
+  matrix[4*K, L] u;
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_stick, u_delta;
+  array[K] vector[L] u_a, u_s, u_delta, u_psi;
   // calculate
   for (kk in 1:K) {
-    u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
-    u_stick[kk] = to_vector(b_s[kk]   + u[3*(kk-1)+2]);
-    u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
+    u_a[kk]     = to_vector(b_a[kk]       + u[4*(kk-1)+1]);
+    u_s[kk]     = to_vector(b_s[kk]       + u[4*(kk-1)+2]);
+    u_delta[kk] = to_vector(rho_delta[kk] + u[4*(kk-1)+3]);
+    u_psi[kk]   = to_vector(rho_psi[kk]   + u[4*(kk-1)+4]);
+  }
+
+  // now work out thet u_log_theta
+  array[K, L] vector[4] u_log_theta;
+
+  for (kk in 1:K) {
+    for (l in 1:L) {
+      for (a in 1:8) {
+
+        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[4*(kk-1)+a, l] .* sigma_w[4*(kk-1)+a]);
+
+      }
+    }  
   }
 }
 
@@ -114,16 +147,21 @@ model {
   ////////////////////////////////////////////////////
 
   // priors for random effects
-  sigma_u ~ exponential(1);
+  sigma_u ~ exponential(1); 
   L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
-
+  
+  sigma_w ~ exponential(1);
+  to_vector(z_w) ~ normal(0,1);
+  
   // priors for fixed effects
   for (kk in 1:K) {
     target += normal_lpdf(b_a[kk]       | prior_mu_b_a, prior_sd_b_a);
     target += normal_lpdf(b_s[kk]   | prior_mu_b_s, prior_sd_b_s);
     target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
-    }
+    target += normal_lpdf(rho_psi[kk]   | prior_mu_rho_psi, prior_sd_rho_psi);
+    target += normal_lpdf(log_theta[kk] | 0, 1);
+  }
 
   // create some variables
   vector[n_targets] weights;
@@ -138,9 +176,9 @@ model {
     z = Z[t];
     x = X[t];
  
-    weights = compute_weights_v12(
-      u_a[x, z], u_stick[x, z], u_delta[x, z], 
-      to_vector(item_class[t]), S[ii], delta[ii],
+    weights = compute_weights_v14(
+      u_a[x, z], u_s[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
+      to_vector(item_class[t]), S[ii], delta[ii], psi[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii]); 
 
     // get likelihood of item selection
@@ -154,4 +192,5 @@ generated quantities {
   real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
   real prior_b_s = normal_rng(prior_mu_b_s, prior_sd_b_s);
   real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+  real prior_rho_psi = normal_rng(prior_mu_rho_psi, prior_sd_rho_psi);
 }
