@@ -134,7 +134,9 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
   
-  if (fomo_ver_str == "1_3") {
+  if (fomo_ver_str == "1_3" && dataset == "bhat2025") {
+    d_list$grid_offset <- c(0, pi/4, 0, pi/4)
+  } else {
     d_list$grid_offset <- c(0, 0)
   }
 
