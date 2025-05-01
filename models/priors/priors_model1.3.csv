@@ -5,3 +5,5 @@ rho_delta,1,0.25
 rho_psi,0,1
 theta,1,NA
 kappa,20,NA
+sigma_u_lambda,5,NA
+sigma_w_lambda,5,NA

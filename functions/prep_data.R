@@ -77,10 +77,11 @@ add_priors_to_d_list <- function(dl, modelver="1.0") {
     select(-stat) %>%
     filter(is.finite(value))
   
-  # fix prior names for theta and kappa
+  # fix prior names for theta, kappa and lambda params
   priors %>% mutate(
     param = if_else(str_detect(param, "kappa"), "kappa", param),
-    param = if_else(str_detect(param, "theta"), "prior_theta_lambda", param)) -> priors
+    param = if_else(str_detect(param, "theta"), "prior_theta_lambda", param),
+    param = if_else(str_detect(param, "lambda"), str_remove(param, "_mu"), param)) -> priors
   
   dl <- append(dl, priors %>% group_by(param) %>% deframe())
   

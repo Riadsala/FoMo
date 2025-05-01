@@ -55,6 +55,7 @@ data {
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
   real prior_mu_rho_psi; // = 0, "momentum"
   real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
+  real prior_sigma_u_lambda;
 
 }
 
@@ -119,7 +120,7 @@ model {
   ////////////////////////////////////////////////////
 
   // priors for random effects
-  sigma_u ~ exponential(5);
+  sigma_u ~ exponential(prior_sigma_u_lambda);
   L_u ~ lkj_corr_cholesky(2); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
 

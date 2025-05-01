@@ -58,6 +58,7 @@ data {
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
   real prior_mu_rho_psi; // = 0, "momentum"
   real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
+  real prior_sigma_u_lambda;
 
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
@@ -149,11 +150,11 @@ model {
   ////////////////////////////////////////////////////
 
   // priors for random effects
-  sigma_u ~ exponential(1); 
+  sigma_u ~ exponential(prior_sigma_u_lambda); 
   L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
   
-  sigma_w ~ exponential(10);
+  sigma_w ~ exponential(prior_sigma_w_lambda);
   to_vector(z_w) ~ normal(0,1);
   
   // priors for fixed effects

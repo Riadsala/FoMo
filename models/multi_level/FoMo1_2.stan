@@ -51,6 +51,7 @@ data {
   real prior_sd_b_s; // = 1, uncertainty for b_s prior
   real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
+  real prior_sigma_u_lambda;
 }
 
 transformed data {
@@ -114,7 +115,7 @@ model {
   ////////////////////////////////////////////////////
 
   // priors for random effects
-  sigma_u ~ exponential(1);
+  sigma_u ~ exponential(prior_sigma_u_lambda);
   L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
 
