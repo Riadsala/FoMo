@@ -113,11 +113,20 @@ rl  %>%
 
 ds <- "tagu2022cog"
 
-rl %>% filter(dataset == ds) %>%
+rl %>% filter(model_ver == "v1_3") %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
+         statistic = fct_recode(statistic, `num runs` = "num_runs", `max (run length)` = "max_run_length", PAO = "mean_pao", `best-r` = "mean_bestr")) %>%
   ggplot(aes(predicted, observed, colour = condition)) +
   geom_abline(linetype = 2) + 
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = F) +
-  ggh4x::facet_grid2(statistic ~ model_ver, scales = "free", independent = "all") +
-  theme_bw()
-               
+  ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+ggsave("run_stats.pdf", width = 8, height = 9)
+
+rl_stats %>% 
+  select(-a, -b) %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "pao","mean_bestr"))) %>%
+  pivot_wider(names_from = "model_ver", values_from = "r") %>%
+  knitr::kable()               

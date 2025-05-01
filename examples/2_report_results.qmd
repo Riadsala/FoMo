@@ -130,7 +130,8 @@ rl <- tibble()
 for (ds in datasets) {
 
   rl <- bind_rows(rl,
-    read_csv(paste0("1_fit_models/scratch/post/", ds, "/run_statistics.csv")) %>%
+    read_csv(paste0("1_fit_models/scratch/post/", ds, "/run_statistics.csv"),
+             show_col_types = FALSE) %>%
       mutate(dataset = ds))
 }
 
@@ -140,8 +141,8 @@ comp_corr <- function(df) {
   
 }
 
-rl %>% pivot_longer(-c(person, condition, statistic, observed, dataset)) %>%
-  group_split(dataset, statistic)
+# rl %>% pivot_longer(-c(person, condition, statistic, observed, dataset)) %>%
+#   group_split(dataset, statistic)
 ```
 
 
