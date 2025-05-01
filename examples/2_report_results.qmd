@@ -37,7 +37,7 @@ sf <- "1_fit_models/scratch"
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos") #,   "clarke2022qjep
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "bhat2025") #,   "clarke2022qjep
 ```
 
 ## Overall Prediction Accuracy

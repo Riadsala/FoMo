@@ -153,7 +153,7 @@ model {
   L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
   to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
   
-  sigma_w ~ exponential(1);
+  sigma_w ~ exponential(10);
   to_vector(z_w) ~ normal(0,1);
   
   // priors for fixed effects
