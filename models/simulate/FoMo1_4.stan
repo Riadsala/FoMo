@@ -89,7 +89,7 @@ parameters {
   cholesky_factor_corr[4*K] L_u;
   // random effect matrix
   matrix[4*K,L] z_u; // for main params
-  matrix[4*K, L] z_w; // for directional params
+  matrix[8*K, L] z_w; // for directional params
 }
 
 transformed parameters {
@@ -115,13 +115,13 @@ transformed parameters {
   }
 
   // now work out thet u_log_theta
-  array[K, L] vector[4] u_log_theta;
+  array[K, L] vector[8] u_log_theta;
 
   for (kk in 1:K) {
     for (l in 1:L) {
       for (a in 1:8) {
 
-        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[4*(kk-1)+a, l] .* sigma_w[4*(kk-1)+a]);
+        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[8*(kk-1)+a, l] .* sigma_w[8*(kk-1)+a]);
 
       }
     }  
@@ -164,7 +164,7 @@ generated quantities {
       x = X[t];
 
       weights = compute_weights_v14(
-        u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
+        u_a[x, z], u_s[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], psi[ii], phi[ii],
         found_order[ii], n_targets, remaining_items[ii]); 
 
@@ -225,7 +225,7 @@ generated quantities {
         }
 
         weights = compute_weights_v14(
-          u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
+          u_a[x, z], u_s[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
           to_vector(item_class[t]), S_q, delta_q, psi_q, phi_q,
           found_order[ii], n_targets, remaining_items_q); 
 
