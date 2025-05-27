@@ -78,9 +78,8 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 }
 
 
-
 gen_quant <- function(dataset, fomo_ver, mode = "all",
-                      iter_genquant = 10) {
+                      iter_genquant = 10, fif = FALSE) {
   
   #######################################################################
   # wrapper function for geneating quantities (predictions)
@@ -108,7 +107,12 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   
   # load the stan file
-  mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
+  if (fif == TRUE) {
+    mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, "fif.stan"))
+  } else {
+    mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
+  }
+  
   
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
@@ -116,13 +120,13 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   } else {
     fxdp = FALSE
   }
-  
  
   # load data and model
   
   # load the pre-computed d_list and add required priors
   d_list <- get_list(dataset, mode, "training")
   m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
+
   
   ###########################################################################
   # now create generated quantities from fitted model
@@ -139,6 +143,11 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   } else {
     d_list$grid_offset <- c(0, 0)
   }
+  
+  # add initial (first) item indices to d_list
+  if (fif == TRUE) {
+    d_list$first_items <- d_list$Y[which(d_list$found_order ==1 )]
+  }
 
   # randomly sample some draws to calculate generated quantities for
   draws_matrix <- posterior::as_draws_matrix(m$draws())
@@ -152,7 +161,11 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
                                         output_dir = paths$out_sim,
                                         output_basename = paste(dataset_name, fomo_ver_str, sep=""))
 
-  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
+  if (fif == TRUE) {
+    p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "fif.model"))
+  } else {
+    p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
+  }
 
 }
 
