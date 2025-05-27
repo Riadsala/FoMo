@@ -121,7 +121,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Which model fits best</h1>
 <p>We are evaluating using the following datasets:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>datasets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"kristjansson2014plos"</span>, <span class="st">"tagu2022cog"</span>, <span class="st">"hughes2024rsos"</span>) <span class="co">#,   "clarke2022qjep</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>datasets <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"kristjansson2014plos"</span>, <span class="st">"tagu2022cog"</span>, <span class="st">"hughes2024rsos"</span>, <span class="st">"bhat2025"</span>) <span class="co">#,   "clarke2022qjep</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="overall-prediction-accuracy" class="level2">
 <h2 class="anchored" data-anchor-id="overall-prediction-accuracy">Overall Prediction Accuracy</h2>
@@ -151,6 +151,92 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-4-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Create table for reporting in paper:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>d_acc <span class="ot">&lt;-</span> <span class="fu">tibble</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>d_chance <span class="ot">&lt;-</span> <span class="fu">tibble</span>()</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># find list of models</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    files <span class="ot">&lt;-</span> <span class="fu">dir</span>(<span class="fu">paste0</span>(sf, <span class="st">"/post/"</span>, ds))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    files <span class="ot">&lt;-</span> files[<span class="fu">str_detect</span>(files,<span class="st">"pred"</span>)]</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> <span class="fu">import_data</span>(ds)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    n_targets <span class="ot">&lt;-</span> <span class="fu">max</span>((d<span class="sc">$</span>found<span class="sc">$</span>found))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    baseline <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">found =</span> <span class="dv">1</span><span class="sc">:</span>n_targets, <span class="at">accuracy =</span> <span class="dv">1</span><span class="sc">/</span>((n_targets <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">-</span> found))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    d_chance <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(d_chance, <span class="fu">tibble</span>(<span class="at">dataset =</span> ds, <span class="at">chance =</span> <span class="fu">mean</span>(baseline<span class="sc">$</span>accuracy)))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rm</span>(d, baseline, n_targets)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ff <span class="cf">in</span> files) {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      a <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(sf, <span class="st">"/post/"</span>, ds, <span class="st">"/"</span>, ff))</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      a<span class="sc">$</span>itemwise<span class="sc">$</span>model_ver <span class="ot">&lt;-</span> a[[<span class="dv">4</span>]]</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      d_acc <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(d_acc, a<span class="sc">$</span>itemwise <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">dataset =</span> ds))</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="co"># create our table</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>d_acc <span class="sc">%&gt;%</span> </span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(dataset, model_ver, .draw) <span class="sc">%&gt;%</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">accuracy =</span> <span class="fu">mean</span>(model_correct), <span class="at">.groups =</span> <span class="st">"drop_last"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">accuracy =</span> <span class="fu">mean</span>(accuracy), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">model_ver =</span> <span class="fu">str_replace</span>(model_ver, <span class="st">"_"</span>, <span class="st">"."</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> model_ver, <span class="at">values_from =</span> accuracy) <span class="sc">%&gt;%</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(d_chance, <span class="at">by =</span> <span class="fu">join_by</span>(dataset)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">dataset</th>
+<th style="text-align: right;">1.0</th>
+<th style="text-align: right;">1.2</th>
+<th style="text-align: right;">1.3</th>
+<th style="text-align: right;">chance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">bhat2025</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">0.49</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.16</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">hughes2024rsos</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">0.54</td>
+<td style="text-align: right;">0.18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">kristjansson2014plos</td>
+<td style="text-align: right;">0.48</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.11</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tagu2022cog</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.41</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <p>The improvements in overall accuracy appear modest at best.</p>
 </section>
@@ -158,53 +244,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="per-person-prediction-accuracy">Per-Person Prediction Accuracy</h2>
 <p>However, we can see a larger improvement if we compare how well models do at predicting individuals.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>v1 <span class="ot">&lt;-</span> <span class="st">"1_0"</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>v2 <span class="ot">&lt;-</span> <span class="st">"1_3"</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  plt <span class="ot">&lt;-</span> <span class="fu">plot_model_accuracy_comparison</span>(ds, v1, v2, <span class="at">scratch_folder =</span> sf) </span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-5-3.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
-</section>
-<section id="accuracy-throughout-a-trial" class="level2">
-<h2 class="anchored" data-anchor-id="accuracy-throughout-a-trial">Accuracy throughout a trial</h2>
-<p>For model 1.3?</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/post/"</span>, ds, <span class="st">"/"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, <span class="st">"pred_1_3.rds"</span>))</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  pred<span class="sc">$</span>itemwise <span class="sc">%&gt;%</span> </span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(condition, found, .draw, person) <span class="sc">%&gt;%</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">person_acc =</span> <span class="fu">mean</span>(model_correct), <span class="at">.groups =</span> <span class="st">"drop_last"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">accuracy =</span> <span class="fu">mean</span>(person_acc), <span class="at">.groups =</span> <span class="st">"drop_last"</span>) <span class="ot">-&gt;</span> acc</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  plt_acc <span class="ot">&lt;-</span> <span class="fu">plot_model_accuracy</span>(acc)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt_acc)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>v1 <span class="ot">&lt;-</span> <span class="st">"1_0"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>v2 <span class="ot">&lt;-</span> <span class="st">"1_3"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  plt <span class="ot">&lt;-</span> <span class="fu">plot_model_accuracy_comparison</span>(ds, v1, v2, <span class="at">scratch_folder =</span> sf) </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -226,43 +272,130 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </figure>
 </div>
 </div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 2 rows containing missing values or values outside the scale range
+(`geom_point()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-6-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
 </div>
 </section>
+<section id="accuracy-throughout-a-trial" class="level2">
+<h2 class="anchored" data-anchor-id="accuracy-throughout-a-trial">Accuracy throughout a trial</h2>
+<p>For model 1.3?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/post/"</span>, ds, <span class="st">"/"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, <span class="st">"pred_1_3.rds"</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  pred<span class="sc">$</span>itemwise <span class="sc">%&gt;%</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(condition, found, .draw, person) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">person_acc =</span> <span class="fu">mean</span>(model_correct), <span class="at">.groups =</span> <span class="st">"drop_last"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">accuracy =</span> <span class="fu">mean</span>(person_acc), <span class="at">.groups =</span> <span class="st">"drop_last"</span>) <span class="ot">-&gt;</span> acc</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  plt_acc <span class="ot">&lt;-</span> <span class="fu">plot_model_accuracy</span>(acc)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt_acc)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-7-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-7-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-7-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="generated-quantites" class="level1">
+<h1>Generated Quantites</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rl <span class="ot">&lt;-</span> <span class="fu">tibble</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  rl <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(rl,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_csv</span>(<span class="fu">paste0</span>(<span class="st">"1_fit_models/scratch/post/"</span>, ds, <span class="st">"/run_statistics.csv"</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">dataset =</span> ds))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>comp_corr <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> <span class="fu">corr.test</span>(df<span class="sc">$</span>value, df<span class="sc">$</span>observed)<span class="sc">$</span>estimate</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># rl %&gt;% pivot_longer(-c(person, condition, statistic, observed, dataset)) %&gt;%</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_split(dataset, statistic)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="posterior-density" class="level1">
 <h1>Posterior Density</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model_ver <span class="ot">&lt;-</span> <span class="st">"1_3"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>model_ver <span class="ot">&lt;-</span> <span class="st">"1_3"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="main-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="main-parameters">Main parameters</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/models/"</span>, ds, <span class="st">"/fit/"</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, model_ver, <span class="st">".model"</span>))</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">import_data</span>(ds)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(m, d)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  post_plt <span class="ot">&lt;-</span> <span class="fu">plot_model_fixed</span>(post) <span class="sc">+</span> <span class="fu">ggtitle</span>(ds)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(post_plt)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/models/"</span>, ds, <span class="st">"/fit/"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, model_ver, <span class="st">".model"</span>))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">import_data</span>(ds)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(m, d)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  post_plt <span class="ot">&lt;-</span> <span class="fu">plot_model_fixed</span>(post) <span class="sc">+</span> <span class="fu">ggtitle</span>(ds)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(post_plt)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-10-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-8-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-10-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-10-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -271,32 +404,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="directional-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="directional-parameters">Directional parameters</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/models/"</span>, ds, <span class="st">"/fit/"</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, model_ver, <span class="st">".model"</span>))</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">import_data</span>(ds)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(m, d)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  plt <span class="ot">&lt;-</span> <span class="fu">plot_model_theta</span>(post, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(ds)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (ds <span class="cf">in</span> datasets) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  folder <span class="ot">&lt;-</span> <span class="fu">paste0</span>(sf, <span class="st">"/models/"</span>, ds, <span class="st">"/fit/"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  m <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(folder, model_ver, <span class="st">".model"</span>))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">import_data</span>(ds)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  post <span class="ot">&lt;-</span> <span class="fu">extract_post</span>(m, d)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  plt <span class="ot">&lt;-</span> <span class="fu">plot_model_theta</span>(post, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(ds)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plt)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-9-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="2_report_results_files/figure-html/unnamed-chunk-9-3.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-11-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="2_report_results_files/figure-html/unnamed-chunk-11-4.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>

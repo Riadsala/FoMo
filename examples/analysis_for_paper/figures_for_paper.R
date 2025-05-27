@@ -81,13 +81,14 @@ ggsave("acc_comp.pdf", width = 6, height = 5)
 #############################################################################
 # generated quantities
 #############################################################################
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "bhat2025")
 
 rl <- tibble()
 
 for (ds in datasets) {
   
   rl <- bind_rows(rl,
-                  read_csv(paste0("1_fit_models/scratch/post/", ds, "/run_statistics.csv")) %>%
+                  read_csv(paste0("../1_fit_models/scratch/post/", ds, "/run_statistics.csv")) %>%
                     mutate(dataset = ds))
 }
 
@@ -111,7 +112,6 @@ rl  %>%
             a = summary(lm(observed ~ predicted))$coefficients[1,1],
             b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
 
-ds <- "tagu2022cog"
 
 rl %>% filter(model_ver == "v1_3") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
@@ -121,9 +121,10 @@ rl %>% filter(model_ver == "v1_3") %>%
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = F) +
   ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
-  theme_bw() +
-  theme(legend.position = "bottom")
-ggsave("run_stats.pdf", width = 8, height = 9)
+  theme_bw() 
+  # theme(legend.position = "bottom")
+
+ggsave("run_stats.pdf", width = 12, height = 8)
 
 rl_stats %>% 
   select(-a, -b) %>%
