@@ -34,7 +34,8 @@ data {
 
   array[N] int<lower = 1, upper = n_trials> trial; // what trial are we on? 
   array[N] int <lower = 0, upper = n_targets> found_order; // = 1 if starting a new trial, 0 otherwise
-  
+  array[n_trials] int first_items;
+
   // (x, y) coordinates of each target
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_x;
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_y;
@@ -50,6 +51,7 @@ data {
 
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
+  array[K] real grid_offset; // angular grid offset (ie, should we rotate our coordiante acis)
   real d0; // scale parameter to get rho_delta to ~ 1
 
 }
@@ -75,7 +77,7 @@ parameters {
   array[K] real rho_psi; // direction tuning
 
   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K, 8] real log_theta; // mixing values for directions
+  array[K, 4] real log_theta; // mixing values for directions
 
   ///////////////////////////////
   // random effects
@@ -84,12 +86,12 @@ parameters {
   // 4*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[4*K] sigma_u;
   // 4*K as we have four directions x K conditions
-  vector<lower=0>[8*K] sigma_w;
+  vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[4*K] L_u;
   // random effect matrix
   matrix[4*K,L] z_u; // for main params
-  matrix[8*K, L] z_w; // for directional params
+  matrix[4*K, L] z_w; // for directional params
 }
 
 transformed parameters {
@@ -105,25 +107,26 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_s, u_delta, u_psi;
+  array[K] vector[L] u_a, u_stick, u_delta, u_psi;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[4*(kk-1)+1]);
-    u_s[kk]     = to_vector(b_s[kk]       + u[4*(kk-1)+2]);
+    u_stick[kk] = to_vector(b_s[kk]   + u[4*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[4*(kk-1)+3]);
     u_psi[kk]   = to_vector(rho_psi[kk]   + u[4*(kk-1)+4]);
   }
 
   // now work out thet u_log_theta
-  array[K, L] vector[8] u_log_theta;
+  array[K, L] vector[4] u_log_theta;
 
   for (kk in 1:K) {
     for (l in 1:L) {
-      for (a in 1:8) {
 
-        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[8*(kk-1)+a, l] .* sigma_w[8*(kk-1)+a]);
+      u_log_theta[kk, l, 1] = (log_theta[kk, 1] + z_w[4*(kk-1)+1, l] .* sigma_w[4*(kk-1)+1]);
+      u_log_theta[kk, l, 2] = (log_theta[kk, 2] + z_w[4*(kk-1)+2, l] .* sigma_w[4*(kk-1)+2]);
+      u_log_theta[kk, l, 3] = (log_theta[kk, 3] + z_w[4*(kk-1)+3, l] .* sigma_w[4*(kk-1)+3]);
+      u_log_theta[kk, l, 4] = (log_theta[kk, 4] + z_w[4*(kk-1)+4, l] .* sigma_w[4*(kk-1)+4]);
 
-      }
     }  
   }
 }
@@ -163,10 +166,11 @@ generated quantities {
       z = Z[t];
       x = X[t];
 
-      weights = compute_weights_v14(
-        u_a[x, z], u_s[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
+      weights = compute_weights_v13(
+        u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
         to_vector(item_class[t]), S[ii], delta[ii], psi[ii], phi[ii],
-        found_order[ii], n_targets, remaining_items[ii]); 
+        found_order[ii], n_targets, remaining_items[ii],
+        grid_offset[x]); 
 
       P[ii] = categorical_rng(exp(weights));
       log_lik[ii] = weights[Y[ii]];
@@ -222,15 +226,25 @@ generated quantities {
           delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
           psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
           phi_q   = compute_absdir(item_x[t], item_y[t], n_targets, Q[t, ], ii); 
+        
+           weights = compute_weights_v13(
+          u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
+          to_vector(item_class[t]), S_q, delta_q, psi_q, phi_q,
+          found_order[ii], n_targets, remaining_items_q,
+          grid_offset[x]); 
+
+          // sample an item to select
+          Q[t, ii] = categorical_rng(exp(weights));
+
+        } else {
+
+          // first item same as it ever was
+          Q[t, ii] = first_items[t];
         }
 
-        weights = compute_weights_v14(
-          u_a[x, z], u_s[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
-          to_vector(item_class[t]), S_q, delta_q, psi_q, phi_q,
-          found_order[ii], n_targets, remaining_items_q); 
+       
 
-        // sample an item to select
-        Q[t, ii] = categorical_rng(exp(weights));
+       
 
         // update remaining_items_q
         remaining_items_q[Q[t, ii]] = 0;

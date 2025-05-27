@@ -96,7 +96,7 @@ parameters {
   // 4*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[4*K] sigma_u;
   // 4*K as we have four directions x K conditions
-  vector<lower=0>[4*K] sigma_w;
+  vector<lower=0>[8*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[4*K] L_u;
   // random effect matrix
@@ -127,13 +127,13 @@ transformed parameters {
   }
 
   // now work out thet u_log_theta
-  array[K, L] vector[4] u_log_theta;
+  array[K, L] vector[8] u_log_theta;
 
   for (kk in 1:K) {
     for (l in 1:L) {
       for (a in 1:8) {
 
-        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[4*(kk-1)+a, l] .* sigma_w[4*(kk-1)+a]);
+        u_log_theta[kk, l, a] = (log_theta[kk, a] + z_w[8*(kk-1)+a, l] .* sigma_w[8*(kk-1)+a]);
 
       }
     }  
