@@ -98,7 +98,6 @@ extract_and_save_predictions <- function(dataset) {
     
     rl %>% bind_rows(rlp) -> rl
     
-    
     # compute empirical run statistics
     iisvp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
       mutate(z = paste0("v",  modelver))
@@ -138,8 +137,6 @@ for (ds in datasets) {
   # first, extract and save accuracy
   print("***** Extracting preditions *****")
   extract_and_save_predictions(ds)
- 
-  # compute_iisv_and_run_statistics(ds)
 
 }
 

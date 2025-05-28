@@ -154,12 +154,13 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   idx <- sample(nrow(draws_matrix), iter_genquant) 
 
   print("computing generated quantities")
+  output_file <- if_else(fif, paste(dataset_name, fomo_ver_str, "fif", sep=""), paste(dataset_name, fomo_ver_str, sep=""))
 
   p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
                                         data = d_list,
                                         seed = 123,
                                         output_dir = paths$out_sim,
-                                        output_basename = paste(dataset_name, fomo_ver_str, sep=""))
+                                        output_basename = output_file)
 
   if (fif == TRUE) {
     p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "fif.model"))
