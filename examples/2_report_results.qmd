@@ -24,20 +24,18 @@ options(mc.cores = 1, digits = 2)
 theme_set(ggthemes::theme_tufte())
 ```
 
-
 See the `1_fit_models` folder for scripts that pre-compute everything
 
 ```{r}
 sf <- "1_fit_models/scratch"
 ```
 
-
 # Which model fits best 
 
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "bhat2025") #,   "clarke2022qjep
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep", "bhat2025") #,   
 ```
 
 ## Overall Prediction Accuracy
@@ -98,7 +96,8 @@ v1 <- "1_0"
 v2 <- "1_3"
 
 for (ds in datasets) {
-  plt <- plot_model_accuracy_comparison(ds, v1, v2, scratch_folder = sf) 
+  plt <- plot_model_accuracy_comparison(ds, v1, v2, scratch_folder = sf) +
+    ggtitle(ds)
   print(plt)
 }
 ```
