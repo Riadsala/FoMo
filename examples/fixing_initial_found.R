@@ -7,7 +7,7 @@ source("../functions/import_data.R")
 source("../functions/compute_summary_stats.R")
 source("../functions/post_functions.R")
 
-dataset <- "tagu2022cog"
+dataset <- "clarke2022qjep"
 
 d <- import_data(dataset)
 folder <- paste0("1_fit_models/scratch/models/", dataset, "/sim/")
@@ -30,7 +30,6 @@ rl_fif <- get_run_info_over_trials(predfif$trialwise %>% filter(.draw == 1)) %>%
             mean_pao = mean(pao),
             .groups = "drop") %>% 
   pivot_longer(-c(.draw, person, condition), names_to = "statistic", values_to = "fif")
-
 
 # now join with standard model
 rl <- read_csv("1_fit_models/scratch/post/tagu2022cog/run_statistics.csv")
