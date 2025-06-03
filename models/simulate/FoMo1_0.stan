@@ -32,7 +32,8 @@ data {
 
   array[N] int<lower = 1, upper = n_trials> trial; // what trial are we on? 
   array[N] int <lower = 0, upper = n_targets> found_order; // = 1 if starting a new trial, 0 otherwise
-  
+  array[n_trials] int first_items;
+
   // (x, y) coordinates of each target
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_x;
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_y;
@@ -200,8 +201,8 @@ generated quantities {
         if (ii > 1) 
         {
           S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
-          delta_q =   d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
-          psi_q   =   compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+          delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+          psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
         }
 
         weights = compute_weights_v10(
@@ -218,4 +219,56 @@ generated quantities {
       }  
     }
   } 
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* 
+  iii) Same as ii), but with the initial item fixed to match what the human
+  participant did
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[n_trials, n_targets] int F; 
+
+  {
+
+    // create some variables
+    vector[n_targets] weights;
+    int z, x; // trial, person, and condition
+    /* we need new remaining_items and features (S, psi, delta) as
+    these features will update dynamically as we carry out a new 
+    simulated foraging trial */
+    vector[n_targets] remaining_items_q;
+    vector[n_targets] S_q, psi_q, delta_q;
+
+    //for each trial
+    for (t in 1:n_trials) {
+
+      z = Z[t];
+      x = X[t];
+
+      // first, set up new trial_ all the items are remaining!
+      remaining_items_q = rep_vector(1, n_targets);
+
+      // first item same as it ever was
+      F[t, 1] = first_items[t];
+   
+      // simulate the rest of the trial!
+      for (ii in 2:n_targets) {
+
+        // if we're not on the first item.... calculate feature vectors  
+        S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
+        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+        psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+        
+        weights = compute_weights_v10(
+          u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z],
+          to_vector(item_class[t]), S_q, delta_q, psi_q,
+          found_order[ii], n_targets, remaining_items_q); 
+
+          // sample an item to select
+          F[t, ii] = categorical_rng(exp(weights));
+
+      }
+    } 
+  }
 }

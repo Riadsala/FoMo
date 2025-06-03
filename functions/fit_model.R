@@ -79,7 +79,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 
 
 gen_quant <- function(dataset, fomo_ver, mode = "all",
-                      iter_genquant = 10, fif = FALSE) {
+                      iter_genquant = 10) {
   
   #######################################################################
   # wrapper function for geneating quantities (predictions)
@@ -107,13 +107,8 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   fomo_ver_str <- str_replace(fomo_ver, "\\.", "_" )
   
   # load the stan file
-  if (fif == TRUE) {
-    mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, "fif.stan"))
-  } else {
-    mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
-  }
-  
-  
+  mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
+
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
     fxdp = TRUE
@@ -122,12 +117,9 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   }
  
   # load data and model
-  
-  # load the pre-computed d_list and add required priors
   d_list <- get_list(dataset, mode, "training")
   m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
 
-  
   ###########################################################################
   # now create generated quantities from fitted model
   
@@ -145,16 +137,14 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   }
   
   # add initial (first) item indices to d_list
-  if (fif == TRUE) {
-    d_list$first_items <- d_list$Y[which(d_list$found_order ==1 )]
-  }
-
+  d_list$first_items <- d_list$Y[which(d_list$found_order ==1 )]
+  
   # randomly sample some draws to calculate generated quantities for
   draws_matrix <- posterior::as_draws_matrix(m$draws())
   idx <- sample(nrow(draws_matrix), iter_genquant) 
 
   print("computing generated quantities")
-  output_file <- if_else(fif, paste(dataset_name, fomo_ver_str, "fif", sep=""), paste(dataset_name, fomo_ver_str, sep=""))
+  output_file <-paste(dataset_name, fomo_ver_str, sep="")
 
   p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
                                         data = d_list,
@@ -162,12 +152,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
                                         output_dir = paths$out_sim,
                                         output_basename = output_file)
 
-  if (fif == TRUE) {
-    p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "fif.model"))
-  } else {
-    p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
-  }
-
+  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
 }
 
 
@@ -193,15 +178,12 @@ get_paths <- function(ds) {
   
   # now sort out output path
   outpt_path <- paste0("scratch/models/", ds)
+  
   # create save folder if it doesn't yet exist
-  if (!dir.exists("scratch/models/")) {
-    dir.create("scratch/models/")
-    
-  }
-
-    dir.create(outpt_path)
-    dir.create(paste0(outpt_path, "/fit/"))
-    dir.create(paste0(outpt_path, "/sim/"))
+  if (!dir.exists("scratch/models/")) dir.create("scratch/models/")
+  if (!dir.exists(outpt_path)) dir.create(outpt_path)
+  if (!dir.exists(paste0(outpt_path, "/fit/"))) dir.create(paste0(outpt_path, "/fit/"))
+  if (!dir.exists(paste0(outpt_path, "/sim/"))) dir.create(paste0(outpt_path, "/sim/"))
 
   return(list(model = model_path, 
               simul = simul_path,
