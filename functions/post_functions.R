@@ -243,12 +243,14 @@ extract_pred <- function(dataset, fomo_ver, folder, mode = "split") {
   
   # extract whole-trial predictions
   trialwise <- extract_trial_pred(genquant, d$stim)
+  trialwiseF <- extract_trial_pred(genquant, d$stim, mode = "F")
 
   # we no longer need genquant or m
   rm(m, genquant)
     
   return(list(itemwise = itemwise, 
               trialwise = trialwise,
+              trialwise_firstfixed = trialwiseF,
               dataset <- dataset,
               model_ver <- fomo_ver))
   
@@ -281,12 +283,12 @@ extract_item_pred <- function(gq, my_data) {
   
 }
 
-extract_trial_pred <- function(gq, d_stim) {
+extract_trial_pred <- function(gq, d_stim, mode = "Q") {
   
   # first, we extract Q from the model
   gq %>%
     rename(id = "value") %>%
-    filter(str_detect(param, "Q")) %>%
+    filter(str_detect(param, mode)) %>%
     separate(param, into = c("trial", "found"), sep = ",") %>%
     mutate(trial = parse_number(str_extract(trial, "(?<=\\[)\\d*")),
            found = parse_number(found)) -> sim
