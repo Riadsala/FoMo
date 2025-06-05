@@ -79,11 +79,7 @@ extract_and_save_predictions <- function(dataset) {
     # save
     print("saving predictions")
     saveRDS(pred, paste0(outfolder, "/pred_", modelver, ".rds"))
-    
-    # # summarise accuracy and save
-    # print("summarising accuracy....")
-    # acc <- summarise_acc(pred)
-    # write_csv(acc, paste0(outfolder, "/acc_", mode, modelver, ".csv"))
+
     
     # compute simulated run statistics
     print("computing predicted run statistics")
@@ -95,6 +91,18 @@ extract_and_save_predictions <- function(dataset) {
                 mean_pao = mean(pao),
                 .groups = "drop") %>% 
       mutate(z = paste0("v",  modelver))
+    
+    rl %>% bind_rows(rlp) -> rl
+    
+    print("repeat, for fixed first selected...")
+    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw == 1)) %>%
+      group_by(.draw, person, condition) %>%
+      summarise(max_run_length = mean(max_run_length),
+                num_runs = mean(n_runs),
+                mean_bestr = mean(best_r),
+                mean_pao = mean(pao),
+                .groups = "drop") %>% 
+      mutate(z = paste0("f",  modelver))
     
     rl %>% bind_rows(rlp) -> rl
     
