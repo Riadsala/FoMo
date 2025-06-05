@@ -44,7 +44,7 @@ rm(acc)
 #############################################################################
 
 trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
-  pivot_longer(starts_with("v"), names_to = "model_version", values_to = "predicted")
+  pivot_longer(starts_with("f"), names_to = "model_version", values_to = "predicted")
 
 # reorder factor levels for plotting
 trl_stats %>% 
@@ -73,12 +73,15 @@ comp_r <- function(condition, statistic, model_version, trl_stats) {
   
   r <- cor.test(t$observed, t$predicted)$estimate
   
+  reg_model <- summary(lm(observed ~ predicted, t))$coefficients
+  
   return(tibble(condition = condition,
                 statistic = statistic,
                 model_version = model_version,
-                r = r))
+                r = r,
+                b = reg_model["predicted",1],
+                a = reg_model["(Intercept)",1]))
 }
-
 
 trl_stats %>% modelr::data_grid(condition, statistic, model_version) -> to_test
 
