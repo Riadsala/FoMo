@@ -57,4 +57,8 @@ plt2 <- plot_a_trial(d$stim, d$found, trial = 1263)
 
 plt3 <- plot_a_trial(d$stim, d$found, trial = 201)
 
-plt1 + plt2 + plt3
+plt1 / plt2 / plt3
+
+ggsave("fig1_example_trials.pdf", width = 6, height = 10)
+
+
