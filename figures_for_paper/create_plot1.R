@@ -27,11 +27,11 @@ plot_a_trial <- function(ds, df,
   
   # plot basic trial
   plt <- ggplot(data = ds, aes(x, y)) + 
-    geom_path(data = df, colour = "grey20", group = 1) +
-    geom_point(size = 8, aes(colour = item_class, shape = item_class)) +
-    geom_text(data = df, aes(label = found), size = 3) + 
+    geom_path(data = df, colour = "grey80", group = 1) +
+    geom_point(size = 5, aes(colour = item_class, shape = item_class)) +
+    geom_text(data = df, aes(label = found), size = 2.5) + 
     scale_colour_manual(values = c("#A1CAF1", "#BE0032", 3, 4)) + 
-    scale_shape_manual(values = c(15, 19, 3, 4))
+    scale_shape_manual(values = c(19, 19, 3, 4))
   
   plt <- plt + coord_equal() + 
     theme(axis.title = element_blank(),
@@ -57,8 +57,8 @@ plt2 <- plot_a_trial(d$stim, d$found, trial = 1263)
 
 plt3 <- plot_a_trial(d$stim, d$found, trial = 201)
 
-plt1 / plt2 / plt3
+plt1 + plt2 + plt3
 
-ggsave("fig1_example_trials.pdf", width = 6, height = 10)
+ggsave("fig1_example_trials.pdf", width = 12, height = 3.2)
 
 
