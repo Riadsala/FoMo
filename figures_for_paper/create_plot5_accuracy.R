@@ -62,10 +62,10 @@ baseline <- bind_rows(
   
 
 ggplot(acc, aes(found, accuracy)) +
-  stat_lineribbon(aes(fill = condition), alpha = 0.5) +
+  stat_lineribbon(aes(fill = condition), alpha = 0.5, linewidth = 0) +
   geom_path(data = baseline) + 
   facet_wrap(~dataset, scales = "free", nrow = 2) -> plt2
 
 plt1 + plt2 + plot_layout(widths = c(2,1))
 
-ggsave("figs/fig5_acc.pdf", width = 8, height = 4)  
+ggsave("figs/fig5_acc.pdf", width = 10, height = 4)  
