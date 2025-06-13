@@ -97,7 +97,7 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
     geom_errorbar(alpha = 0.25) +
     geom_errorbarh(alpha = 0.25) + 
     geom_abline(linetype = 2) + 
-    coord_equal() +
+    # coord_equal() +
     scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
     scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
     scale_color_paletteer_d("MoMAColors::Abbott", direction = -1) -> plt
