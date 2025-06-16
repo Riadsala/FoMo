@@ -37,15 +37,17 @@ plot_a_trial <- function(ds, df,
   ds %>% mutate(item_class = factor(item_class)) -> ds
   
   # plot basic trial
-  plt <- ggplot(data = ds, aes(x, y)) + 
-    geom_path(data = df, colour = "grey80", group = 1) 
+  plt <- ggplot(data = ds, aes(x, y))
   
-
   # add predictions
-  pred %>% filter(trial == trl, .draw == 1) -> predf
+  pred %>% filter(trial_p == trl, .draw %in% c(1,2,3)) %>%
+    bind_rows(bind_rows(df %>% mutate(.draw = 1), 
+                        df %>% mutate(.draw = 2), 
+                        df %>% mutate(.draw = 3)) %>% 
+                mutate(first_selection = "human")) -> predf
   
   plt + geom_path(data = predf, 
-                     aes(x, y, colour = first_selection),
+                     aes(x, y),
                      alpha = 0.5)  -> plt
   
   ds1 <- filter(ds, item_class == 1)
@@ -53,12 +55,12 @@ plot_a_trial <- function(ds, df,
   
    plt + geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#A1CAF1") +
      geom_point(data = ds2, size = 5, aes(shape = item_class), color = "#BE0032") +
-    geom_text(data = df, aes(label = found), size = 2.5) + 
+    geom_text(data = predf, aes(label = found), size = 2.5) + 
      scale_color_paletteer_d("wesanderson::Chevalier1") +
     scale_shape_manual(values = c(19, 19, 3, 4)) -> plt
   
   plt <- plt + coord_equal() + 
-    # facet_wrap(~model) +
+    facet_grid(.draw~first_selection) +
     scale_linewidth(guide = "none") + 
     scale_shape(guide = "none") +
     theme(axis.title = element_blank(),
@@ -81,6 +83,6 @@ bind_rows(
   pred13$trialwise %>% mutate(first_selection = "unconstrained"),
   pred13$trialwise_firstfixed %>% mutate(first_selection = "constrained")) -> pred
 
-plot_a_trial(d$stim, d$found, trial = 1273, pred = pred)
+plot_a_trial(d$stim, d$found, trial = 16, pred = pred)
 
 

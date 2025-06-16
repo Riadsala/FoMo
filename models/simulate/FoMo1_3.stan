@@ -282,10 +282,10 @@ generated quantities {
       for (ii in 2:n_targets) {
 
         // if we're not on the first item.... calculate feature vectors  
-        S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
-        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
-        psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
-        phi_q   = compute_absdir(item_x[t], item_y[t], n_targets, Q[t, ], ii); 
+        S_q     = compute_matching(item_class[t], n_targets, F[t, ], ii);
+        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, F[t, ], ii);
+        psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, F[t, ], ii);
+        phi_q   = compute_absdir(item_x[t], item_y[t], n_targets, F[t, ], ii); 
      
         weights = compute_weights_v13(
           u_a[x, z], u_stick[x, z], u_delta[x, z], u_psi[x, z], u_log_theta[x, z], kappa,
