@@ -9,7 +9,6 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(theme_bw())
 
-
 library(tidyverse)
 library(cmdstanr)
 library(patchwork)
@@ -52,57 +51,14 @@ plt_acc <- plot_model_accuracy(acc)
 rm(acc)
 
 
-#############################################################################
-# compare run statistics
-#############################################################################
 
-trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
-  pivot_longer(starts_with("v"), names_to = "model_version", values_to = "predicted")
-
-# reorder factor levels for plotting
-trl_stats %>% 
-  mutate(statistic = fct_recode(statistic, 
-                                `number of runs` = "num_runs", 
-                                `max(run length)` = "max_run_length",
-                                pao = "mean_pao",
-                                `best r`  = "mean_bestr"),
-         statistic = fct_relevel(statistic, 
-                                 "number of runs", "max(run length)", "pao")) -> trl_stats
-
-ggplot(trl_stats, aes(observed, predicted, colour = condition)) + 
-  geom_point() + 
-  geom_abline(linetype = 2) + 
-  facet_wrap( ~ statistic, nrow = 2, scales = "free") +
-  theme(legend.position = "none") -> plt_runs
-
-# compute correlations
-
-comp_r <- function(condition, statistic, model_version, trl_stats) {
-  
-  t <- filter(trl_stats, 
-              {{condition}} == condition,
-              {{statistic}} == statistic, 
-              {{model_version}} == model_version)
-  
-  r <- cor.test(t$observed, t$predicted)$estimate
-  
-  return(tibble(condition = condition,
-                statistic = statistic,
-                model_version = model_version,
-                r = r))
-}
-
-trl_stats %>% modelr::data_grid(condition, statistic, model_version) -> to_test
-
-pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
-  pivot_wider(names_from = model_version, values_from = r) %>%
-  knitr::kable()
 
 #############################################################################
 # compute & compare iisv statistics
 #############################################################################
 
-iisv <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+  filter(z %in% c("observed", "v1_0")) %>%
   mutate(z = if_else(str_detect(z, "v1_0"), "predicted", "observed")) %>%
   rename(data = "z")
 
@@ -126,13 +82,21 @@ iisv %>%
                  alpha = 0.5) + 
   paletteer::scale_fill_paletteer_d("fishualize::Acanthurus_sohal") -> plt_psi
 
+labels <- c(expression(-pi), expression(-pi/2), expression(0), expression(pi), expression(pi/2), expression(pi))
+
 iisv %>% 
   filter(is.finite(theta)) %>%
   ggplot(aes(theta, fill = data)) + 
   geom_histogram(position = position_identity(),
-                 breaks = seq(-pi, pi, pi/8),
+                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
                  alpha = 0.5) + 
-  paletteer::scale_fill_paletteer_d("fishualize::Acanthurus_sohal") -> plt_phi
+  scale_x_continuous(expression(phi), 
+                     breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
+                     labels = labels) +
+  paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = -1) +
+  theme(legend.position = "bottom") -> plt_phi
+
+ggsave("figs/figure2_absdir.pdf", width = 5, height = 4)
 
 #############################################################################
 #assemble plot
