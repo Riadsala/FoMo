@@ -113,13 +113,13 @@ rl  %>%
             b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
 
 
-rl %>% filter(model_ver == "v1_4") %>%
+rl %>% filter(model_ver == "f1_4") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
          statistic = fct_recode(statistic, `num runs` = "num_runs", `max (run length)` = "max_run_length", PAO = "mean_pao", `best-r` = "mean_bestr")) %>%
   ggplot(aes(predicted, observed, colour = condition)) +
   geom_abline(linetype = 2) + 
   geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = F) +
+  geom_smooth(method = "lm", se = F, aes(group = 1), colour = "black") +
   ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
   theme_bw() 
   # theme(legend.position = "bottom")
