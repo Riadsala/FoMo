@@ -12,7 +12,7 @@ source("../../functions/post_functions.R")
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
-datasets <- c( "clarke2022qjep" )  #"kristjansson2014plos", "tagu2022cog", "hughes2024rsos",
+datasets <- c( "clarke2022qjep", "hughes2024rsos", "tagu2022cog" )  #"kristjansson2014plos", , ,
 ############################################################################
 
 extract_and_save_predictions <- function(dataset) {
