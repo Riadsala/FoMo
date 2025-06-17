@@ -31,8 +31,8 @@ plot_a_trial <- function(ds, df,
   # Path segments may be labelled with some feature (a column in df).
   
   trl = trial
-  ds <- filter(ds, trial == trl)
-  df <- filter(df, trial == trl)
+  ds <- filter(ds, trial %in% trl)
+  df <- filter(df, trial %in% trl)
   
   ds %>% mutate(item_class = factor(item_class)) -> ds
   
@@ -40,20 +40,22 @@ plot_a_trial <- function(ds, df,
   plt <- ggplot(data = ds, aes(x, y)) + 
     geom_path(data = df, colour = "grey80", group = 1) -> plt
   
-  df %>% filter(found == ff-1) -> dff
+  df %>% filter(found == ff-1) %>%
+    rename(x0 = x, y0 = y) %>%
+    select(trial, x0, y0) -> dff
   
   # add predictions
-  pred %>% filter(found == ff, trial_p == trl ) %>%
-    group_by(P, model) %>%
+  pred %>% filter(found == ff, trial_p %in% trl ) %>%
+    group_by(P, model, trial_p) %>%
     summarise(n = n()) %>%
-    rename(id = "P") %>%
-    left_join(ds, by = join_by(id)) %>%
-    mutate(x0 = dff$x, y0 = dff$y) %>%
+    rename(id = "P", trial = "trial_p") %>%
+    left_join(ds, by = join_by(id, trial)) %>%
+    left_join(dff) %>%
     filter(n > 2) -> predf
   
   plt + geom_segment(data = predf, 
-                     aes(x=x0, y=y0, xend = x, yend = y, group = id, linewidth = n, color = model),
-                     alpha = 0.5)  -> plt
+                     aes(x=x0, y=y0, xend = x, yend = y, linewidth = n),
+                     alpha = 0.5, colour = "darkviolet")  -> plt
   
   print(predf %>% group_by(model) %>% summarise(prop_acc_for = sum(n)/max(pred$.draw)))
   
@@ -67,7 +69,7 @@ plot_a_trial <- function(ds, df,
     scale_shape_manual(values = c(19, 19, 3, 4)) -> plt
   
   plt <- plt + coord_equal() + 
-    facet_wrap(~model) +
+    facet_grid(trial~model) +
     scale_linewidth(guide = "none") + 
     scale_shape(guide = "none") +
     theme(axis.title = element_blank(),
@@ -89,11 +91,6 @@ pred10 <- readRDS(paste0(folder, "pred_1_0.rds"))$itemwise %>%
 pred13 <- readRDS(paste0(folder, "pred_1_3.rds"))$itemwise %>% 
   mutate(model = "1.3")
 
-plt1 <- plot_a_trial(d$stim, d$found, trial = 1273, pred = bind_rows(pred10, pred13), ff = 8)
+ plot_a_trial(d$stim, d$found, trial = c(53, 1273, 211), pred = bind_rows(pred10, pred13), ff = 8)
 
-plt2 <- plot_a_trial(d$stim, d$found, trial = 211, pred = bind_rows(pred10, pred13), ff = 8)
-
-plt3 <- plot_a_trial(d$stim, d$found, trial = 53, pred = bind_rows(pred10, pred13), ff = 8)
-
-plt3 / plt1 / plt2 + plot_layout(guides = "collect")
 
