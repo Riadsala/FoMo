@@ -239,14 +239,16 @@ generated quantities {
 
       // first item same as it ever was
       F[t, 1] = first_items[t];
-   
+      // update remaining_items_q
+      remaining_items_q[F[t, 1]] = 0;
+      
       // simulate the rest of the trial!
       for (ii in 2:n_targets) {
 
         // if we're not on the first item.... calculate feature vectors  
-        S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
-        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
-        psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+        S_q     = compute_matching(item_class[t], n_targets, F[t, ], ii);
+        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, F[t, ], ii);
+        psi_q   = compute_reldir(item_x[t], item_y[t], n_targets, F[t, ], ii);
         
         weights = compute_weights_v12(
           u_a[x, z], u_stick[x, z], u_delta[x, z], 
@@ -255,6 +257,8 @@ generated quantities {
 
         // sample an item to select
         F[t, ii] = categorical_rng(exp(weights));
+
+        remaining_items_q[F[t, ii]] = 0;
 
       }
     } 

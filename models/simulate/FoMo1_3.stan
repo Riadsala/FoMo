@@ -274,8 +274,7 @@ generated quantities {
 
       // first item same as it ever was
       F[t, 1] = first_items[t];
-
-       // update remaining_items_q
+      // update remaining_items_q
       remaining_items_q[F[t, 1]] = 0;
    
       // simulate the rest of the trial!
