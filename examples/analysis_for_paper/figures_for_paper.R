@@ -3,13 +3,13 @@ library(cmdstanr)
 library(patchwork)
 library(tidybayes)
 
-source("../functions/import_data.R")
-source("../functions/prep_data.R")
-source("../functions/compute_summary_stats.R")
-source("../functions/plot_model.R")
-source("../functions/plot_data.R")
-source("../functions/post_functions.R")
-source("../functions/sim_foraging_data.R")
+source("../../functions/import_data.R")
+source("../../functions/prep_data.R")
+source("../../functions/compute_summary_stats.R")
+source("../../functions/plot_model.R")
+source("../../functions/plot_data.R")
+source("../../functions/post_functions.R")
+source("../../functions/sim_foraging_data.R")
 
 options(mc.cores = 1, digits = 2)
 
@@ -81,7 +81,7 @@ ggsave("acc_comp.pdf", width = 6, height = 5)
 #############################################################################
 # generated quantities
 #############################################################################
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "bhat2025")
+datasets <- c( "tagu2022cog", "hughes2024rsos", "clarke2022qjep")
 
 rl <- tibble()
 
@@ -113,7 +113,7 @@ rl  %>%
             b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
 
 
-rl %>% filter(model_ver == "v1_3") %>%
+rl %>% filter(model_ver == "v1_4") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
          statistic = fct_recode(statistic, `num runs` = "num_runs", `max (run length)` = "max_run_length", PAO = "mean_pao", `best-r` = "mean_bestr")) %>%
   ggplot(aes(predicted, observed, colour = condition)) +
@@ -128,6 +128,6 @@ ggsave("run_stats.pdf", width = 12, height = 8)
 
 rl_stats %>% 
   select(-a, -b) %>%
-  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "pao","mean_bestr"))) %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr"))) %>%
   pivot_wider(names_from = "model_ver", values_from = "r") %>%
   knitr::kable()               
