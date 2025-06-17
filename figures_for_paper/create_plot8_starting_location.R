@@ -40,11 +40,7 @@ plot_a_trial <- function(ds, df,
   plt <- ggplot(data = ds, aes(x, y))
   
   # add predictions
-  pred %>% filter(trial_p == trl, .draw %in% c(1,2,3)) %>%
-    bind_rows(bind_rows(df %>% mutate(.draw = 1), 
-                        df %>% mutate(.draw = 2), 
-                        df %>% mutate(.draw = 3)) %>% 
-                mutate(first_selection = "human")) -> predf
+  pred %>% filter(trial_p == trl, .draw %in% c(1,2,3)) -> predf
   
   plt + geom_path(data = predf, 
                      aes(x, y),
@@ -69,8 +65,34 @@ plot_a_trial <- function(ds, df,
           # plot.background = element_rect(fill='darkgrey', colour='black'),
           panel.grid = element_blank(),
           panel.background =  element_rect(fill='darkgrey', colour='darkgrey'))
+  
+  
+  plt2 <- ggplot(data = ds, aes(x, y)) +
+    geom_path(data = df) 
+  
+  ds1 <- filter(ds, item_class == 1)
+  ds2 <- filter(ds, item_class == 2)
+  
+  plt2 + geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#A1CAF1") +
+    geom_point(data = ds2, size = 5, aes(shape = item_class), color = "#BE0032") +
+    geom_text(data = df, aes(label = found), size = 2.5) + 
+    scale_color_paletteer_d("wesanderson::Chevalier1") +
+    scale_shape_manual(values = c(19, 19, 3, 4)) -> plt2
+  
+  plt2 <- plt + coord_equal() + 
+    scale_linewidth(guide = "none") + 
+    scale_shape(guide = "none") +
+    theme(axis.title = element_blank(),
+          axis.ticks  = element_blank(),
+          axis.text = element_blank(),
+          # plot.background = element_rect(fill='darkgrey', colour='black'),
+          panel.grid = element_blank(),
+          panel.background =  element_rect(fill='darkgrey', colour='darkgrey'))
+  
+  
+  pltout <- plt2 + plt
 
-  return(plt)
+  return(pltout)
 }
 
 # read in data and predictions
@@ -85,4 +107,5 @@ bind_rows(
 
 plot_a_trial(d$stim, d$found, trial = 16, pred = pred)
 
+ggsave("figs/fig8_examples.png", width = 8, height = 8)
 
