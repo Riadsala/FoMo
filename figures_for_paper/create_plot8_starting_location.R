@@ -4,7 +4,7 @@ library(circular)
 
 source("../functions/import_data.R")
 source("../functions/prep_data.R")
-source("../functions/compute_summary_stats.R")
+# source("../functions/compute_summary_stats.R")
 source("../functions/plot_model.R")
 source("../functions/plot_data.R")
 source("../functions/post_functions.R")
@@ -43,7 +43,8 @@ plot_a_trial <- function(ds, df,
   # add predictions
   pred %>% filter(trial_p == trl, .draw %in% c(1,2,3)) -> predf
   
-  my_theme <- theme(axis.title = element_blank(),
+  my_theme <- theme(legend.position = "none", 
+                    axis.title = element_blank(),
                     axis.ticks  = element_blank(),
                     axis.text = element_blank(),
                     # plot.background = element_rect(fill='darkgrey', colour='black'),
@@ -53,13 +54,13 @@ plot_a_trial <- function(ds, df,
   # plot human path
   plt_human <- ggplot(ds, aes(x, y)) + 
     geom_path(data = df)  +
-    geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#A1CAF1") +
-    geom_point(data = ds2, size = 5, aes(shape = item_class), color = "#BE0032") +
+    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#A1CAF1") +
+    geom_point(data = ds2, size = 5, aes(shape = factor(item_class)), color = "#BE0032") +
     geom_text(data = df, aes(label = found), size = 2.5) + 
     scale_shape_manual(values = c(19, 19, 3, 4))+ 
     coord_equal() + 
     scale_linewidth(guide = "none") + 
-    scale_shape(guide = "none") +
+    # scale_shape(guide = "none") +
     my_theme
   
   
@@ -67,20 +68,17 @@ plot_a_trial <- function(ds, df,
   plt_model <- ggplot(data = ds, aes(x, y)) + geom_path(data = predf, 
                   aes(x, y),
                   alpha = 0.5) + 
-    geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#A1CAF1") +
-    geom_point(data = ds2, size = 5, aes(shape = item_class), color = "#BE0032") +
+    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#A1CAF1") +
+    geom_point(data = ds2, size = 5, aes(shape = factor(item_class)), color = "#BE0032") +
     geom_text(data = predf, aes(label = found), size = 2.5) + 
-     scale_color_paletteer_d("wesanderson::Chevalier1") +
+    scale_color_paletteer_d("wesanderson::Chevalier1") +
     scale_shape_manual(values = c(19, 19, 3, 4)) + coord_equal() + 
-    facet_grid(.draw~first_selection) +
-    scale_linewidth(guide = "none") + 
-    scale_shape(guide = "none") +
+    facet_grid(first_selection ~ .draw) +
+     scale_linewidth(guide = "none") + 
+    # scale_shape(guide = "none") +
     my_theme
   
- 
-  
-  
-  pltout <- plt2 + plt
+  pltout <- plt_human + plt_model + plot_layout(widths = c(2,3))
 
   return(pltout)
 }
