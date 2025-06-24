@@ -13,7 +13,7 @@ options(mc.cores = 1, digits = 2)
 #############################################################################
 # generated quantities
 #############################################################################
-datasets <- c( "tagu2022cog", "hughes2024rsos", "clarke2022qjep")
+datasets <- c( "tagu2022cog", "hughes2024rsos", "clarke2022qjep", "kristjansson2014plos")
 
 rl <- tibble()
 
@@ -25,7 +25,8 @@ for (ds in datasets) {
 }
 
 rl %>% pivot_longer(-c(person, condition, statistic, observed, dataset), 
-                    names_to = "model_ver", values_to = "predicted") -> rl
+                    names_to = "model_ver", values_to = "predicted") %>%
+  mutate(dataset = fct_relevel(dataset, c("kristjansson2014plos", "tagu2022cog"))) -> rl
 
 comp_corr <- function(df) {
   
@@ -45,7 +46,7 @@ rl  %>%
             b = summary(lm(observed ~ predicted))$coefficients[2,1], 
             .groups = "drop") -> rl_stats
 
-rl %>% filter(model_ver == "v1_4") %>%
+rl %>% filter(model_ver == "f1_3") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
          statistic = fct_recode(statistic, 
                                 `num runs` = "num_runs",
@@ -58,9 +59,8 @@ rl %>% filter(model_ver == "v1_4") %>%
   geom_smooth(method = "lm", se = F, aes(group = 1), colour = "black") +
   ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
   theme_bw() 
-  # theme(legend.position = "bottom")
 
-ggsave("run_stats.pdf", width = 12, height = 8)
+ggsave("figs/fig7_run_stats.pdf", width = 12, height = 8)
 
 rl_stats %>% 
   select(-a, -b) %>%
@@ -95,9 +95,16 @@ rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
          model_ver = str_replace(model_ver, "_", "."),
          model_ver = as.numeric(model_ver)) %>%
   group_by(dataset, model_ver, first_selection, statistic) %>%
-  summarise(tot_err = sum(abs_err)) %>%
-  pivot_wider(names_from = "first_selection", values_from = "tot_err") %>%
-  mutate(percent = 100*(fixed-free)/(free)) %>%
-  ggplot(aes(dataset, percent, fill = factor(model_ver))) + 
-  geom_col(position = position_dodge()) +
-  facet_wrap(~statistic)
+  summarise(abs_err = median(abs_err)) %>%
+  mutate(first_selection = factor(first_selection),
+         first_selection =  fct_relevel(first_selection, "free"),
+         statistic = factor(statistic),
+         statistic = fct_relevel(statistic, "num_runs", "max_run_length")) %>%
+  # pivot_wider(names_from = "first_selection", values_from = "tot_err") %>%
+  filter(model_ver == "1.3") %>%
+  # mutate(percent = 100*(fixed-free)/(free)) %>%
+  ggplot(aes(dataset, abs_err, fill = first_selection)) + 
+  geom_col(position = position_dodge(), alpha = 0.75) +
+  theme_bw() +
+  facet_wrap(~statistic, scales = "free_y") 
+  

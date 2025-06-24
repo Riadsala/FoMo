@@ -12,7 +12,7 @@ source("../../functions/post_functions.R")
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
-datasets <- c(  "kristjansson2014plos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c(  "clarke2022qjep" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
 ############################################################################
 
 extract_and_save_predictions <- function(dataset) {
@@ -79,7 +79,6 @@ extract_and_save_predictions <- function(dataset) {
     # save
     print("saving predictions")
     saveRDS(pred, paste0(outfolder, "/pred_", modelver, ".rds"))
-
     
     # compute simulated run statistics
     print("computing predicted run statistics")
