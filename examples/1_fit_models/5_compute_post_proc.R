@@ -82,7 +82,7 @@ extract_and_save_predictions <- function(dataset) {
     
     # compute simulated run statistics
     print("computing predicted run statistics")
-    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
@@ -94,7 +94,7 @@ extract_and_save_predictions <- function(dataset) {
     rl %>% bind_rows(rlp) -> rl
     
     print("repeat, for fixed first selected...")
-    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
