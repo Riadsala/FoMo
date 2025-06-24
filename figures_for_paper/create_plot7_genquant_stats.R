@@ -42,12 +42,16 @@ rl  %>%
   group_by(dataset, statistic, model_ver, condition) %>%
   summarise(r = cor.test(predicted, observed)$estimate, 
             a = summary(lm(observed ~ predicted))$coefficients[1,1],
-            b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
+            b = summary(lm(observed ~ predicted))$coefficients[2,1], 
+            .groups = "drop") -> rl_stats
 
-
-rl %>% filter(model_ver == "f1_4") %>%
+rl %>% filter(model_ver == "v1_4") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
-         statistic = fct_recode(statistic, `num runs` = "num_runs", `max (run length)` = "max_run_length", PAO = "mean_pao", `best-r` = "mean_bestr")) %>%
+         statistic = fct_recode(statistic, 
+                                `num runs` = "num_runs",
+                                `max (run length)` = "max_run_length", 
+                                PAO = "mean_pao", 
+                                `best-r` = "mean_bestr")) %>%
   ggplot(aes(predicted, observed, colour = condition)) +
   geom_abline(linetype = 2) + 
   geom_point(alpha = 0.5) +
@@ -64,7 +68,6 @@ rl_stats %>%
   pivot_wider(names_from = "model_ver", values_from = "r") %>%
   knitr::kable()               
 
-
 # 
 # rl  %>%
 #   group_by(dataset, statistic, model_ver) %>%
@@ -74,20 +77,6 @@ rl_stats %>%
 
 perfect <- tibble(metric = c("a", "b", "r"),
                   value = c(0, 1, 1))
-
-rl_stats %>%
-  filter(dataset == "clarke2022qjep") %>%
-  mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
-         model_ver = str_remove(model_ver, "v|f"),
-         model_ver = str_replace(model_ver, "_", "."),
-         model_ver = as.numeric(model_ver)) %>%
-  pivot_longer(c(r, a, b), names_to = "metric") %>%
-  ggplot(aes(model_ver, value, colour = condition, linetype = first_selection)) + 
-  geom_hline(data = perfect, aes(yintercept = value), linewidth = 2) + 
-  geom_point() + geom_path() + 
-  ggh4x::facet_grid2(statistic~metric, independent = "y", scales = "free")
-
-
 
 rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
@@ -100,8 +89,6 @@ rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   geom_path() + 
   facet_wrap(~statistic, scales = "free")
   
-
-
 rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
@@ -111,6 +98,6 @@ rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   summarise(tot_err = sum(abs_err)) %>%
   pivot_wider(names_from = "first_selection", values_from = "tot_err") %>%
   mutate(percent = 100*(fixed-free)/(free)) %>%
-  filter(model_ver == 1.4) %>%
-  ggplot(aes(dataset, percent, fill = statistic)) + 
-  geom_col(position = position_dodge()) 
+  ggplot(aes(dataset, percent, fill = factor(model_ver))) + 
+  geom_col(position = position_dodge()) +
+  facet_wrap(~statistic)
