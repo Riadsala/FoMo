@@ -128,7 +128,7 @@ plot_models_accuracy <- function(ds, scratch_folder = "1_fit_models/scratch") {
     
     a <- readRDS(paste0(scratch_folder, "/post/", ds, "/", ff))
     
-    a$itemwise$model_ver <- a[[4]]
+    a$itemwise$model_ver <- a[[5]]
     
     d <- bind_rows(d, a$itemwise)
     
