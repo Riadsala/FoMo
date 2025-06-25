@@ -91,6 +91,6 @@ pred10 <- readRDS(paste0(folder, "pred_1_0.rds"))$itemwise %>%
 pred13 <- readRDS(paste0(folder, "pred_1_3.rds"))$itemwise %>% 
   mutate(model = "1.3")
 
- plot_a_trial(d$stim, d$found, trial = c(53, 1273, 211), pred = bind_rows(pred10, pred13), ff = 8)
+plot_a_trial(d$stim, d$found, trial = c(53, 1273, 211), pred = bind_rows(pred10, pred13), ff = 8)
 
 

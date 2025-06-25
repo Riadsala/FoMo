@@ -95,5 +95,5 @@ bind_rows(
 
 plot_a_trial(d$stim, d$found, trial = 17, pred = pred)
 
-ggsave("figs/fig8_examples.pdf", width = 15, height = 6)
+ggsave("figs/fig9_examples.pdf", width = 15, height = 6)
 

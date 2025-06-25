@@ -60,7 +60,7 @@ rl %>% filter(model_ver == "f1_3") %>%
   ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
   theme_bw() 
 
-ggsave("figs/fig7_run_stats.pdf", width = 12, height = 8)
+ggsave("figs/fig8_run_stats.pdf", width = 12, height = 8)
 
 rl_stats %>% 
   select(-a, -b) %>%
@@ -97,5 +97,5 @@ rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   facet_wrap(~statistic, scales = "free_y") +
   scale_x_discrete(guide = guide_axis(angle = 45))
 
-ggsave("figs/fig9_fixed_v_free.pdf", width = 6, height = 5)
+ggsave("figs/fig10_fixed_v_free.pdf", width = 6, height = 5)
   
