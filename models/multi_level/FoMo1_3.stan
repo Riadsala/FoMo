@@ -59,6 +59,7 @@ data {
   real prior_mu_rho_psi; // = 0, "momentum"
   real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
   real prior_sigma_u_lambda;
+  real prior_sigma_w_lambda;
 
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
