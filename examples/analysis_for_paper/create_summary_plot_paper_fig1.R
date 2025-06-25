@@ -17,7 +17,7 @@ options(mc.cores = 1, digits = 2)
 theme_set(theme_bw())
 
 model_ver <- "1_0"
-dataset <- "kristjansson2014plos"
+dataset <- "hughes2022rsos"
 
 # read in data
 d <- import_data(dataset)

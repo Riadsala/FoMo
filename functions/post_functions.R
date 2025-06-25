@@ -276,7 +276,7 @@ extract_item_pred <- function(gq, my_data) {
   pred <- full_join(my_data$found %>% mutate(row = 1:n()), 
                     pred, 
                     by = join_by(row)) %>%
-    select(-any_of(c("row", "item_class", "x", "y", "rt"))) %>%
+    select(-any_of(c("row", "rt"))) %>% # "item_class", "x", "y",
     mutate(model_correct = (P == id))
   
   return(pred)

@@ -12,7 +12,7 @@ source("../../functions/post_functions.R")
 options(mc.cores = 4, digits = 2)
 
 ############################################################################
-datasets <- c(  "clarke2022qjep" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c(  "hughes2024rsos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
 ############################################################################
 
 extract_and_save_predictions <- function(dataset) {
@@ -82,7 +82,7 @@ extract_and_save_predictions <- function(dataset) {
     
     # compute simulated run statistics
     print("computing predicted run statistics")
-    rlp <- get_run_info_over_trials(pred$trialwise) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
@@ -94,7 +94,7 @@ extract_and_save_predictions <- function(dataset) {
     rl %>% bind_rows(rlp) -> rl
     
     print("repeat, for fixed first selected...")
-    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw == 1)) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
@@ -106,7 +106,7 @@ extract_and_save_predictions <- function(dataset) {
     rl %>% bind_rows(rlp) -> rl
     
     # compute empirical run statistics
-    iisvp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
+    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw == 1)) %>%
       mutate(z = paste0("v",  modelver))
     
     iisv %>% bind_rows(iisvp) -> iisv

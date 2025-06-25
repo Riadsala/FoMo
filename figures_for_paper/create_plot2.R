@@ -28,7 +28,7 @@ options(mc.cores = 1, digits = 2)
 theme_set(theme_bw())
 
 model_ver <- "1_0"
-dataset <- "clarke2022qjep"
+dataset <- "hughes2024rsos"
 
 # read in data
 d <- import_data(dataset)
@@ -98,7 +98,6 @@ iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iis
   mutate(z = if_else(str_detect(z, "v1_3"), "predicted", "observed")) %>%
   rename(data = "z")
 
-
 iisv %>% 
   filter(is.finite(theta)) %>%
   ggplot(aes(theta, fill = data)) + 
@@ -110,3 +109,23 @@ iisv %>%
                      labels = labels) +
   paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = -1) +
   theme(legend.position = "bottom") -> plt_phi
+
+
+# compare 1.0 and 1.3
+iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+  filter(z %in% c("observed", "v1_0")) %>%
+  # mutate(z = if_else(str_detect(z, "v1_3"), "predicted", "observed")) %>%
+  rename(data = "z")
+
+iisv %>% 
+  filter(is.finite(theta)) %>%
+  ggplot(aes(theta, fill = data)) + 
+  geom_histogram(position = position_identity(),
+                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
+                 alpha = 0.25) + 
+  scale_x_continuous(expression(phi), 
+                     breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
+                     labels = labels) +
+  paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  theme(legend.position = "bottom") 
+  
