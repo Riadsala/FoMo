@@ -91,6 +91,29 @@ pred10 <- readRDS(paste0(folder, "pred_1_0.rds"))$itemwise %>%
 pred13 <- readRDS(paste0(folder, "pred_1_3.rds"))$itemwise %>% 
   mutate(model = "1.3")
 
-plot_a_trial(d$stim, d$found, trial = c(53, 1273, 211), pred = bind_rows(pred10, pred13), ff = 8)
+
+# find some examples with BIG differences
+pred = bind_rows(pred10, pred13)
+
+pred %>% group_by(person, trial, model, found) %>%
+  filter(found > 1) %>%
+  summarise(acc = mean(model_correct)) %>%
+  pivot_wider(names_from = "model", values_from = "acc") %>%
+  mutate(acc_diff = `1.3` - `1.0`, .keep = "unused") -> ad
+
+ad %>% group_by(person, found) %>%
+  summarise(acc_diff = mean(acc_diff)) %>%
+  ggplot(aes(found, acc_diff, colour = factor(person))) +
+  geom_path() +
+  geom_smooth(aes(group = 1))
+
+hist(ad$acc_diff, 50)
+
+ad %>% arrange(desc(acc_diff))
+
+
+
+
+plot_a_trial(d$stim, d$found, trial = 778, pred = bind_rows(pred10, pred13), ff = 6)
 
 

@@ -13,7 +13,7 @@ options(mc.cores = 8)
 # lets simulate some data - this is for the TEST MULTICOND dataset
 ######################################################################
 
-experiment_params <- list(n_people = 20, 
+experiment_params <- list(n_people = 10, 
                           n_conditions = 2,
                           condition_labels = c("A", "B"),
                           n_trials_per_cond = 6)
@@ -35,7 +35,7 @@ variance_params <- list(b_a = c(0.1, 0.1),
 absdir_params <- list(
   kappa = rep(20, 4), theta = c(5, 1, 5, 1))
 
-absdir_params <- "off"
+# absdir_params <- "off"
 
 initsel_params <- "off"
 
@@ -55,14 +55,15 @@ plot_a_trial(d$stim, d$found, 1)
 ######################################################################
 
 dl <- prep_data_for_stan(d)
-dl <- add_priors_to_d_list(dl, modelver = "1.0")
+dl <- add_priors_to_d_list(dl, modelver = "1.3")
+
 
 iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan",
+mod <- cmdstan_model("../../models/multi_level/FoMo1_3.stan",
                      cpp_options = list(stan_threads = TRUE))
 
 m <- mod$sample(data = dl, 
-                iter_warmup  = iter, iter_sampling = iter,
+                iter_warmup = iter, iter_sampling = iter,
                 chains = 4, 
                 parallel_chains = 8,
                 threads_per_chain = 2)
