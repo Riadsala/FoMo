@@ -35,7 +35,7 @@ sf <- "1_fit_models/scratch"
 We are evaluating using the following datasets:
 
 ```{r}
-datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep", "bhat2025") #,   
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep") #,   
 ```
 
 ## Overall Prediction Accuracy
@@ -67,7 +67,7 @@ for (ds in datasets) {
     for (ff in files) {
       
       a <- readRDS(paste0(sf, "/post/", ds, "/", ff))
-      a$itemwise$model_ver <- a[[4]]
+      a$itemwise$model_ver <- a[[5]]
       d_acc <- bind_rows(d_acc, a$itemwise %>% mutate(dataset = ds))
       
     }
