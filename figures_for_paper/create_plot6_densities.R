@@ -18,5 +18,20 @@ theme_set(theme_bw())
 sf <- "../examples/1_fit_models/scratch"
 
 dataset <- c("hughes2024rsos")   
-v2 <- "1_3"
+model_ver <- "1_3"
 
+# read in data
+d <- import_data(dataset)
+
+m <- readRDS(paste0(sf, "/models/", dataset, "/fit/", model_ver, ".model"))
+post <- extract_post(m, d)
+
+
+plt_coreparams <- plot_model_fixed(post, nrow = 2)
+plt_theta <- plot_model_theta(post, nrow = 1)
+
+plt_coreparams / plt_theta + plot_layout(heights = c(1.5,1))
+ggsave("figs/fig6_post_densities.pdf", width = 5, height = 8)
+
+# currently not in paper
+plt_indiv <- plot_model_random(post)
