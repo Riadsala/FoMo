@@ -75,20 +75,8 @@ rl_stats %>%
 #             a = summary(lm(observed ~ predicted))$coefficients[1,1],
 #             b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
 
-perfect <- tibble(metric = c("a", "b", "r"),
-                  value = c(0, 1, 1))
 
-rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
-  mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
-         model_ver = str_remove(model_ver, "v|f"),
-         model_ver = str_replace(model_ver, "_", "."),
-         model_ver = as.numeric(model_ver)) %>%
-  group_by(dataset, model_ver, first_selection, statistic) %>%
-  summarise(tot_err = sum(abs_err)) %>%
-  ggplot(aes(model_ver, tot_err, colour = dataset, linetype = first_selection)) +
-  geom_path() + 
-  facet_wrap(~statistic, scales = "free")
-  
+
 rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
@@ -106,5 +94,8 @@ rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   ggplot(aes(dataset, abs_err, fill = first_selection)) + 
   geom_col(position = position_dodge(), alpha = 0.75) +
   theme_bw() +
-  facet_wrap(~statistic, scales = "free_y") 
+  facet_wrap(~statistic, scales = "free_y") +
+  scale_x_discrete(guide = guide_axis(angle = 45))
+
+ggsave("figs/fig9_fixed_v_free.pdf", width = 6, height = 5)
   

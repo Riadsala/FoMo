@@ -37,23 +37,6 @@ sf <- "../examples/1_fit_models/scratch"
 folder <- paste0(sf, "/post/", dataset, "/")
 
 #############################################################################
-# plot accuracy
-#############################################################################
-pred <- readRDS(paste0(folder, "pred_1_0.rds"))
-
-pred$itemwise %>% 
-  group_by(condition, found, .draw, person) %>%
-  summarise(person_acc = mean(model_correct), .groups = "drop_last") %>%
-  summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
-
-plt_acc <- plot_model_accuracy(acc)
-
-rm(acc)
-
-
-
-
-#############################################################################
 # compute & compare iisv statistics
 #############################################################################
 
@@ -102,5 +85,28 @@ ggsave("figs/figure2_absdir.pdf", width = 5, height = 4)
 #assemble plot
 #############################################################################
 
-plt_top <- plt_acc / plt_runs + plot_layout(heights = c(2,3), guides = "collect")
-plt_bot <- plt_delta / (plt_psi + plt_phi) + plot_layout(guides = "collect")
+# plt_top <- plt_acc / plt_runs + plot_layout(heights = c(2,3), guides = "collect")
+# plt_bot <- plt_delta / (plt_psi + plt_phi) + plot_layout(guides = "collect")
+
+
+#############################################################################
+# now repeat for model 1.3
+#############################################################################
+
+iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+  filter(z %in% c("observed", "v1_3")) %>%
+  mutate(z = if_else(str_detect(z, "v1_3"), "predicted", "observed")) %>%
+  rename(data = "z")
+
+
+iisv %>% 
+  filter(is.finite(theta)) %>%
+  ggplot(aes(theta, fill = data)) + 
+  geom_histogram(position = position_identity(),
+                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
+                 alpha = 0.5) + 
+  scale_x_continuous(expression(phi), 
+                     breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
+                     labels = labels) +
+  paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = -1) +
+  theme(legend.position = "bottom") -> plt_phi
