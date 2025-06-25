@@ -117,7 +117,6 @@ extract_and_save_predictions <- function(dataset) {
   
   # tidy up run statistics model
   rl %>%  
-    select(-.draw) %>%
     pivot_longer(c(max_run_length, num_runs, mean_bestr, mean_pao), names_to = "statistic") %>%
     pivot_wider(names_from = z) -> rl
   

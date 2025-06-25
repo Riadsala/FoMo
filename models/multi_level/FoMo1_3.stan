@@ -90,7 +90,6 @@ parameters {
   // theta is a 4D vector containing the mixture weights for our direction model
   array[K, 4] real log_theta; // mixing values for directions
 
-
   ///////////////////////////////
   // random effects
   ///////////////////////////////
