@@ -2,7 +2,7 @@ library(cmdstanr)
 
 
 fit_model <- function(dataset, fomo_ver, mode = "all",
-                      iter = 1000) {
+                      iter = 1000, kappa = NA) {
   
   #######################################################################
   # wrapper function for loading d_list, fitting model, training
@@ -56,6 +56,11 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
     d_list$grid_offset <- c(0, pi/4, 0, pi/4)
   } else {
     d_list$grid_offset <- c(0, 0)
+  }
+  
+  if(is.finite(kappa)) {
+    d_list$kappa = kappa
+    fomo_ver_str = paste0(fomo_ver_str, "_kappa", kappa)
   }
   
   print("****************************************************************************")
