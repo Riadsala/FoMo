@@ -171,7 +171,7 @@ vector compute_absdir(vector x, vector y, int n_targets, array [ ] int Q, int jj
 
   if (jj > 1) {
 
-    phi = atan2((y - y[Q[jj-1]]), (x - x[Q[jj-1]])) * 180 / pi();
+    phi = atan2((y - y[Q[jj-1]]), (x - x[Q[jj-1]]));
 
   }
 
