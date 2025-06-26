@@ -55,7 +55,7 @@ iisv %>%
   facet_wrap(~condition) + 
   paletteer::scale_colour_paletteer_d("fishualize::Acanthurus_sohal") +
   theme(legend.position = "none") +
-  scale_x_continuous("item selection")-> plt_delta
+  scale_x_continuous("item selection") -> plt_delta
 
 iisv %>% 
   filter(is.finite(psi)) %>%

@@ -13,7 +13,7 @@ options(mc.cores = 1, digits = 2)
 #############################################################################
 # generated quantities
 #############################################################################
-datasets <- c( "tagu2022cog", "hughes2024rsos", "clarke2022qjep", "kristjansson2014plos")
+datasets <- c( "tagu2022cog", "hughes2024rsos", "kristjansson2014plos")
 
 rl <- tibble()
 
@@ -24,9 +24,20 @@ for (ds in datasets) {
                     mutate(dataset = ds))
 }
 
-rl %>% pivot_longer(-c(person, condition, statistic, observed, dataset), 
-                    names_to = "model_ver", values_to = "predicted") %>%
-  mutate(dataset = fct_relevel(dataset, c("kristjansson2014plos", "tagu2022cog"))) -> rl
+rl_obs <- rl %>% filter(is.na(.draw)) %>%
+  select(dataset, person, condition, statistic, observed)
+
+rl_sim <- rl %>% filter(is.finite(.draw)) %>%
+  select(-observed) %>%
+  pivot_longer(
+    -c(person, condition, statistic, dataset), 
+    names_to = "model_ver", values_to = "predicted")
+
+rl <- full_join(rl_obs, rl_sim)
+
+# rl %>% select(-.draw) %>% pivot_longer(-c(person, condition, statistic, observed, dataset), 
+#                     names_to = "model_ver", values_to = "predicted") %>%
+#   mutate(dataset = fct_relevel(dataset, c("kristjansson2014plos", "tagu2022cog"))) -> rl
 
 comp_corr <- function(df) {
   
@@ -46,7 +57,7 @@ rl  %>%
             b = summary(lm(observed ~ predicted))$coefficients[2,1], 
             .groups = "drop") -> rl_stats
 
-rl %>% filter(model_ver == "f1_3") %>%
+rl %>% filter(model_ver == "f1_0") %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
          statistic = fct_recode(statistic, 
                                 `num runs` = "num_runs",
