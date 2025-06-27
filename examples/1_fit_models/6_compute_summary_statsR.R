@@ -17,7 +17,7 @@ draws_for_sim <- 2
 datasets <- c(  "hughes2024rsos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
 ############################################################################
 
-extract_and_save_predictions <- function(dataset, draws_for_sim = 2) {
+extract_and_save_predictions <- function(dataset, draws_for_sim = 1) {
   
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
