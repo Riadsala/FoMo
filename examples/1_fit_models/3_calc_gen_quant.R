@@ -5,7 +5,7 @@ source("../../functions/import_data.R")
 source("../../functions/prep_data.R")
 source("../../functions/fit_model.R")
 
-iter <- 100
+iter <- 500
 
 gen_quant("hughes2024rsos", fomo_ver = "1.0", mode = "traintest", iter_genquant = iter)
 gen_quant("hughes2024rsos", fomo_ver = "1.2", mode = "traintest", iter_genquant = iter)

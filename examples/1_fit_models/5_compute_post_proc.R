@@ -11,11 +11,13 @@ source("../../functions/post_functions.R")
 
 options(mc.cores = 4, digits = 2)
 
+draws_for_sim <- 2
+
 ############################################################################
 datasets <- c(  "hughes2024rsos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
 ############################################################################
 
-extract_and_save_predictions <- function(dataset) {
+extract_and_save_predictions <- function(dataset, draws_for_sim = 2) {
   
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
@@ -56,7 +58,7 @@ extract_and_save_predictions <- function(dataset) {
               mean_bestr = mean(best_r),
               mean_pao = mean(pao),
               .groups = "drop") %>%
-    mutate(z = "observed")
+    pivot_longer(-c(person, condition), names_to = "statistic", values_to = "observed")
   
   # compute empirical run statistics
   iisv <- get_iisv_over_trials(d$found) %>%
@@ -82,34 +84,41 @@ extract_and_save_predictions <- function(dataset) {
     
     # compute simulated run statistics
     print("computing predicted run statistics")
-    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw < (draws_for_sim+1))) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
                 .groups = "drop") %>% 
-      mutate(z = paste0("v",  modelver))
-    
-    rl %>% bind_rows(rlp) -> rl
+      pivot_longer(-c(.draw, person, condition), 
+                   names_to = "statistic", 
+                   values_to =  paste0("v",  modelver))
+   
+    rl %>% full_join(rlp, 
+                     by = join_by(person, condition, statistic)) -> rl
     
     print("repeat, for fixed first selected...")
-    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw < (draws_for_sim+1))) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
                 .groups = "drop") %>% 
-      mutate(z = paste0("f",  modelver))
+      pivot_longer(-c(.draw, person, condition),
+                   names_to = "statistic", 
+                   values_to =  paste0("f",  modelver))
     
-    rl %>% bind_rows(rlp) -> rl
+    rl %>% full_join(rlp, 
+                     by = join_by(.draw, person, condition, statistic)) -> rl
     
     # compute empirical run statistics
-    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw == 1)) %>%
-      mutate(z = paste0("v",  modelver))
+    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("v",  modelver))
     
-    iisv %>% bind_rows(iisvp) -> iisv
+    iisv %>% mutate(model_version = "observed") %>%
+      bind_rows(iisvp) -> iisv
     
     rm(pred) 
     
