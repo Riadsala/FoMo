@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 draws_for_sim <- 2
 
 ############################################################################
-datasets <- c(  "hughes2024rsos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c(  "hughes2024rsos", "tagu2022cog")  #"clarke2022qjep", "hughes2024rsos",
 ############################################################################
 
 compute_summary_stats <- function(dataset, draws_for_sim = 1) {
@@ -60,7 +60,6 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
               .groups = "drop") %>%
     pivot_longer(-c(person, condition), names_to = "statistic", values_to = "observed") 
 
-  
   # compute empirical run statistics
   iisv <- get_iisv_over_trials(d$found) %>%
     mutate(z = "observed")
@@ -109,21 +108,19 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
     
     rl <- full_join(rl, rlp)
     # 
-    # # compute empirical run statistics
-    # iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw <  (draws_for_sim+1))) %>%
-    #   mutate(model_version = paste0("v",  modelver))
-    # 
-    # iisv %>% mutate(model_version = "observed") %>%
-    #   bind_rows(iisvp) -> iisv
+    # compute empirical run statistics
+    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("v",  modelver))
+
+    iisv %>% mutate(model_version = "observed") %>%
+      bind_rows(iisvp) -> iisv
     
     rm(pred) 
     
   }
   
   # tidy up run statistics model
-  rl %>%  
-    pivot_longer(c(max_run_length, num_runs, mean_bestr, mean_pao), names_to = "statistic") %>%
-    pivot_wider(names_from = z) -> rl
+
   
   # round iisv to 3dp
   iisv %>% mutate(x = round(x, 3), 
@@ -144,10 +141,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
 for (ds in datasets) {
   
   print(paste("Obtaining posterior predictions for dataset ", ds))
-  
-  # first, extract and save accuracy
-  print("***** Extracting preditions *****")
-  compute_summary_stats(ds)
+  compute_summary_stats(ds, draws_for_sim = 3)
 
 }
 
