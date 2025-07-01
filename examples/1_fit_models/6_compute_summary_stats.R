@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 draws_for_sim <- 2
 
 ############################################################################
-datasets <- c(  "hughes2024rsos", "tagu2022cog")  #"clarke2022qjep", "hughes2024rsos",
+datasets <- c("clarke2022qjep", "kristjansson2014plos", "tagu2022cog", "hughes2024rsos")  #"clarke2022qjep", "hughes2024rsos",
 ############################################################################
 
 compute_summary_stats <- function(dataset, draws_for_sim = 1) {
@@ -141,7 +141,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
 for (ds in datasets) {
   
   print(paste("Obtaining posterior predictions for dataset ", ds))
-  compute_summary_stats(ds, draws_for_sim = 3)
+  compute_summary_stats(ds, draws_for_sim = draws_for_sim)
 
 }
 
