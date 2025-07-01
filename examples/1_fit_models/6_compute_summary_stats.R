@@ -112,7 +112,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
     iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw <  (draws_for_sim+1))) %>%
       mutate(model_version = paste0("v",  modelver))
 
-    iisv %>% mutate(model_version = "observed") %>%
+    iisv %>%
       bind_rows(iisvp) -> iisv
     
     rm(pred) 
