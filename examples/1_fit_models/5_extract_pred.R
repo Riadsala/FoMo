@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 draws_for_sim <- 2
 
 ############################################################################
-datasets <- c(  "hughes2024rsos" )  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c( "clarke2022qjep", "kristjansson2014plos", "tagu2022cog", "hughes2024rsos") 
 ############################################################################
 
 extract_and_save_predictions <- function(dataset, draws_for_sim = 1) {

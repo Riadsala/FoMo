@@ -16,7 +16,7 @@ theme_set(theme_bw())
 sf <- "../examples/1_fit_models/scratch"
 
 # select dataset
-ds <- "clarke2022qjep"
+ds <- "hughes2024rsos"
 
 # customised plot_a_trial function
 plot_a_trial <- function(ds, df, 
@@ -87,13 +87,13 @@ plot_a_trial <- function(ds, df,
 d <- import_data(ds)
 folder <- paste0(sf, "/post/", ds, "/")
 
-pred13 <- readRDS(paste0(folder, "pred_1_4.rds"))
+pred13 <- readRDS(paste0(folder, "pred_1_3.rds"))
 
 bind_rows(
   pred13$trialwise %>% mutate(first_selection = "unconstrained"),
   pred13$trialwise_firstfixed %>% mutate(first_selection = "constrained")) -> pred
 
-plot_a_trial(d$stim, d$found, trial = 17, pred = pred)
+plot_a_trial(d$stim, d$found, trial = 87, pred = pred)
 
 ggsave("figs/fig9_examples.pdf", width = 15, height = 6)
 
