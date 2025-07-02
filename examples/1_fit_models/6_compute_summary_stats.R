@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 draws_for_sim <- 2
 
 ############################################################################
-datasets <- c("clarke2022qjep", "kristjansson2014plos", "tagu2022cog", "hughes2024rsos")  #"clarke2022qjep", "hughes2024rsos",
+datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep")  #"clarke2022qjep", "hughes2024rsos",
 ############################################################################
 
 compute_summary_stats <- function(dataset, draws_for_sim = 1) {
@@ -109,11 +109,19 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
     rl <- full_join(rl, rlp)
     # 
     # compute empirical run statistics
-    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw <  (draws_for_sim+1))) %>%
-      mutate(model_version = paste0("v",  modelver))
+    iisvp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("v",  modelver),
+             z = "predicted")
+    
+    iisfp <- get_iisv_over_trials(pred$trialwise_firstfixed %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("f",  modelver),
+             z = "predicted")
 
     iisv %>%
       bind_rows(iisvp) -> iisv
+    
+    iisv %>%
+      bind_rows(iisfp) -> iisv
     
     rm(pred) 
     
