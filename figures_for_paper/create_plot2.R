@@ -28,7 +28,7 @@ options(mc.cores = 1, digits = 2)
 theme_set(theme_bw())
 
 model_ver <- "v1_0"
-dataset <- "kristjansson2014plos"
+dataset <- "hughes2024rsos"
 
 # read in data
 d <- import_data(dataset)
@@ -92,14 +92,15 @@ iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iis
 
 iisv %>% 
   filter(is.finite(theta)) %>%
-  ggplot(aes(theta, fill = data)) + 
+  ggplot(aes(theta, fill = data, colour = data)) + 
   geom_histogram(position = position_identity(),
-                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
+                 breaks = seq(-pi, pi, pi/8), linewidth = 1,
                  alpha = 0.25) + 
   scale_x_continuous(expression(phi), 
                      breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
                      labels = labels) +
   paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  paletteer::scale_color_paletteer_d("lisa::BridgetRiley", direction = 1) +
   theme(legend.position = "bottom") -> plt_phi_v1
 
 model_ver <- "f1_3"
@@ -111,14 +112,15 @@ iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iis
 
 iisv  %>%
   filter(is.finite(theta)) %>%
-  ggplot(aes(theta, fill = data)) + 
+  ggplot(aes(theta, fill = data, colour = data)) + 
   geom_histogram(position = position_identity(),
-                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
+                 breaks = seq(-pi, pi, pi/8), linewidth = 1,
                  alpha = 0.25) + 
   scale_x_continuous(expression(phi), 
                      breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
                      labels = labels) +
   paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  paletteer::scale_color_paletteer_d("lisa::BridgetRiley", direction = 1) +
   theme(legend.position = "bottom") -> plt_phi_v3
  
 plt_phi_v1 + plt_phi_v3 
