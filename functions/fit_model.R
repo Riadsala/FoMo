@@ -84,7 +84,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 
 
 gen_quant <- function(dataset, fomo_ver, mode = "all",
-                      iter_genquant = 10) {
+                      iter_genquant = 10, kappa = 10) {
   
   #######################################################################
   # wrapper function for geneating quantities (predictions)
@@ -114,6 +114,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   # load the stan file
   mod_sim <- cmdstan_model(paste0(paths$simul, "FoMo", fomo_ver_str, ".stan"))
 
+
   # check if we are carrying out a prior model only
   if (fomo_ver_str == "0_0") {
     fxdp = TRUE
@@ -123,7 +124,12 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
  
   # load data and model
   d_list <- get_list(dataset, mode, "training")
-  m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
+  
+  if (kappa == 10) {
+    m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
+  } else {
+    m <- readRDS(paste0(paths$out_fit, fomo_ver_str, "_kappa", kappa, ".model")) 
+  }
 
   ###########################################################################
   # now create generated quantities from fitted model
@@ -134,6 +140,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   }
   
   d_list <- add_priors_to_d_list(d_list, modelver = fomo_ver)
+  d_list$kappa <- kappa
   
   if (fomo_ver_str == "1_3" && dataset == "bhat2025") {
     d_list$grid_offset <- c(0, pi/4, 0, pi/4)
@@ -149,7 +156,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   idx <- sample(nrow(draws_matrix), iter_genquant) 
 
   print("computing generated quantities")
-  output_file <-paste(dataset_name, fomo_ver_str, sep="")
+  output_file <-paste(dataset_name, fomo_ver_str, "_", kappa, sep="")
 
   p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
                                         data = d_list,
@@ -157,7 +164,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
                                         output_dir = paths$out_sim,
                                         output_basename = output_file)
 
-  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, ".model"))
+  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "_", kappa, ".model"))
 }
 
 
