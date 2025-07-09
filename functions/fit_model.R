@@ -156,7 +156,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   idx <- sample(nrow(draws_matrix), iter_genquant) 
 
   print("computing generated quantities")
-  output_file <-paste(dataset_name, fomo_ver_str, "_", kappa, sep="")
+  output_file <-paste(dataset_name, fomo_ver_str, "_k", kappa, sep="")
 
   p <- mod_sim$generate_quantities(fitted_params = draws_matrix[idx,],
                                         data = d_list,
@@ -164,7 +164,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
                                         output_dir = paths$out_sim,
                                         output_basename = output_file)
 
-  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "_", kappa, ".model"))
+  p$save_object(paste0(paths$out_sim, dataset_name, fomo_ver_str, "_k", kappa, ".model"))
 }
 
 
