@@ -11,11 +11,15 @@ source("../../functions/post_functions.R")
 
 options(mc.cores = 4, digits = 2)
 
-############################################################################
-datasets <- c("kristjansson2014plos", "hughes2024rsos", "tagu2022cog")  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+draws_for_sim <- 2
+
 ############################################################################
 
-extract_and_save_predictions <- function(dataset) {
+datasets <- c("kristjansson2014plos", "hughes2024rsos", "tagu2022cog")  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+
+############################################################################
+
+compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   
   # wrapper function for computing train/test accuracy for each version
   # of FoMo for a given dataset
@@ -56,8 +60,8 @@ extract_and_save_predictions <- function(dataset) {
               mean_bestr = mean(best_r),
               mean_pao = mean(pao),
               .groups = "drop") %>%
-    mutate(z = "observed")
-  
+    pivot_longer(-c(person, condition), names_to = "statistic", values_to = "observed") 
+
   # compute empirical run statistics
   iisv <- get_iisv_over_trials(d$found) %>%
     mutate(z = "observed")
@@ -66,59 +70,67 @@ extract_and_save_predictions <- function(dataset) {
   rm(d)
   
   # read in models and extract post predictions
+
   for (file in models)
   {
     
     # get model version from file name
     modelver <- str_extract(file, "\\d_\\d")
-    print(paste("... model version ", modelver))
-
-    # get all model predictions
-    pred <- extract_pred(dataset, modelver, folder)
     
-    # save
-    print("saving predictions")
-    saveRDS(pred, paste0(outfolder, "/pred_", modelver, ".rds"))
+    # load
+    print(paste("loading predictions for model version ", modelver))
+    pred <- readRDS( paste0(outfolder, "/pred_", modelver, ".rds"))
     
     # compute simulated run statistics
     print("computing predicted run statistics")
-    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise %>% filter(.draw < (draws_for_sim+1))) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
                 .groups = "drop") %>% 
-      mutate(z = paste0("v",  modelver))
+      pivot_longer(-c(.draw, person, condition), 
+                   names_to = "statistic", 
+                   values_to =  paste0("v",  modelver))
     
-    rl %>% bind_rows(rlp) -> rl
+    rl <- full_join(rl, rlp)
     
     print("repeat, for fixed first selected...")
-    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw == 1)) %>%
+    rlp <- get_run_info_over_trials(pred$trialwise_firstfixed %>% filter(.draw < (draws_for_sim+1))) %>%
       group_by(.draw, person, condition) %>%
       summarise(max_run_length = mean(max_run_length),
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
                 .groups = "drop") %>% 
-      mutate(z = paste0("f",  modelver))
+      pivot_longer(-c(.draw, person, condition),
+                   names_to = "statistic", 
+                   values_to =  paste0("f",  modelver))
     
-    rl %>% bind_rows(rlp) -> rl
-    
+    rl <- full_join(rl, rlp)
+    # 
     # compute empirical run statistics
-    iisvp <- get_iisv_over_trials(pred$itemwise %>% filter(.draw == 1)) %>%
-      mutate(z = paste0("v",  modelver))
+    iisvp <- get_iisv_over_trials(pred$trialwise %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("v",  modelver),
+             z = "predicted")
     
-    iisv %>% bind_rows(iisvp) -> iisv
+    iisfp <- get_iisv_over_trials(pred$trialwise_firstfixed %>% filter(.draw <  (draws_for_sim+1))) %>%
+      mutate(model_version = paste0("f",  modelver),
+             z = "predicted")
+
+    iisv %>%
+      bind_rows(iisvp) -> iisv
+    
+    iisv %>%
+      bind_rows(iisfp) -> iisv
     
     rm(pred) 
     
   }
   
   # tidy up run statistics model
-  rl %>%  
-    pivot_longer(c(max_run_length, num_runs, mean_bestr, mean_pao), names_to = "statistic") %>%
-    pivot_wider(names_from = z) -> rl
+
   
   # round iisv to 3dp
   iisv %>% mutate(x = round(x, 3), 
@@ -139,10 +151,7 @@ extract_and_save_predictions <- function(dataset) {
 for (ds in datasets) {
   
   print(paste("Obtaining posterior predictions for dataset ", ds))
-  
-  # first, extract and save accuracy
-  print("***** Extracting preditions *****")
-  extract_and_save_predictions(ds)
+  compute_summary_stats(ds, draws_for_sim = draws_for_sim)
 
 }
 

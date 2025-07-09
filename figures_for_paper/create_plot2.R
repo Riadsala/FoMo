@@ -27,7 +27,7 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(theme_bw())
 
-model_ver <- "1_0"
+model_ver <- "v1_0"
 dataset <- "hughes2024rsos"
 
 # read in data
@@ -41,9 +41,8 @@ folder <- paste0(sf, "/post/", dataset, "/")
 #############################################################################
 
 iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
-  filter(z %in% c("observed", "v1_0")) %>%
-  mutate(z = if_else(str_detect(z, "v1_0"), "predicted", "observed")) %>%
-  rename(data = "z")
+  rename(data = "z") %>%
+  filter(data == "observed" | model_version == model_ver)
 
 iisv %>% 
   filter(is.finite(d2)) %>%
@@ -81,51 +80,47 @@ iisv %>%
 
 ggsave("figs/figure2_absdir.pdf", width = 5, height = 4)
 
-#############################################################################
-#assemble plot
-#############################################################################
-
-# plt_top <- plt_acc / plt_runs + plot_layout(heights = c(2,3), guides = "collect")
-# plt_bot <- plt_delta / (plt_psi + plt_phi) + plot_layout(guides = "collect")
-
-
-#############################################################################
-# now repeat for model 1.3
-#############################################################################
-
-iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
-  filter(z %in% c("observed", "v1_3")) %>%
-  mutate(z = if_else(str_detect(z, "v1_3"), "predicted", "observed")) %>%
-  rename(data = "z")
-
-iisv %>% 
-  filter(is.finite(theta)) %>%
-  ggplot(aes(theta, fill = data)) + 
-  geom_histogram(position = position_identity(),
-                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
-                 alpha = 0.5) + 
-  scale_x_continuous(expression(phi), 
-                     breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
-                     labels = labels) +
-  paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = -1) +
-  theme(legend.position = "bottom") -> plt_phi
-
 
 # compare 1.0 and 1.3
+
+model_ver <- "f1_0"
+
 iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
-  filter(z %in% c("observed", "v1_0")) %>%
-  # mutate(z = if_else(str_detect(z, "v1_3"), "predicted", "observed")) %>%
-  rename(data = "z")
+  rename(data = "z") %>%
+  filter(is.na(.draw) | .draw == 1) %>%
+  filter(data == "observed" | model_version == model_ver)
 
 iisv %>% 
   filter(is.finite(theta)) %>%
-  ggplot(aes(theta, fill = data)) + 
+  ggplot(aes(theta, fill = data, colour = data)) + 
   geom_histogram(position = position_identity(),
-                 breaks = seq(-pi, pi, pi/8), linewidth = 2,
+                 breaks = seq(-pi, pi, pi/8), linewidth = 1,
                  alpha = 0.25) + 
   scale_x_continuous(expression(phi), 
                      breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
                      labels = labels) +
   paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = 1) +
-  theme(legend.position = "bottom") 
-  
+  paletteer::scale_color_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  theme(legend.position = "bottom") -> plt_phi_v1
+
+model_ver <- "f1_3"
+
+iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
+  rename(data = "z") %>%
+  filter(is.na(.draw) | .draw == 1)  %>%
+  filter(data == "observed" | model_version == model_ver)
+
+iisv  %>%
+  filter(is.finite(theta)) %>%
+  ggplot(aes(theta, fill = data, colour = data)) + 
+  geom_histogram(position = position_identity(),
+                 breaks = seq(-pi, pi, pi/8), linewidth = 1,
+                 alpha = 0.25) + 
+  scale_x_continuous(expression(phi), 
+                     breaks = c(-pi, -pi/2, 0, pi, pi/2, pi),
+                     labels = labels) +
+  paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  paletteer::scale_color_paletteer_d("lisa::BridgetRiley", direction = 1) +
+  theme(legend.position = "bottom") -> plt_phi_v3
+ 
+plt_phi_v1 + plt_phi_v3 
