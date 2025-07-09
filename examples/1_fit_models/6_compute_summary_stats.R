@@ -15,7 +15,7 @@ draws_for_sim <- 2
 
 ############################################################################
 
-datasets <- c("kristjansson2014plos", "hughes2024rsos", "tagu2022cog")  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c("hughes2024rsos", "tagu2022cog", "kristjansson2014plos")  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
 
 ############################################################################
 
@@ -76,6 +76,10 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
     
     # get model version from file name
     modelver <- str_extract(file, "\\d_\\d")
+    
+    # get kappa from filename
+    kappa <- str_extract(file, "_k[\\d]*")
+    modelver <- if_else(is.na(kappa), modelver, paste0(modelver, kappa))
     
     # load
     print(paste("loading predictions for model version ", modelver))
