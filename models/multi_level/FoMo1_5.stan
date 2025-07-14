@@ -56,8 +56,6 @@ data {
   real prior_sd_b_s; // = 1, uncertainty for b_s prior
   real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
   real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
-  real prior_mu_rho_psi; // = 0, "momentum"
-  real prior_sd_rho_psi; // = 0.5, uncertainty around rho_psi
   real prior_sigma_u_lambda;
   real prior_sigma_w_lambda;
 
@@ -88,7 +86,7 @@ parameters {
   array[K] real<lower = 0> rho_delta; // distance tuning
 
   // theta is a 4D vector containing the mixture weights for our direction model
-  array[K, 3] real log_theta; // mixing values for directions
+  array[K, 4] real log_theta; // mixing values for directions
 
   ///////////////////////////////
   // random effects
@@ -97,12 +95,12 @@ parameters {
   // 3*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[3*K] sigma_u;
   // 3*K as we have four directions x K conditions
-  vector<lower=0>[3*K] sigma_w;
+  vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[3*K] L_u;
   // random effect matrix
   matrix[3*K,L] z_u; // for main params
-  matrix[3*K, L] z_w; // for directional params
+  matrix[4*K, L] z_w; // for directional params
 }
 
 transformed parameters {
@@ -176,7 +174,7 @@ model {
     z = Z[t];
     x = X[t];
  
-    weights = compute_weights_v13(
+    weights = compute_weights_v15(
       u_a[x, z], u_s[x, z], u_delta[x, z],  u_log_theta[x, z], kappa,
       to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
       found_order[ii], n_targets, remaining_items[ii],
