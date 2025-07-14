@@ -8,9 +8,9 @@ source("../../functions/fit_model.R")
 
 iter <- 500
 
-fit_model("hughes2024rsos", fomo_ver = "1.0", mode = "traintest",  iter = iter) 
-fit_model("hughes2024rsos", fomo_ver = "1.2", mode = "traintest",  iter = iter) 
-# fit_model("hughes2024rsos", fomo_ver = "1.3", mode = "traintest",  iter = iter) fit
+#fit_model("hughes2024rsos", fomo_ver = "1.0", mode = "traintest",  iter = iter) 
+#fit_model("hughes2024rsos", fomo_ver = "1.2", mode = "traintest",  iter = iter) 
+fit_model("hughes2024rsos", fomo_ver = "1.3", mode = "traintest",  iter = iter, kappa = 10) 
 
 # fit_model("clarke2022qjep", fomo_ver = "1.0", mode = "traintest",  iter = iter) 
 # fit_model("clarke2022qjep", fomo_ver = "1.1", mode = "traintest",  iter = iter) 
@@ -18,12 +18,12 @@ fit_model("hughes2024rsos", fomo_ver = "1.2", mode = "traintest",  iter = iter)
 # fit_model("clarke2022qjep", fomo_ver = "1.3", mode = "traintest",  iter = iter) 
 # fit_model("clarke2022qjep", fomo_ver = "1.4", mode = "traintest",  iter = iter) 
 
-fit_model("kristjansson2014plos", fomo_ver = "1.0", mode = "traintest", iter = iter)
-fit_model("kristjansson2014plos", fomo_ver = "1.2", mode = "traintest", iter = iter)
+#fit_model("kristjansson2014plos", fomo_ver = "1.0", mode = "traintest", iter = iter)
+#fit_model("kristjansson2014plos", fomo_ver = "1.2", mode = "traintest", iter = iter)
 
 
-fit_model("tagu2022cog", fomo_ver = "1.0", mode = "traintest", iter = iter)
-fit_model("tagu2022cog", fomo_ver = "1.2", mode = "traintest", iter = iter)
+#fit_model("tagu2022cog", fomo_ver = "1.0", mode = "traintest", iter = iter)
+#fit_model("tagu2022cog", fomo_ver = "1.2", mode = "traintest", iter = iter)
 
 #fit_model("tagu2022cog", fomo_ver = "1.3", mode = "traintest", iter = iter)
 #fit_model("tagu2022cog", fomo_ver = "1.4", mode = "traintest", iter = iter)
