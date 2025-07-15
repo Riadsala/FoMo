@@ -1,4 +1,6 @@
 library(ForagingOrg)
+library(poweRlaw)
+
 
 # Computes some descriptive summary statistics of foraging data
 
@@ -138,5 +140,15 @@ get_iisv_stats <- function(person, condition, trial_p, d) {
   return(trl_dat)
 }
 
+get_levy <- function(person, condition) {
+  
+  d <- sqrt(filter(iisv, person ==!!person, condition == !!condition)$d2)
+  
+  m <- conpl(d)
+  return(tibble(person = person,
+                condition = condition,
+                alpha = estimate_pars(m)$pars))
+  
+}
 
 
