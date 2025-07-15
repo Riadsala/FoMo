@@ -140,11 +140,15 @@ get_iisv_stats <- function(person, condition, trial_p, d) {
   return(trl_dat)
 }
 
-get_levy <- function(person, condition) {
+get_levy <- function(person, condition, iisv) {
   
-  d <- sqrt(filter(iisv, person ==!!person, condition == !!condition)$d2)
+  d <- sqrt(filter(iisv, 
+                   person ==!!person, 
+                   condition == !!condition,
+                   is.finite(d2))$d2)
   
   m <- conpl(d)
+  
   return(tibble(person = person,
                 condition = condition,
                 alpha = estimate_pars(m)$pars))
