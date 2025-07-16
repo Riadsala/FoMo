@@ -14,7 +14,7 @@ options(mc.cores = 4, digits = 2)
 draws_for_sim <- 2
 
 ############################################################################
-datasets <- c( "clarke2022qjep", "kristjansson2014plos", "tagu2022cog", "hughes2024rsos") 
+datasets <- c( "hughes2024rsos", "clarke2022qjep", "kristjansson2014plos", "tagu2022cog") 
 ############################################################################
 
 extract_and_save_predictions <- function(dataset, draws_for_sim = 1) {
@@ -47,6 +47,11 @@ extract_and_save_predictions <- function(dataset, draws_for_sim = 1) {
     
     # get model version from file name
     modelver <- str_extract(file, "\\d_\\d")
+    
+    # get kappa from filename
+    kappa <- str_extract(file, "_k[\\d]*")
+    modelver <- if_else(is.na(kappa), modelver, paste0(modelver, kappa))
+    
     print(paste("... model version ", modelver))
 
     # get all model predictions

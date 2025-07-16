@@ -3,7 +3,6 @@
 
 library(cmdstanr)
 
-
 cmdstan_model("simple/fomo1_0.stan", force = T)
 cmdstan_model("multi_level/fomo1_0.stan", force = T)
 cmdstan_model("simulate/fomo1_0.stan", force = T)

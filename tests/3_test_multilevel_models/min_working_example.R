@@ -55,11 +55,11 @@ plot_a_trial(d$stim, d$found, 1)
 ######################################################################
 
 dl <- prep_data_for_stan(d)
-dl <- add_priors_to_d_list(dl, modelver = "1.0")
+dl <- add_priors_to_d_list(dl, modelver = "1.5")
 
 iter = 500
-mod <- cmdstan_model("../../models/multi_level/FoMo1_0.stan",
-                     cpp_options = list(stan_threads = TRUE))
+mod <- cmdstan_model("../../models/multi_level/FoMo1_5.stan",
+                     cpp_options = list(stan_threads = TRUE), force = TRUE)
 
 m <- mod$sample(data = dl, 
                 iter_warmup  = iter, iter_sampling = iter,

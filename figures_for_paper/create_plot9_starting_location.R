@@ -93,7 +93,11 @@ bind_rows(
   pred13$trialwise %>% mutate(first_selection = "unconstrained"),
   pred13$trialwise_firstfixed %>% mutate(first_selection = "constrained")) -> pred
 
-plot_a_trial(d$stim, d$found, trial = 87, pred = pred)
+
+plot_a_trial(d$stim, d$found, trial = 23, pred = pred)
+
+#plot_a_trial(d$stim, d$found, trial = 87, pred = pred)
+
 
 ggsave("figs/fig9_examples.pdf", width = 15, height = 6)
 
