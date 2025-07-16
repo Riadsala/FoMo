@@ -65,15 +65,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   # compute empirical run statistics
   iisv <- get_iisv_over_trials(d$found) %>%
     mutate(z = "observed")
-  
-  # get levy flight statistic
-  iisv %>% modelr::data_grid(person, condition) %>%
-    pmap_df(get_levy, iisv) %>%
-    mutate(statistic = "levy") %>%
-    rename(observed = "alpha") %>%
-    bind_rows(rl) -> rl
 
-  
   
   # tidy up
   rm(d)
@@ -137,13 +129,6 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
     
     iisv %>%
       bind_rows(iisfp) -> iisv
-    
-    # get levy flight statistic
-    iisv %>% modelr::data_grid(person, condition) %>%
-      pmap_df(get_levy, iisv) %>%
-      mutate(statistic = "levy") %>%
-      rename(observed = "alpha") %>%
-      bind_rows(rl) 
     
     rm(pred) 
       
