@@ -14,7 +14,7 @@ options(mc.cores = 1, digits = 2)
 # generated quantities
 #############################################################################
 
-datasets <-  "hughes2024rsos" #c("kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
+datasets <- c("hughes2024rsos", "kristjansson2014plos", "tagu2022cog", "clarke2022qjep")
 
 rl <- tibble()
 
@@ -27,14 +27,23 @@ for (ds in datasets) {
   # add in levy
   read_csv(paste0("../examples/1_fit_models/scratch/post/", ds, "/levy_flight.csv")) %>%
     rename(predicted = "alpha") %>%
-    mutate(dataset = ds) %>%
+    mutate(dataset = ds, statistic = "levy") %>%
+    pivot_wider(names_from = model_version, values_from = "predicted") %>%
     bind_rows(rl) -> rl
 }
 
 
-rl %>% select(-.draw) %>% pivot_longer(-c(person, condition, statistic, observed, dataset), 
-                     names_to = "model_ver", values_to = "predicted") -> rl
 
+rl %>%
+  select(-.draw) %>% 
+  pivot_longer(-c(person, condition, statistic, observed, dataset), 
+                     names_to = "model_ver", values_to = "predicted") %>%
+  group_by(person, condition, dataset, model_ver, statistic) %>%
+  summarise(
+    observed = observed, 
+    predicted = mean(predicted)) -> rl
+
+rl %>% filter(!str_detect(model_ver, "k")) -> rl
 
 comp_corr <- function(df) {
   
@@ -59,7 +68,7 @@ rl  %>%
 
 
 rl %>% filter(model_ver == "v1_3") %>%
-  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr")),
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy")),
          statistic = fct_recode(statistic, 
                                 `num runs` = "num_runs",
                                 `max (run length)` = "max_run_length", 
