@@ -23,6 +23,12 @@ for (ds in datasets) {
   rl <- bind_rows(rl,
                   read_csv(paste0("../examples/1_fit_models/scratch/post/", ds, "/run_statistics.csv")) %>%
                     mutate(dataset = ds))
+  
+  # add in levy
+  read_csv(paste0("../examples/1_fit_models/scratch/post/", ds, "/levy_flight.csv")) %>%
+    rename(predicted = "alpha") %>%
+    mutate(dataset = ds) %>%
+    bind_rows(rl) -> rl
 }
 
 
