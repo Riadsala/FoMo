@@ -78,7 +78,7 @@ rl %>% filter(model_ver == "v1_3") %>%
   geom_abline(linetype = 2) + 
   geom_point(alpha = 0.5) +
   geom_smooth(method = "lm", se = F, aes(group = 1), colour = "black") +
-  ggh4x::facet_grid2(statistic ~ dataset, scales = "free", independent = "all") +
+  ggh4x::facet_grid2(dataset ~statistic, scales = "free", independent = "all") +
   theme_bw() 
 
 ggsave("figs/fig8_run_stats.pdf", width = 12, height = 8)
