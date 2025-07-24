@@ -84,7 +84,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
 
 
 gen_quant <- function(dataset, fomo_ver, mode = "all",
-                      iter_genquant = 10, kappa = 10) {
+                      iter_genquant = 10, kappa = 20) {
   
   #######################################################################
   # wrapper function for geneating quantities (predictions)
@@ -125,7 +125,7 @@ gen_quant <- function(dataset, fomo_ver, mode = "all",
   # load data and model
   d_list <- get_list(dataset, mode, "training")
   
-  if (kappa == 10) {
+  if (kappa == 20) {
     m <- readRDS(paste0(paths$out_fit, fomo_ver_str, ".model"))
   } else {
     m <- readRDS(paste0(paths$out_fit, fomo_ver_str, "_kappa", kappa, ".model")) 
