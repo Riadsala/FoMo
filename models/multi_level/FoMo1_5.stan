@@ -45,7 +45,6 @@ data {
 
   // pre-computed inter-item features
   array[N] vector<lower = 0>[n_targets] delta; // distance measures
-  array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
   // read in priors
@@ -92,9 +91,9 @@ parameters {
   // random effects
   ///////////////////////////////
   // random effect variances: 
-  // 3*K as we have four fixed effect parameters x K conditions
+  // 3*K as we have three fixed effect parameters x K conditions
   vector<lower=0>[3*K] sigma_u;
-  // 3*K as we have four directions x K conditions
+  // 4*K as we have four directions x K conditions
   vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[3*K] L_u;
@@ -116,7 +115,7 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_s, u_delta, u_psi;
+  array[K] vector[L] u_a, u_s, u_delta;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
