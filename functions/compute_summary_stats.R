@@ -114,7 +114,8 @@ get_run_info <- function(person, condition, trial_p, df) {
     max_run_length = max(rl$lengths), 
     n_runs = length(rl$lengths),
     best_r = best.r(trl_dat$x, trl_dat$y),
-    pao = PAO(trl_dat$x, trl_dat$y)))
+    pao = PAO(trl_dat$x, trl_dat$y),
+    intersections = number.intersections(trl_dat$x, trl_dat$y)$Intersection.rate))
 }    
 
 
