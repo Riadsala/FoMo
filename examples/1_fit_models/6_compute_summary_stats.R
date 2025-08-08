@@ -48,7 +48,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   
   d <- import_data(dataset)
   
-  # we only want to calcualte these on the test data
+  # we only want to calculate these on the test data
   d <- get_train_test_split(d)
   d <- d$testing
   

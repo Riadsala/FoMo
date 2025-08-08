@@ -242,7 +242,7 @@ extract_pred <- function(dataset, fomo_ver, folder, mode = "split") {
   itemwise <- extract_item_pred(genquant, d)
   
   # extract whole-trial predictions
-  trialwise <- extract_trial_pred(genquant, d$stim)
+  trialwise  <- extract_trial_pred(genquant, d$stim)
   trialwiseF <- extract_trial_pred(genquant, d$stim, mode = "F")
 
   # we no longer need genquant or m

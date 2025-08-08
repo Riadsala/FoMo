@@ -64,7 +64,6 @@ extract_and_save_predictions <- function(dataset, draws_for_sim = 1) {
     rm(pred) 
     
   }
-  
 }
 
 ############################################################################
