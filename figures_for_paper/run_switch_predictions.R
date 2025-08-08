@@ -3,13 +3,15 @@ library(tidybayes)
 source("../../functions/import_data.R")
 # script to compute switch acc
 
-p <- readRDS("scratch/post/tagu2022cog/pred_1_3.rds")
+dataset <- "hughes2024rsos"
+
+p <- readRDS(paste0("scratch/post/", dataset, "/pred_1_0.rds"))
 
 p <- p$itemwise %>%
   select(-model_correct, -x, -y, -trial)
 
 # add in p_item_class
-d <- import_data("tagu2022cog")
+d <- import_data(dataset)
 d$stim %>%
   select(-trial_p) %>%
   select(person, condition, trial_p = "trial", P = "id", pred_class = "item_class") %>%
@@ -25,7 +27,7 @@ d$stim %>%
   filter(found > 1) -> p
 
 
-p %>% group_by(e_switch,condition, .draw, person, trial_p) %>%
+p %>% group_by(condition, e_switch,.draw, person, trial_p) %>%
   summarise(mean_switch_acc = mean(pred_correct)) %>%
   summarise(mean_switch_acc = mean(mean_switch_acc)) %>%
   summarise(mean_switch_acc = mean(mean_switch_acc)) %>%

@@ -94,6 +94,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
+                mean_int = mean(intersections),
                 .groups = "drop") %>% 
       pivot_longer(-c(.draw, person, condition), 
                    names_to = "statistic", 
@@ -108,6 +109,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
+                mean_int = mean(intersections),
                 .groups = "drop") %>% 
       pivot_longer(-c(.draw, person, condition),
                    names_to = "statistic", 
