@@ -28,7 +28,7 @@ options(mc.cores = 1, digits = 2)
 theme_set(theme_bw())
 
 model_ver <- "v1_0"
-dataset <- "hughes2024rsos"
+dataset <- "clarke2022qjep"
 
 # read in data
 d <- import_data(dataset)
@@ -42,7 +42,8 @@ folder <- paste0(sf, "/post/", dataset, "/")
 
 iisv <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/iisv_statistics.csv")) %>%
   rename(data = "z") %>%
-  filter(data == "observed" | model_version == model_ver)
+  filter(data == "observed" | model_version == model_ver) %>%
+  filter(.draw == 1 | is.na(.draw))
 
 iisv %>% 
   filter(is.finite(d2)) %>%
@@ -78,7 +79,7 @@ iisv %>%
   paletteer::scale_fill_paletteer_d("lisa::BridgetRiley", direction = -1) +
   theme(legend.position = "bottom") -> plt_phi
 
-ggsave("figs/figure2_absdir.pdf", width = 5, height = 4)
+ggsave("figs/fig2_absdir.pdf", width = 5, height = 4)
 
 
 # compare 1.0 and 1.3
