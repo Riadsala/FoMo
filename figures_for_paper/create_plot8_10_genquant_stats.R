@@ -108,50 +108,23 @@ rl_stats %>%
   pivot_wider(names_from = "model_ver", values_from = "r") %>%
   knitr::kable()               
 
-# 
-# rl  %>%
-#   group_by(dataset, statistic, model_ver) %>%
-#   summarise(r = cor.test(predicted, observed)$estimate, 
-#             a = summary(lm(observed ~ predicted))$coefficients[1,1],
-#             b = summary(lm(observed ~ predicted))$coefficients[2,1],.groups = "drop") -> rl_stats
+#### FIG 10
 
-
-
-# rl %>% mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
-#   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
-#          model_ver = str_remove(model_ver, "v|f"),
-#          model_ver = str_replace(model_ver, "_", "."),
-#          model_ver = as.numeric(model_ver)) %>%
-#   group_by(dataset, model_ver, first_selection, statistic) %>%
-#   summarise(abs_err = median(abs_err)) %>%
-#   mutate(first_selection = factor(first_selection),
-#          first_selection =  fct_relevel(first_selection, "free"),
-#          statistic = factor(statistic),
-#          statistic = fct_relevel(statistic, "num_runs", "max_run_length")) %>%
-#   # pivot_wider(names_from = "first_selection", values_from = "tot_err") %>%
-#   filter(model_ver == "1" | model_ver == "1.3") %>%
-#   # mutate(percent = 100*(fixed-free)/(free)) %>%
-#   ggplot(aes(dataset, abs_err, fill = as.factor(model_ver))) + 
-#   geom_col(position = position_dodge(), alpha = 0.75) +
-#   theme_bw() +
-#   facet_grid(statistic~first_selection, scales = "free_y") +
-#   scale_x_discrete(guide = guide_axis(angle = 45))
-
-#ggsave("figs/fig10_fixed_v_free.pdf", width = 6, height = 5)
+source("../functions/plot_model.R")
   
 # having a go at scaling things
 
 rl_z <- rl %>%
   mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   ungroup() %>%
-  reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
+  #reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
   mutate(model_ver = rl$model_ver) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
          model_ver = str_replace(model_ver, "_", "."),
          model_ver = as.numeric(model_ver)) %>%
   group_by(dataset, model_ver, first_selection) %>%
-  summarise(abs_err = mean(scale_abs_err)) 
+  summarise(abs_err = mean(abs_err)) 
 
 rl_z %>% 
   filter(model_ver == "1" | model_ver == "1.3") %>%
@@ -163,7 +136,7 @@ rl_z %>%
   #facet_grid(~first_selection, scales = "free_y") +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
   labs(fill="model version") +
-  ylab("scaled absolute error") -> rl_z_a
+  ylab("absolute error") -> rl_z_a
 
 rl_z %>%
   filter(model_ver == "1.3") %>%
@@ -174,20 +147,20 @@ rl_z %>%
   theme_bw() +
   #facet_grid(~first_selection, scales = "free_y") +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
-  ylab("scaled absolute error") +
+  ylab("absolute error") +
   xlab("first selection") -> rl_z_b
 
 rl_z2 <- rl %>%
-  mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   ungroup() %>%
-  reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
+  mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
+  #reframe(scale_abs_err = scale(abs_err, center = FALSE), .by = c(dataset, statistic)) %>%
   mutate(model_ver = rl$model_ver) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
          model_ver = str_replace(model_ver, "_", "."),
          model_ver = as.numeric(model_ver)) %>%
   group_by(statistic, model_ver, first_selection) %>%
-  summarise(abs_err = mean(scale_abs_err)) 
+  summarise(abs_err = mean(abs_err)) 
            
 rl_z2 %>%
   filter(model_ver == "1.3") %>%
@@ -198,7 +171,7 @@ rl_z2 %>%
   theme_bw() +
   #facet_grid(~first_selection, scales = "free_y") +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
-  ylab("scaled absolute error") +
+  ylab("absolute error") +
   labs(fill="first selection")  -> rl_z_c
 
 
