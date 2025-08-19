@@ -15,7 +15,7 @@ draws_for_sim <- 2
 
 ############################################################################
 
-datasets <- c( "kristjansson2014plos")  #, "hughes2024rsos", "tagu2022cog" "clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c( "kristjansson2014plos", "hughes2024rsos", "tagu2022cog", "clarke2022qjep")
 
 ############################################################################
 
