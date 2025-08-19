@@ -59,6 +59,6 @@ plt3 <- plot_a_trial(d$stim, d$found, trial = 201)
 
 plt1 + plt2 + plt3
 
-ggsave("fig1_example_trials.pdf", width = 12, height = 3.2)
+ggsave("figs/fig1_example_trials.pdf", width = 12, height = 3.2)
 
 
