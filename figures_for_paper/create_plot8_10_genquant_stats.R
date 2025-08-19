@@ -10,6 +10,22 @@ source("../functions/import_data.R")
 
 options(mc.cores = 1, digits = 2)
 
+# set global ggplot theme
+theme_set(theme_bw())
+
+scale_colour_brewer_d <- function(..., palette = "Dark2") {
+  scale_colour_brewer(..., palette = palette )
+}
+
+scale_fill_brewer_d <- function(..., palette = "Dark2") {
+  scale_fill_brewer(..., palette = palette)
+}
+
+options(
+  ggplot2.discrete.colour = scale_colour_brewer_d,
+  ggplot2.discrete.fill = scale_fill_brewer_d
+)
+
 #############################################################################
 # generated quantities
 #############################################################################
@@ -35,6 +51,7 @@ for (ds in datasets) {
 
 
 rl %>%
+  filter(is.na(.draw)| .draw == "1") %>%
   select(-.draw) %>% 
   pivot_longer(-c(person, condition, statistic, observed, dataset), 
                      names_to = "model_ver", values_to = "predicted") %>%
@@ -67,13 +84,15 @@ rl  %>%
             .groups = "drop") -> rl_stats
 
 
-rl %>% filter(model_ver == "v1_3") %>%
-  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy")),
+rl %>% filter(model_ver == "v1_3") %>% ungroup() %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy", "mean_int")),
          statistic = fct_recode(statistic, 
                                 `num runs` = "num_runs",
                                 `max (run length)` = "max_run_length", 
                                 PAO = "mean_pao", 
-                                `best-r` = "mean_bestr")) %>%
+                                `best-r` = "mean_bestr",
+                                `mean intersections` = "mean_int"),
+         condition = fct_relevel(condition, "conjunction", "feature", "control", "value")) %>%
   ggplot(aes(predicted, observed, colour = condition)) +
   geom_abline(linetype = 2) + 
   geom_point(alpha = 0.5) +
@@ -85,7 +104,7 @@ ggsave("figs/fig8_run_stats.pdf", width = 12, height = 8)
 
 rl_stats %>% 
   select(-a, -b) %>%
-  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr"))) %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "mean_int"))) %>%
   pivot_wider(names_from = "model_ver", values_from = "r") %>%
   knitr::kable()               
 
@@ -124,6 +143,7 @@ rl_stats %>%
 
 rl_z <- rl %>%
   mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
+  ungroup() %>%
   reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
   mutate(model_ver = rl$model_ver) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
@@ -159,6 +179,7 @@ rl_z %>%
 
 rl_z2 <- rl %>%
   mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
+  ungroup() %>%
   reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
   mutate(model_ver = rl$model_ver) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
