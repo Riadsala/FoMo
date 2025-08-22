@@ -106,7 +106,33 @@ rl_stats %>%
   select(-a, -b) %>%
   mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "mean_int"))) %>%
   pivot_wider(names_from = "model_ver", values_from = "r") %>%
-  knitr::kable()               
+  knitr::kable()          
+
+#### FIG 8 but scaled??
+
+rl %>% filter(model_ver == "v1_3") %>% ungroup() %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy", "mean_int")),
+         statistic = fct_recode(statistic, 
+                                `num runs` = "num_runs",
+                                `max (run length)` = "max_run_length", 
+                                PAO = "mean_pao", 
+                                `best-r` = "mean_bestr",
+                                `mean intersections` = "mean_int"),
+         condition = fct_relevel(condition, "conjunction", "feature", "control", "value")) %>%
+  pivot_longer(cols = c('observed', 'predicted'), names_to = "dv_name", values_to = "dv") %>%
+  group_by(dataset, statistic) %>%
+  reframe(dv_scale = scale(dv, center = FALSE),
+          dv_name = dv_name,
+          condition = condition,
+          person = person) %>%
+  pivot_wider(names_from = dv_name, values_from = dv_scale) %>%
+  ggplot(aes(predicted, observed, colour = condition)) +
+  geom_abline(linetype = 2) + 
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = F, aes(group = 1), colour = "black") +
+  ggh4x::facet_grid2(dataset ~statistic, scales = "free", independent = "all") +
+  theme_bw() 
+
 
 #### FIG 10
 
@@ -115,14 +141,29 @@ source("../functions/plot_model.R")
 # having a go at scaling things
 
 rl_z <- rl %>%
-  mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
   ungroup() %>%
-  #reframe(scale_abs_err = scale(abs_err), .by = c(dataset, statistic)) %>%
-  mutate(model_ver = rl$model_ver) %>%
+  filter(dataset != "tagu2022cog") %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy", "mean_int")),
+         statistic = fct_recode(statistic, 
+                                `num runs` = "num_runs",
+                                `max (run length)` = "max_run_length", 
+                                PAO = "mean_pao", 
+                                `best-r` = "mean_bestr",
+                                `mean intersections` = "mean_int"),
+         condition = fct_relevel(condition, "conjunction", "feature", "control", "value")) %>%
+  pivot_longer(cols = c('observed', 'predicted'), names_to = "dv_name", values_to = "dv") %>%
+  group_by(dataset, statistic) %>%
+  reframe(dv_scale = scale(dv, center = FALSE),
+          dv_name = dv_name,
+          model_ver = model_ver,
+          condition = condition,
+          person = person) %>%
+  pivot_wider(names_from = dv_name, values_from = dv_scale) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
          model_ver = str_replace(model_ver, "_", "."),
          model_ver = as.numeric(model_ver)) %>%
+  mutate(abs_err = abs(observed - predicted)) %>%
   group_by(dataset, model_ver, first_selection) %>%
   summarise(abs_err = mean(abs_err)) 
 
@@ -138,44 +179,61 @@ rl_z %>%
   labs(fill="model version") +
   ylab("absolute error") -> rl_z_a
 
-rl_z %>%
-  filter(model_ver == "1.3") %>%
-  group_by(model_ver, first_selection) %>%
-  summarise(abs_err = mean(abs_err)) %>%
-  ggplot(aes(first_selection, abs_err)) + 
-  geom_col(position = position_dodge(), alpha = 0.75) +
-  theme_bw() +
-  #facet_grid(~first_selection, scales = "free_y") +
-  scale_x_discrete(guide = guide_axis(angle = 45)) +
-  ylab("absolute error") +
-  xlab("first selection") -> rl_z_b
+#rl_z %>%
+#  filter(model_ver == "1.3") %>%
+#  group_by(model_ver, first_selection) %>%
+#  summarise(abs_err = mean(abs_err)) %>%
+#  ggplot(aes(first_selection, abs_err)) + 
+#  geom_col(position = position_dodge(), alpha = 0.75) +
+#  theme_bw() +
+#  #facet_grid(~first_selection, scales = "free_y") +
+#  scale_x_discrete(guide = guide_axis(angle = 45)) +
+#  ylab("absolute error") +
+#  xlab("first selection") -> rl_z_b
 
 rl_z2 <- rl %>%
   ungroup() %>%
-  mutate(abs_err = abs(observed - predicted), .keep = "unused") %>%
-  #reframe(scale_abs_err = scale(abs_err, center = FALSE), .by = c(dataset, statistic)) %>%
-  mutate(model_ver = rl$model_ver) %>%
+  filter(dataset != "tagu2022cog") %>%
+  mutate(statistic = factor(statistic, levels = c("num_runs", "max_run_length", "mean_pao","mean_bestr", "levy", "mean_int")),
+         statistic = fct_recode(statistic, 
+                                `num runs` = "num_runs",
+                                `max (run length)` = "max_run_length", 
+                                PAO = "mean_pao", 
+                                `best-r` = "mean_bestr",
+                                `mean intersections` = "mean_int"),
+         condition = fct_relevel(condition, "conjunction", "feature", "control", "value")) %>%
+  pivot_longer(cols = c('observed', 'predicted'), names_to = "dv_name", values_to = "dv") %>%
+  group_by(dataset, statistic) %>%
+  reframe(dv_scale = scale(dv, center = FALSE),
+          dv_name = dv_name,
+          model_ver = model_ver,
+          condition = condition,
+          person = person) %>%
+  pivot_wider(names_from = dv_name, values_from = dv_scale) %>%
   mutate(first_selection = if_else(str_detect(model_ver, "f"), "fixed", "free"),
          model_ver = str_remove(model_ver, "v|f"),
          model_ver = str_replace(model_ver, "_", "."),
          model_ver = as.numeric(model_ver)) %>%
+  mutate(abs_err = abs(observed - predicted)) %>%
   group_by(statistic, model_ver, first_selection) %>%
   summarise(abs_err = mean(abs_err)) 
+
            
 rl_z2 %>%
   filter(model_ver == "1.3") %>%
   group_by(statistic, first_selection) %>%
   summarise(abs_err = mean(abs_err)) %>%
-  ggplot(aes(statistic, abs_err, fill = as.factor(first_selection))) + 
+  ggplot(aes(statistic, abs_err, fill = factor(first_selection, levels = c("free", "fixed")))) + 
   geom_col(position = position_dodge(), alpha = 0.75) +
   theme_bw() +
   #facet_grid(~first_selection, scales = "free_y") +
   scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_fill_brewer(palette = "Paired") +
   ylab("absolute error") +
   labs(fill="first selection")  -> rl_z_c
 
 
-rl_z_b + rl_z_c / rl_z_a
+rl_z_a / rl_z_c
 
 ggsave("figs/fig10_fixed_v_free.pdf", width = 8, height = 5)
 
