@@ -1,8 +1,19 @@
-# this script takes a previously fitted model (see 1_fit_models) and creates a load of plots
-# giving an overview of how well the model fits the data
-# - accuracy plot
-# - run statistics plots (observed vs. predicted)
-# - posterior density plots (including theta plots for relevant model versions)
+---
+title: "Plot model example"
+author: "Anna Hughes & Alasdair Clarke"
+format: html
+editor: visual
+---
+
+
+This file takes a previously fitted model (see 1_fit_models) and creates a load of plots giving an overview of how well the model fits the data.
+
+
+- accuracy plot
+- run statistics plots (observed vs. predicted)
+- posterior density plots (including theta plots for relevant model versions)
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 
 library(tidyverse)
 library(cmdstanr)
@@ -19,8 +30,19 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(theme_bw())
 
-model_ver <- "1_3"
+```
+
+# Set your dataset and model version here
+
+```{r}
+
+model_ver <- "1_0"
 dataset <- "kristjansson2014plos"
+free_or_fixed <- "v" # "v" for free, "f" for fixed
+
+```
+
+```{r, echo = FALSE}
 
 # read in data
 d <- import_data(dataset)
@@ -28,9 +50,12 @@ d <- import_data(dataset)
 sf <- "1_fit_models/scratch"
 folder <- paste0(sf, "/post/", dataset, "/")
 
-#############################################################################
-# plot accuracy
-#############################################################################
+```
+
+# Accuracy plot
+
+```{r, echo = FALSE}
+
 pred <- readRDS(paste0(folder, "pred_", model_ver, ".rds"))
 
 pred$itemwise %>% 
@@ -44,33 +69,34 @@ plt_acc
 
 rm(acc)
 
-#############################################################################
-# compare run statistics
-#############################################################################
+```
+
+# Run statistics plots & correlations
+
+```{r, echo = FALSE, message = FALSE}
 
 trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
-  pivot_longer(starts_with("f"), names_to = "model_version", values_to = "predicted")
+  pivot_longer(starts_with(free_or_fixed), names_to = "model_version", values_to = "predicted")
 
 # reorder factor levels for plotting
 trl_stats %>% 
-  filter(.draw == 1) %>%
+  filter(.draw == 1, model_version == paste0(free_or_fixed, model_ver)) %>%
   mutate(statistic = fct_recode(statistic, 
                                 `number of runs` = "num_runs", 
                                 `max(run length)` = "max_run_length",
                                 pao = "mean_pao",
-                                `best r`  = "mean_bestr"),
+                                `best r`  = "mean_bestr",
+                                `mean intersections` = "mean_int"),
          statistic = fct_relevel(statistic, 
                                  "number of runs", "max(run length)", "pao")) -> trl_stats
 
-ggplot(trl_stats, aes(observed, predicted, colour = condition)) + 
+ggplot(trl_stats, aes(predicted, observed, colour = condition)) + 
   geom_point() + 
   geom_abline(linetype = 2) + 
   facet_wrap( ~ statistic, nrow = 2, scales = "free") +
   theme(legend.position = "none") -> plt_runs
 
 plt_runs
-
-# compute correlations
 
 comp_r <- function(condition, statistic, model_version, trl_stats) {
   
@@ -96,10 +122,11 @@ trl_stats %>% modelr::data_grid(condition, statistic, model_version) -> to_test
 pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
   knitr::kable()
 
+```
 
-#############################################################################
-# plot posterior densities
-#############################################################################
+# Posterior densities
+
+```{r, echo = FALSE}
 
 m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/fit/", model_ver, ".model"))
 post <- extract_post(m, d)
@@ -109,3 +136,4 @@ post_plt
 post_theta <- plot_model_theta(post, nrow = 1)
 post_theta
 
+```
