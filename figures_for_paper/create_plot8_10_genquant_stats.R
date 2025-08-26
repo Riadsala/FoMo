@@ -235,5 +235,5 @@ rl_z2 %>%
 
 rl_z_a / rl_z_c
 
-ggsave("figs/fig10_fixed_v_free.pdf", width = 8, height = 5)
+ggsave("figs/fig10_fixed_v_free.pdf", width = 5, height = 5)
 
