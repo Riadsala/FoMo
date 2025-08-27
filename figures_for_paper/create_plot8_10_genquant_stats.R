@@ -48,8 +48,6 @@ for (ds in datasets) {
     bind_rows(rl) -> rl
 }
 
-
-
 rl %>%
   filter(is.na(.draw)| .draw == "1") %>%
   select(-.draw) %>% 
