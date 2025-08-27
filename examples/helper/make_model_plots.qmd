@@ -1,0 +1,203 @@
+---
+author: "Anna Hughes & Alasdair Clarke"
+format:
+    html:
+        embed-resources: TRUE 
+params:
+  model_comp: "1_0"
+  model_ver: "1_3"
+  dataset: "kristjansson2014plos"
+  free_or_fixed: "v"
+---
+
+
+This file takes a previously fitted model (see 1_fit_models) and creates a load of plots giving an overview of how well the model fits the data.
+
+
+- accuracy plots (including a plot that shows how accuracy changes across trials, an average accuracy plot which will show the current model version alongside any other model versions you have calculated for easy comparison, and a per-person accuracy plot comparing your chosen model against a baseline comparison)
+- run statistics plots (observed vs. predicted) & correlations
+- posterior density plots (including theta plots for relevant model versions, and random effects plots)
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+
+library(tidyverse)
+library(cmdstanr)
+library(patchwork)
+library(tidybayes)
+
+source("../functions/import_data.R")
+source("../functions/compute_summary_stats.R")
+source("../functions/post_functions.R")
+source("../functions/plot_model.R")
+
+options(mc.cores = 1, digits = 2)
+
+# set global ggplot theme
+theme_set(theme_bw())
+
+```
+
+
+```{r, echo = FALSE}
+
+model_ver <- params$model_ver
+model_comp <- params$model_comp
+dataset <- params$dataset
+free_or_fixed <- params$free_or_fixed
+
+# need to add underscore back in to model version
+
+model_ver <- gsub("1", "1_", model_ver)
+model_comp <- gsub("1", "1_", model_comp)
+
+title_for_doc <- paste0("Model plots for ", dataset, "_", free_or_fixed, model_ver)
+
+```
+
+---
+title: "`r title_for_doc`"
+---
+
+```{r, echo = FALSE}
+
+# read in data
+d <- import_data(dataset)
+
+sf <- "1_fit_models/scratch"
+folder <- paste0(sf, "/post/", dataset, "/")
+
+```
+
+# Accuracy plots
+
+## Accuracy throughout trials
+
+```{r, echo = FALSE}
+
+pred <- readRDS(paste0(folder, "pred_", model_ver, ".rds"))
+
+pred$itemwise %>% 
+  group_by(condition, found, .draw, person) %>%
+  summarise(person_acc = mean(model_correct), .groups = "drop_last") %>%
+  summarise(accuracy = mean(person_acc), .groups = "drop_last") -> acc
+
+plt_acc <- plot_model_accuracy(acc)
+
+plt_acc
+
+rm(acc)
+
+```
+
+## Average accuracy (for all model versions)
+
+```{r, echo = FALSE}
+
+plt_acc_2 <- plot_models_accuracy(dataset, sf)
+
+plt_acc_2
+
+```
+
+## Per-person accuracy comparison
+
+```{r, echo = FALSE}
+
+v1 <- model_comp
+v2 <- model_ver
+
+plt_acc_3 <- plot_model_accuracy_comparison(dataset, v1, v2, sf) 
+
+plt_acc_3
+
+```
+
+# Run statistics plots & correlations
+
+```{r, echo = FALSE, message = FALSE}
+
+# reorder factor levels for plotting
+trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
+  pivot_longer(starts_with(free_or_fixed), names_to = "model_version", values_to = "predicted") %>%
+  filter(.draw == 1, model_version == paste0(free_or_fixed, model_ver)) %>%
+    mutate(statistic = fct_recode(statistic, 
+                                `number of runs` = "num_runs", 
+                                `max(run length)` = "max_run_length",
+                                pao = "mean_pao",
+                                `best r`  = "mean_bestr",
+                                `mean intersections` = "mean_int"),
+         statistic = fct_relevel(statistic, 
+                                 "number of runs", "max(run length)", "pao")) %>%
+  select(person, condition, statistic, observed, model_version, predicted) 
+
+  # add in levy
+levy_stats <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/levy_flight.csv")) %>%
+    rename(predicted = "alpha") %>%
+    mutate(statistic = "levy") %>%
+    filter(model_version == paste0(free_or_fixed, model_ver)) %>%
+    select(person, condition, statistic, observed, model_version, predicted) 
+
+trl_stats <- bind_rows(trl_stats, levy_stats)
+  
+ # %>%
+ #   pivot_wider(names_from = model_version, values_from = "predicted") %>%
+ #   bind_rows(rl) -> rl
+
+
+ggplot(trl_stats, aes(predicted, observed, colour = condition)) + 
+  geom_point() + 
+  geom_abline(linetype = 2) + 
+  facet_wrap( ~ statistic, nrow = 2, scales = "free") +
+  theme(legend.position = "none") -> plt_runs
+
+plt_runs
+
+comp_r <- function(condition, statistic, model_version, trl_stats) {
+  
+  t <- filter(trl_stats, 
+              {{condition}} == condition,
+              {{statistic}} == statistic, 
+              {{model_version}} == model_version)
+  
+  r <- cor.test(t$observed, t$predicted)$estimate
+  
+  reg_model <- summary(lm(observed ~ predicted, t))$coefficients
+  
+  return(tibble(condition = condition,
+                statistic = statistic,
+                model_version = model_version,
+                r = r,
+                b = reg_model["predicted",1],
+                a = reg_model["(Intercept)",1]))
+}
+
+trl_stats %>% modelr::data_grid(condition, statistic, model_version) -> to_test
+
+pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
+  knitr::kable()
+
+```
+
+# Posterior densities
+
+## Fixed effects
+
+```{r, echo = FALSE}
+
+m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/fit/", model_ver, ".model"))
+post <- extract_post(m, d)
+post_plt <- plot_model_fixed(post)
+post_plt
+
+post_theta <- plot_model_theta(post, nrow = 1)
+post_theta
+
+```
+
+## Random effects
+
+```{r, echo = FALSE}
+
+plot_model_random(post)
+
+```

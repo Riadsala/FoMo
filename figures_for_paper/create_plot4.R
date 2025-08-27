@@ -57,5 +57,5 @@ d %>% group_by(phi) %>%
 
 plt1 / plt2
   
-ggsave("figs/figure4_vm.pdf", width = 6, height = 4)
+ggsave("figs/fig4_vm.pdf", width = 6, height = 4)
 

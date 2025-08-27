@@ -15,6 +15,19 @@ options(mc.cores = 1, digits = 2)
 # set global ggplot theme
 theme_set(theme_bw())
 
+scale_colour_brewer_d <- function(..., palette = "Dark2") {
+  scale_colour_brewer(..., palette = palette )
+}
+
+scale_fill_brewer_d <- function(..., palette = "Dark2") {
+  scale_fill_brewer(..., palette = palette)
+}
+
+options(
+  ggplot2.discrete.colour = scale_colour_brewer_d,
+  ggplot2.discrete.fill = scale_fill_brewer_d
+)
+
 sf <- "../examples/1_fit_models/scratch"
 
 dataset <- c("hughes2024rsos")   
@@ -30,8 +43,8 @@ post <- extract_post(m, d)
 plt_coreparams <- plot_model_fixed(post, nrow = 2)
 plt_theta <- plot_model_theta(post, nrow = 1)
 
-plt_coreparams / plt_theta + plot_layout(heights = c(1.5,1))
-ggsave("figs/fig6_post_densities.pdf", width = 5, height = 8)
+plt_coreparams / free(plt_theta) 
+ggsave("figs/fig6_post_densities.pdf", width = 5, height = 7.5)
 
 # currently not in paper
 plt_indiv <- plot_model_random(post)

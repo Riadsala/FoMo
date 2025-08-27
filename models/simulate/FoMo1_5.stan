@@ -34,7 +34,8 @@ data {
 
   array[N] int<lower = 1, upper = n_trials> trial; // what trial are we on? 
   array[N] int <lower = 0, upper = n_targets> found_order; // = 1 if starting a new trial, 0 otherwise
-  
+  array[n_trials] int first_items;
+
   // (x, y) coordinates of each target
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_x;
   array[n_trials] vector<lower=0,upper=1>[n_targets] item_y;
@@ -45,6 +46,7 @@ data {
 
   // pre-computed inter-item features
   array[N] vector<lower = 0>[n_targets] delta; // distance measures
+  array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
 
   // read in priors
@@ -91,9 +93,9 @@ parameters {
   // random effects
   ///////////////////////////////
   // random effect variances: 
-  // 3*K as we have three fixed effect parameters x K conditions
+  // 3*K as we have four fixed effect parameters x K conditions
   vector<lower=0>[3*K] sigma_u;
-  // 4*K as we have four directions x K conditions
+  // 3*K as we have four directions x K conditions
   vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[3*K] L_u;
@@ -115,7 +117,7 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_s, u_delta;
+  array[K] vector[L] u_a, u_s, u_delta, u_psi;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
@@ -140,54 +142,9 @@ transformed parameters {
 
 model {
 
-  /////////////////////////////////////////////////////
-  // Define Priors
-  ////////////////////////////////////////////////////
-
-  // priors for random effects
-  sigma_u ~ exponential(prior_sigma_u_lambda); 
-  L_u ~ lkj_corr_cholesky(1.5); // LKJ prior for the correlation matrix
-  to_vector(z_u) ~ normal(0, 1); // centred prior for random effects, so this should always be N(0,1)
   
-  sigma_w ~ exponential(prior_sigma_w_lambda);
-  to_vector(z_w) ~ normal(0,1);
-  
-  // priors for fixed effects
-  for (kk in 1:K) {
-    target += normal_lpdf(b_a[kk]       | prior_mu_b_a, prior_sd_b_a);
-    target += normal_lpdf(b_s[kk]   | prior_mu_b_s, prior_sd_b_s);
-    target += normal_lpdf(rho_delta[kk] | prior_mu_rho_delta, prior_sd_rho_delta);
-    target += normal_lpdf(log_theta[kk] | 0, 1);
-  }
-
-  // create some variables
-  vector[n_targets] weights;
-  int t, z, x; // trial, person, and condition
-
-  //////////////////////////////////////////////////
-  // // step through data row by row and define LLH
-  //////////////////////////////////////////////////  
-  for (ii in 1:N) {
-
-    t = trial[ii];
-    z = Z[t];
-    x = X[t];
- 
-    weights = compute_weights_v15(
-      u_a[x, z], u_s[x, z], u_delta[x, z],  u_log_theta[x, z], kappa,
-      to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
-      found_order[ii], n_targets, remaining_items[ii],
-      grid_offset[x]); 
-
-    // get likelihood of item selection
-    target += weights[Y[ii]];
-   
-  }
 }
 
 generated quantities {
-  // here we  can output our prior distritions
-  real prior_b_a = normal_rng(prior_mu_b_a, prior_sd_b_a);
-  real prior_b_s = normal_rng(prior_mu_b_s, prior_sd_b_s);
-  real prior_rho_delta = normal_rng(prior_mu_rho_delta, prior_sd_rho_delta);
+
 }

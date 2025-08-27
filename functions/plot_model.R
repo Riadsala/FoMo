@@ -211,7 +211,7 @@ plot_model_fixed <- function(post, gt=NULL, clist=NULL, nrow = 1) {
   
   # assemble the plots!
   plt <- wrap_plots(plts, nrow = nrow) + 
-    plot_layout(guides = "collect", axis_titles = "collect")
+    plot_layout(guides = "collect", axis_titles = "collect") & theme(legend.position = "bottom")
   
   return(plt)
 }
@@ -255,6 +255,14 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
   grid_break_width <- pi/2
   pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2))
   
+  if ("theta" %in% names(post)) {
+    # good, we can plot model theta
+  } else {
+
+    return("this model does not calculate a theta parameter")
+    
+  }
+  
   if (per_person) {
     theta <- post$utheta
   } else {
@@ -274,7 +282,8 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
       expand = c(0, 0)) +
     scale_y_continuous(expression(theta)) +
     theme(axis.title.y = element_text(hjust = 0.68),
-          axis.ticks.x = element_blank()) + 
+          axis.ticks.x = element_blank(),
+          legend.position = "none") + 
     facet_wrap(~condition, nrow = nrow) -> plt
   
   if (per_person) plt <- plt + facet_wrap(~person, nrow = nrow)

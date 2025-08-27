@@ -15,7 +15,7 @@ draws_for_sim <- 2
 
 ############################################################################
 
-datasets <- c("hughes2024rsos", "tagu2022cog", "kristjansson2014plos")  #"clarke2022qjep", "hughes2024rsos", "tagu2022cog",
+datasets <- c( "kristjansson2014plos", "hughes2024rsos", "tagu2022cog", "clarke2022qjep")
 
 ############################################################################
 
@@ -48,7 +48,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   
   d <- import_data(dataset)
   
-  # we only want to calcualte these on the test data
+  # we only want to calculate these on the test data
   d <- get_train_test_split(d)
   d <- d$testing
   
@@ -59,6 +59,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
               num_runs = mean(n_runs),
               mean_bestr = mean(best_r),
               mean_pao = mean(pao),
+              mean_int = mean(intersections),
               .groups = "drop") %>%
     pivot_longer(-c(person, condition), names_to = "statistic", values_to = "observed") 
 
@@ -66,7 +67,6 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   iisv <- get_iisv_over_trials(d$found) %>%
     mutate(z = "observed")
 
-  
   # tidy up
   rm(d)
   
@@ -94,6 +94,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
+                mean_int = mean(intersections),
                 .groups = "drop") %>% 
       pivot_longer(-c(.draw, person, condition), 
                    names_to = "statistic", 
@@ -108,6 +109,7 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
                 num_runs = mean(n_runs),
                 mean_bestr = mean(best_r),
                 mean_pao = mean(pao),
+                mean_int = mean(intersections),
                 .groups = "drop") %>% 
       pivot_longer(-c(.draw, person, condition),
                    names_to = "statistic", 
@@ -136,11 +138,10 @@ compute_summary_stats <- function(dataset, draws_for_sim = 1) {
   
   # tidy up run statistics model
 
-  
   # round iisv to 3dp
   iisv %>% mutate(x = round(x, 3), 
                   y = round(y, 3),
-                  d2 = round(d2, 3), 
+                  d2 = round(d2, 4), 
                   theta = round(theta, 3), 
                   psi = round(psi, 3)) -> iisv
   
