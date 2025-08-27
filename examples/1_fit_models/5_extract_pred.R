@@ -74,7 +74,7 @@ for (ds in datasets) {
   print(paste("Obtaining posterior predictions for dataset ", ds))
   
   # first, extract and save accuracy
-  print("***** Extracting preditions *****")
+  print("***** Extracting predictions *****")
   extract_and_save_predictions(ds)
 
 }

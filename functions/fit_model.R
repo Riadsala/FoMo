@@ -12,6 +12,7 @@ fit_model <- function(dataset, fomo_ver, mode = "all",
   # the data. "split" or "traintest" means that training and testing 
   # take place on separate partitions of the data
   # - iter = number of iterations during model fitting
+  # - kappa = hyper-parameter value for kappa (defaults to 20: this is probably adequate for most purposes)
   #######################################################################
   
   #######################################################################
