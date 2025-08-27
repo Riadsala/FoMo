@@ -3,19 +3,17 @@ If you are interested in using this model, please feel free to contact us (Alasd
 
 # Model Versions
 
-More details will be made available in the pre-print (once we finish it)
+More details are available in the pre-print.
 
-| Version Number             | Overview                           | item class | proximity ($\delta$) | rel dir ($\psi$)  | abs dir ($\phi$) | sim start |
-|----------------------------|------------------------------------|-----------------|--------------------|-----------|-----------|---------|
-| v0.0                       | prior predictions for 1.0          | $b_a$ and $b_s$ | abs | x | | random |
-| v1.0                       | Clarke, Hunt & Hughes (2022)       | $b_a$ and $b_s$ | abs | x |  |random |
-| v1.1                       | Does relative prox help?    | $b_a$ and $b_s$ | rel | x | | random |
-| v1.2                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |       |   | random |
-| v1.3                       | Four comp directions | $b_a$ and $b_s$ | abs | x|  4 | random |
-| v1.4                       | Eight comp directions | $b_a$ and $b_s$ | abs | x |  8 | random |
-| v1.5                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |  |  ? | random |
-| v2.0      ????                 | Fix starting point | $b_a$ and $b_s$ | abs | ? |  ? | fixed |
-
+| Version Number             | Overview                           | item class | proximity ($\delta$) | rel dir ($\psi$)  | abs dir ($\phi$) |
+|----------------------------|------------------------------------|-----------------|--------------------|-----------|-----------|
+| v0.0                       | prior predictions for 1.0          | $b_a$ and $b_s$ | abs | x | | 
+| v1.0                       | Clarke, Hunt & Hughes (2022)       | $b_a$ and $b_s$ | abs | x |  |
+| v1.1                       | Does relative prox help?    | $b_a$ and $b_s$ | rel | x | | 
+| v1.2                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |       |   |
+| v1.3                       | Four comp directions | $b_a$ and $b_s$ | abs | x|  4 | 
+| v1.4                       | Eight comp directions | $b_a$ and $b_s$ | abs | x |  8 | 
+| v1.5                       | Is rel direction doing anything? | $b_a$ and $b_s$ | abs |  |  4 |
 
 
 # Import Data

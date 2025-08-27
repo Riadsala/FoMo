@@ -1,11 +1,12 @@
 library(tidyverse)
 library(tidybayes)
-source("../../functions/import_data.R")
+source("../functions/import_data.R")
 # script to compute switch acc
 
-dataset <- "hughes2024rsos"
+dataset <- "kristjansson2014plos"
+model_ver <- "1_0"
 
-p <- readRDS(paste0("scratch/post/", dataset, "/pred_1_0.rds"))
+p <- readRDS(paste0("../examples/1_fit_models/scratch/post/", dataset, "/pred_", model_ver, ".rds"))
 
 p <- p$itemwise %>%
   select(-model_correct, -x, -y, -trial)

@@ -9,7 +9,7 @@ source("../functions/plot_data.R")
 source("../functions/post_functions.R")
 source("../functions/sim_foraging_data.R")
 
-sf <- "1_fit_models/scratch"
+sf <- "../examples/1_fit_models/scratch"
 datasets <- c("kristjansson2014plos", "tagu2022cog", "hughes2024rsos", "clarke2022qjep")
 
 d_acc <- tibble()
