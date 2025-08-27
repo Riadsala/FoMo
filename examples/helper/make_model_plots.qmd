@@ -13,9 +13,9 @@ params:
 This file takes a previously fitted model (see 1_fit_models) and creates a load of plots giving an overview of how well the model fits the data.
 
 
-- accuracy plot
-- run statistics plots (observed vs. predicted)
-- posterior density plots (including theta plots for relevant model versions)
+- accuracy plots (including a plot that shows how accuracy changes across trials, and an average accuracy plot which will show the current model version alongside any other model versions you have calculated for easy comparison)
+- run statistics plots (observed vs. predicted) & correlations
+- posterior density plots (including theta plots for relevant model versions, and random effects plots)
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -64,7 +64,9 @@ folder <- paste0(sf, "/post/", dataset, "/")
 
 ```
 
-# Accuracy plot
+# Accuracy plots
+
+## Accuracy throughout trials
 
 ```{r, echo = FALSE}
 
@@ -80,6 +82,16 @@ plt_acc <- plot_model_accuracy(acc)
 plt_acc
 
 rm(acc)
+
+```
+
+## Average accuracy (for all model versions)
+
+```{r, echo = FALSE}
+
+plt_acc_2 <- plot_models_accuracy(dataset, sf)
+
+plt_acc_2
 
 ```
 
