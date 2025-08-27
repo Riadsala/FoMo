@@ -299,8 +299,10 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
 
 plot_traceplots <- function(m) {
   
-  bayesplot::mcmc_trace(m$draws(), pars = c("bA", "b_stick"))
+  plt <- mcmc_trace(m$draws(), regex_pars = c("b_a", "b_s"))
   
+  return(plt)
+
 }
 
 ##################################################################################
