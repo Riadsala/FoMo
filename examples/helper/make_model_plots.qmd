@@ -4,7 +4,8 @@ format:
     html:
         embed-resources: TRUE 
 params:
-  model_ver: "1_0"
+  model_comp: "1_0"
+  model_ver: "1_3"
   dataset: "kristjansson2014plos"
   free_or_fixed: "v"
 ---
@@ -13,7 +14,7 @@ params:
 This file takes a previously fitted model (see 1_fit_models) and creates a load of plots giving an overview of how well the model fits the data.
 
 
-- accuracy plots (including a plot that shows how accuracy changes across trials, and an average accuracy plot which will show the current model version alongside any other model versions you have calculated for easy comparison)
+- accuracy plots (including a plot that shows how accuracy changes across trials, an average accuracy plot which will show the current model version alongside any other model versions you have calculated for easy comparison, and a per-person accuracy plot comparing your chosen model against a baseline comparison)
 - run statistics plots (observed vs. predicted) & correlations
 - posterior density plots (including theta plots for relevant model versions, and random effects plots)
 
@@ -40,11 +41,14 @@ theme_set(theme_bw())
 ```{r, echo = FALSE}
 
 model_ver <- params$model_ver
+model_comp <- params$model_comp
 dataset <- params$dataset
 free_or_fixed <- params$free_or_fixed
 
 # need to add underscore back in to model version
+
 model_ver <- gsub("1", "1_", model_ver)
+model_comp <- gsub("1", "1_", model_comp)
 
 title_for_doc <- paste0("Model plots for ", dataset, "_", free_or_fixed, model_ver)
 
@@ -92,6 +96,19 @@ rm(acc)
 plt_acc_2 <- plot_models_accuracy(dataset, sf)
 
 plt_acc_2
+
+```
+
+## Per-person accuracy comparison
+
+```{r, echo = FALSE}
+
+v1 <- model_comp
+v2 <- model_ver
+
+plt_acc_3 <- plot_model_accuracy_comparison(dataset, v1, v2, sf) 
+
+plt_acc_3
 
 ```
 
