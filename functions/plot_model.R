@@ -255,6 +255,14 @@ plot_model_theta <- function(post, per_person = FALSE, nrow = 4) {
   grid_break_width <- pi/2
   pi_labels <- c("0", expression(pi/2), expression(pi), expression(3*pi/2))
   
+  if ("theta" %in% names(post)) {
+    # good, we can plot model theta
+  } else {
+
+    return("this model does not calculate a theta parameter")
+    
+  }
+  
   if (per_person) {
     theta <- post$utheta
   } else {
