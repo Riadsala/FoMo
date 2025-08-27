@@ -1,6 +1,7 @@
 library(tidyverse)
 library(cmdstanr)
 library(posterior)
+library(bayesplot)
 
 # this script (or QMD) checks previously fitted models and assesses how well they fit
 
@@ -11,26 +12,31 @@ mode <- "train"
 models <- unlist(dir(folder))
 models <- models[str_detect(models, "model")]
 
-d <- tibble()
-
-for (model in models) {
-  
-  m <- readRDS(paste0(folder, model))
-  
-  vars <- m$metadata()$stan_variables
-  vars <- vars[!(vars %in% c("P", "Q",  "z_w", "u", "log_lik"))]
-  vars <- vars[!str_detect(vars, "prior")]
-  # this is quite slow if we have many variables
-  rhat <- m$summary(variables = vars)$rhat
-  
-  d <- bind_rows(d, 
-                 tibble(model = model, rhat = rhat))
-
-}
 
 
-d %>% 
+model <- models[1]
+
+m <- readRDS(paste0(folder, model))
+
+vars <- m$metadata()$stan_variables
+vars <- vars[!(vars %in% c("P", "Q",  "z_w", "u", "log_lik", "lp__"))]
+vars <- vars[!str_detect(vars, "prior")]
+# this is quite slow if we have many variables
+dsummary <- m$summary(variables = vars)
+
+# check NA rhats are unused values in L:
+print(filter(dsummary, is.na(rhat))$variable)
+
+dsummary %>% filter(is.finite(rhat)) %>%
   ggplot(aes(rhat)) +
-  geom_histogram(binwidth = 0.01) +
-  facet_wrap(~model, scales = "free") + 
+  geom_histogram() +
   ggtitle("distribution of Rhat statistics")
+
+#######################
+# trankplot?
+
+mcmc_trace(m$draws(), regex_pars = "b_a")
+mcmc_trace(m$draws(), regex_pars = "b_s")
+
+
+mcmc_pairs(m$draws(), pars = c("b_a[1]", "b_s[1]", "rho_delta[1]", "rho_psi[1]"))
