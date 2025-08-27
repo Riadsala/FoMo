@@ -1,8 +1,12 @@
 ---
-title: "Plot model example"
 author: "Anna Hughes & Alasdair Clarke"
-format: html
-editor: visual
+format:
+    html:
+        embed-resources: TRUE 
+params:
+  model_ver: "1_0"
+  dataset: "kristjansson2014plos"
+  free_or_fixed: "v"
 ---
 
 
@@ -32,15 +36,23 @@ theme_set(theme_bw())
 
 ```
 
-# Set your dataset and model version here
 
-```{r}
+```{r, echo = FALSE}
 
-model_ver <- "1_0"
-dataset <- "kristjansson2014plos"
-free_or_fixed <- "v" # "v" for free, "f" for fixed
+model_ver <- params$model_ver
+dataset <- params$dataset
+free_or_fixed <- params$free_or_fixed
+
+# need to add underscore back in to model version
+model_ver <- gsub("1", "1_", model_ver)
+
+title_for_doc <- paste0("Model plots for ", dataset, "_", free_or_fixed, model_ver)
 
 ```
+
+---
+title: "`r title_for_doc`"
+---
 
 ```{r, echo = FALSE}
 
@@ -75,20 +87,33 @@ rm(acc)
 
 ```{r, echo = FALSE, message = FALSE}
 
-trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
-  pivot_longer(starts_with(free_or_fixed), names_to = "model_version", values_to = "predicted")
-
 # reorder factor levels for plotting
-trl_stats %>% 
+trl_stats <- read_csv(paste0("1_fit_models/scratch/post/", dataset, "/run_statistics.csv")) %>%
+  pivot_longer(starts_with(free_or_fixed), names_to = "model_version", values_to = "predicted") %>%
   filter(.draw == 1, model_version == paste0(free_or_fixed, model_ver)) %>%
-  mutate(statistic = fct_recode(statistic, 
+    mutate(statistic = fct_recode(statistic, 
                                 `number of runs` = "num_runs", 
                                 `max(run length)` = "max_run_length",
                                 pao = "mean_pao",
                                 `best r`  = "mean_bestr",
                                 `mean intersections` = "mean_int"),
          statistic = fct_relevel(statistic, 
-                                 "number of runs", "max(run length)", "pao")) -> trl_stats
+                                 "number of runs", "max(run length)", "pao")) %>%
+  select(person, condition, statistic, observed, model_version, predicted) 
+
+  # add in levy
+levy_stats <- read_csv(paste0("../examples/1_fit_models/scratch/post/", dataset, "/levy_flight.csv")) %>%
+    rename(predicted = "alpha") %>%
+    mutate(statistic = "levy") %>%
+    filter(model_version == paste0(free_or_fixed, model_ver)) %>%
+    select(person, condition, statistic, observed, model_version, predicted) 
+
+trl_stats <- bind_rows(trl_stats, levy_stats)
+  
+ # %>%
+ #   pivot_wider(names_from = model_version, values_from = "predicted") %>%
+ #   bind_rows(rl) -> rl
+
 
 ggplot(trl_stats, aes(predicted, observed, colour = condition)) + 
   geom_point() + 
@@ -126,6 +151,8 @@ pmap_df(to_test, comp_r, trl_stats = trl_stats) %>%
 
 # Posterior densities
 
+## Fixed effects
+
 ```{r, echo = FALSE}
 
 m <- readRDS(paste0("1_fit_models/scratch/models/", dataset, "/fit/", model_ver, ".model"))
@@ -135,5 +162,13 @@ post_plt
 
 post_theta <- plot_model_theta(post, nrow = 1)
 post_theta
+
+```
+
+## Random effects
+
+```{r, echo = FALSE}
+
+plot_model_random(post)
 
 ```
