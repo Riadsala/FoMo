@@ -62,7 +62,7 @@ plot_a_trial <- function(ds, df,
   ds1 <- filter(ds, item_class == 1)
   ds2 <- filter(ds, item_class == 2)
   
-   plt + geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#A1CAF1") +
+   plt + geom_point(data = ds1, size = 5, aes(shape = item_class), color = "#F0F8FF") +
      geom_point(data = ds2, size = 5, aes(shape = item_class), color = "#BE0032") +
     geom_text(data = df, aes(label = found), size = 2.5) + 
      scale_color_paletteer_d("wesanderson::Chevalier1") +

@@ -54,7 +54,7 @@ plot_a_trial <- function(ds, df,
   # plot human path
   plt_human <- ggplot(ds, aes(x, y)) + 
     geom_path(data = df)  +
-    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#A1CAF1") +
+    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#F0F8FF") +
     geom_point(data = ds2, size = 5, aes(shape = factor(item_class)), color = "#BE0032") +
     geom_text(data = df, aes(label = found), size = 2.5) + 
     scale_shape_manual(values = c(19, 19, 3, 4))+ 
@@ -68,7 +68,7 @@ plot_a_trial <- function(ds, df,
   plt_model <- ggplot(data = ds, aes(x, y)) + geom_path(data = predf, 
                   aes(x, y),
                   alpha = 0.5) + 
-    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#A1CAF1") +
+    geom_point(data = ds1, size = 5, aes(shape = factor(item_class)), color = "#F0F8FF") +
     geom_point(data = ds2, size = 5, aes(shape = factor(item_class)), color = "#BE0032") +
     geom_text(data = predf, aes(label = found), size = 2.5) + 
     scale_color_paletteer_d("wesanderson::Chevalier1") +
