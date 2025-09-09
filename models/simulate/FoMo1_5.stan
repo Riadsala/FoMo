@@ -1,23 +1,24 @@
+
 /* 
 
-FoMo V1.5 (multi-level)
+FoMo V1.5 (multi-level: generated quantities)
 
-This model removes relative direction (psi)
+This model adds absolute direction but removes relative direction.
 
 Includes the core parameters:
-b_a, b_s, rho_delta and 
+b_a, b_s, rho_delta, and 
 a set of theta mixture weights
 
 kappa is passed in as a hyper parameter
 
 */
 
+
 functions {
 
   #include /../include/FoMo_functions.stan
 
 }
-
 
 data {
   int <lower = 1> N; // total number of selected targets over the whole experiment
@@ -46,19 +47,7 @@ data {
 
   // pre-computed inter-item features
   array[N] vector<lower = 0>[n_targets] delta; // distance measures
-  array[N] vector[n_targets] psi; // direction measures (relative)
   array[N] vector[n_targets] phi; // direction measures (absolute)
-
-  // read in priors
-  // suggested values given in comments
-  real prior_mu_b_a; // = 0, prior for salience of item class A compared to B
-  real prior_sd_b_a; // = 1, uncertainty for b_a prior
-  real prior_mu_b_s; // = 0, prior for b_s, item class sticking v switching
-  real prior_sd_b_s; // = 1, uncertainty for b_s prior
-  real prior_mu_rho_delta; // = 15, negexp fall off due to proximity
-  real prior_sd_rho_delta; // = 5, uncertainty around rho_delta
-  real prior_sigma_u_lambda;
-  real prior_sigma_w_lambda;
 
   // hyper parameters
   real<lower = 0> kappa; // kappa = 10? concentration of von Mises
@@ -93,9 +82,9 @@ parameters {
   // random effects
   ///////////////////////////////
   // random effect variances: 
-  // 3*K as we have four fixed effect parameters x K conditions
+  // 3*K as we have three fixed effect parameters x K conditions
   vector<lower=0>[3*K] sigma_u;
-  // 3*K as we have four directions x K conditions
+  // 4*K as we have four directions x K conditions
   vector<lower=0>[4*K] sigma_w;
   // declare L_u to be the Choleski factor of a correlation matrix
   cholesky_factor_corr[3*K] L_u;
@@ -117,11 +106,11 @@ transformed parameters {
   u = diag_pre_multiply(sigma_u, L_u) * z_u;
 
   // create empty arrays for everything
-  array[K] vector[L] u_a, u_s, u_delta, u_psi;
+  array[K] vector[L] u_a, u_stick, u_delta;
   // calculate
   for (kk in 1:K) {
     u_a[kk]     = to_vector(b_a[kk]       + u[3*(kk-1)+1]);
-    u_s[kk]     = to_vector(b_s[kk]       + u[3*(kk-1)+2]);
+    u_stick[kk] = to_vector(b_s[kk]   + u[3*(kk-1)+2]);
     u_delta[kk] = to_vector(rho_delta[kk] + u[3*(kk-1)+3]);
   }
 
@@ -147,4 +136,163 @@ model {
 
 generated quantities {
 
+  //////////////////////////////////////////////////////////////////////////////
+  /* 
+  i) Step through data item-selection at a time and compute which item the 
+  model selects next. This allows us to compute accuracy
+
+  P: which item do we think the human will select next?
+  log_lik: what is the likelihood of selecting the next item ? 
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[N] int P;
+  array[N] real log_lik;
+
+  {
+    
+    // create some variables
+    vector[n_targets] weights;
+    int t, z, x; // trial, person, and condition
+
+    //////////////////////////////////////////////////
+    // // step through data row by row and define LLH
+    //////////////////////////////////////////////////
+    for (ii in 1:N) {
+
+      t = trial[ii];
+      z = Z[t];
+      x = X[t];
+
+      weights = compute_weights_v15(
+        u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
+        to_vector(item_class[t]), S[ii], delta[ii], phi[ii],
+        found_order[ii], n_targets, remaining_items[ii],
+        grid_offset[x]); 
+
+      P[ii] = categorical_rng(exp(weights));
+      log_lik[ii] = weights[Y[ii]];
+
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  /* 
+  ii) Simulate each trial, start to finish. This allows us to compuare the model
+  to human participants in terms of run statistics and selection vectors
+
+  - have not implemented starting rule: select item at random
+  - we do not have a stopping rule yet: so we will simply collect all of the targets
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[n_trials, n_targets] int Q; 
+
+  {
+
+    // create some variables
+    vector[n_targets] weights;
+    int z, x; // trial, person, and condition
+    /* we need new remaining_items and features (S, delta) as
+    these features will update dynamically as we carry out a new 
+    simulated foraging trial */
+    vector[n_targets] remaining_items_q;
+    vector[n_targets] S_q, phi_q, delta_q;
+
+    //for each trial
+    for (t in 1:n_trials) {
+
+      z = Z[t];
+      x = X[t];
+
+      // first, set up new trial_ all the items are remaining!
+      remaining_items_q = rep_vector(1, n_targets);
+   
+      // simulate a trial!
+      for (ii in 1:n_targets) {
+
+        // create empty vectors to store our features in
+        S_q     = rep_vector(0, n_targets);
+        delta_q = rep_vector(1, n_targets);
+        phi_q   = rep_vector(1, n_targets);
+          
+        // if we're not on the first item.... calculate feature vectors  
+        if (ii > 1) 
+        {
+          S_q     = compute_matching(item_class[t], n_targets, Q[t, ], ii);
+          delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, Q[t, ], ii);
+          phi_q   = compute_absdir(item_x[t], item_y[t], n_targets, Q[t, ], ii); 
+        }
+
+        weights = compute_weights_v15(
+          u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
+          to_vector(item_class[t]), S_q, delta_q, phi_q,
+          found_order[ii], n_targets, remaining_items_q,
+          grid_offset[x]); 
+
+        // sample an item to select
+        Q[t, ii] = categorical_rng(exp(weights));
+
+        // update remaining_items_q
+        remaining_items_q[Q[t, ii]] = 0;
+ 
+      }  
+    }
+  } 
+ //////////////////////////////////////////////////////////////////////////////
+  /* 
+  iii) Same as ii), but with the initial item fixed to match what the human
+  participant did
+  */
+  //////////////////////////////////////////////////////////////////////////////
+
+  array[n_trials, n_targets] int F; 
+
+  {
+
+    // create some variables
+    vector[n_targets] weights;
+    int z, x; // trial, person, and condition
+    /* we need new remaining_items and features (S delta) as
+    these features will update dynamically as we carry out a new 
+    simulated foraging trial */
+    vector[n_targets] remaining_items_q;
+    vector[n_targets] S_q, phi_q, delta_q;
+
+    //for each trial
+    for (t in 1:n_trials) {
+
+      z = Z[t];
+      x = X[t];
+
+      // first, set up new trial_ all the items are remaining!
+      remaining_items_q = rep_vector(1, n_targets);
+
+      // first item same as it ever was
+      F[t, 1] = first_items[t];
+      // update remaining_items_q
+      remaining_items_q[F[t, 1]] = 0;
+   
+      // simulate the rest of the trial!
+      for (ii in 2:n_targets) {
+
+        // if we're not on the first item.... calculate feature vectors  
+        S_q     = compute_matching(item_class[t], n_targets, F[t, ], ii);
+        delta_q = d0 * compute_prox(item_x[t], item_y[t], n_targets, F[t, ], ii);
+        phi_q   = compute_absdir(item_x[t], item_y[t], n_targets, F[t, ], ii); 
+     
+        weights = compute_weights_v15(
+          u_a[x, z], u_stick[x, z], u_delta[x, z], u_log_theta[x, z], kappa,
+          to_vector(item_class[t]), S_q, delta_q, phi_q,
+          found_order[ii], n_targets, remaining_items_q,
+          grid_offset[x]); 
+
+        // sample an item to select
+        F[t, ii] = categorical_rng(exp(weights));
+
+        remaining_items_q[F[t, ii]] = 0;
+
+      }
+    } 
+  }
 }
