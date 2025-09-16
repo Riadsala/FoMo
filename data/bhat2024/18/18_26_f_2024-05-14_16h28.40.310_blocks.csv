@@ -1,0 +1,9 @@
+,attribute,block1,block2
+0,label,feature_blocks,conjunction_blocks
+1,conditions,feat_grid-feat_rot-feat_uni,conj_grid-conj_rot-conj_uni
+2,n_trials_per_cond,5,5
+3,group,none,none
+4,intro_text,Ready?,Ready?
+5,outro_text,This block is now complete. Please take a break!,"This block is now complete. Please take a break!
+"
+6,practice,prac_feat,prac2_conj
