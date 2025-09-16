@@ -47,7 +47,7 @@ for (pp in 1:length(p_folders)) {
   
   d_found <- bind_rows(d_found, p_found)
   d_stim <- bind_rows(d_stim, p_stim)
-  d_rt <- bind_rows(d_found, p_found)
+  d_rt <- d_found
   
   # age and gender
   filename <- str_split_i(p_file_found, "/", 2)
@@ -194,8 +194,8 @@ d_found <- fix_person_and_trial(d_found)
 d_stim <- fix_person_and_trial(d_stim)
 d_rt <- fix_person_and_trial(d_rt)
 
-write_csv(d_found, "bhat2025_found.csv")
-write_csv(d_stim, "bhat2025_stim.csv")
-write_csv(d_rt, "bhat2025_rt.csv")
-write_csv(d_age, "bhat2025_age.csv")
-write_csv(d_gender, "bhat2025_gender.csv")
+write_csv(d_found, "bhat2024_found.csv")
+write_csv(d_stim, "bhat2024_stim.csv")
+write_csv(d_rt, "bhat2024_rt.csv")
+write_csv(d_age, "bhat2024_age.csv")
+write_csv(d_gender, "bhat2024_gender.csv")

@@ -33,6 +33,7 @@ import_data <- function(dataset, small_test=FALSE) {
               "kristjansson2014plos" = import_kristjansson2014plos(data_path, small_test),
               "hughes2024rsos" = import_hughes2024rsos(data_path, small_test),
               "bhat2025" = import_bhat2025(data_path, small_test),
+              "bhat2024" = import_bhat2024(data_path, small_test),
               "unknown dataset")
   
   return(list(
@@ -417,7 +418,36 @@ import_bhat2025 <- function(data_path = "../data/", small_test) {
                 gender = d_gender,
                 rt = d_rt))
 
-    }
+}
+
+
+import_bhat2024 <- function(data_path = "../data/", small_test) {
+  
+  d_stim <- read_csv(paste0(data_path, "bhat2024/bhat2024_stim.csv"),
+                     show_col_types = FALSE) 
+  d_found <- read_csv(paste0(data_path, "bhat2024/bhat2024_found.csv"),
+                      show_col_types = FALSE)
+  d_age <- read_csv(paste0(data_path, "bhat2024/bhat2024_age.csv"),
+                    show_col_types = FALSE)
+  d_gender <- read_csv(paste0(data_path, "bhat2024/bhat2024_gender.csv"),
+                       show_col_types = FALSE)
+  d_rt <- read_csv(paste0(data_path, "bhat2024/bhat2024_rt.csv"),
+                   show_col_types = FALSE)
+  
+  d_found %>% 
+    mutate(condition = as_factor(condition)) -> d_found
+  
+  d_stim %>% 
+    mutate(condition = as_factor(condition)) -> d_stim
+  
+  return(list(stim = d_stim,
+              found = d_found,
+              age = d_age,
+              gender = d_gender,
+              rt = d_rt))
+  
+}
+
   
 
 # some functions to sanity check our data... should be run after import_dat, but before anything else
