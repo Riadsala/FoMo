@@ -96,7 +96,10 @@ d_acc %>%
 
 # plot a trial
 
-plot_a_trial(ds, df, 2) # person 1, conj grid, for whom 1.3 improves things a lot (accuracy goes from quite low to quite middling)
+ds <- d$stim
+df <- d$found
+
+good_grid <- plot_a_trial(ds, df, 2) # person 1, conj grid, for whom 1.3 improves things a lot (accuracy goes from quite low to quite middling)
 plot_a_trial(ds, df, 15) # person 1, feat grid, 1.3 improves things a lot (accuracy goes from lowish to middling)
 plot_a_trial(ds, df, 50) # person 3, conj grid, for whom 1.3 improves things (accuracy stays relatively low)
 
@@ -108,7 +111,11 @@ plot_a_trial(ds, df, 265) # person 12, conj grid, who doesn't show any differenc
 plot_a_trial(ds, df, 638) # person 27, feat grid v low (I think because they are doing things in a conjunction-y way? Or changing a lot between trials?)
 plot_a_trial(ds, df, 549) # person 23, feat rot, quite high accuracy but goes down a little for 1.3 (does seem to be going up and down a bit)
 
-plot_a_trial(ds, df, 647) # person 28, conj grid, not doing a very good job (and 1.3 not helping)
+bad_grid <- plot_a_trial(ds, df, 647) # person 28, conj grid, not doing a very good job (and 1.3 not helping)
 plot_a_trial(ds, df, 653) # person 28, conj rot, not that great and 1.3 not helping. Search does look a bit disorganised and not particularly on any grid.
 plot_a_trial(ds, df, 659) # person 28, feat grid, doing  better (1.3 helps a bit?)
 plot_a_trial(ds, df, 665) # person 28, feat rot, doing better (1.3 helps a bit?)
+
+good_grid + bad_grid
+
+ggsave('example_trials.png', bg = "transparent")
