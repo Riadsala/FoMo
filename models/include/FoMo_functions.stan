@@ -209,7 +209,6 @@ vector compute_absdir(vector x, vector y, int n_targets, array [ ] int Q, int jj
 
 }
 
-
 vector compute_reldir(vector x, vector y, int n_targets, array [ ] int Q, int jj) {      
 
   vector[n_targets] psi = rep_vector(1, n_targets);
@@ -252,7 +251,6 @@ real mod(real a, real b) {
   return( a - floor(a/b));
 
 }
-
   
 vector compute_absdir_weights_fixed_kappa4(int n, int n_targets, 
     vector log_theta, real kappa, vector phi, real os) {
@@ -284,7 +282,7 @@ vector compute_absdir_weights_fixed_kappa4(int n, int n_targets,
     vector[n_targets] w;
     vector[8] theta = exp(log_theta);
 
-    w = rep_vector(1, n_targets); 
+    w = rep_vector(0, n_targets); 
 
     if (n > 1) {
 
@@ -300,7 +298,7 @@ vector compute_absdir_weights_fixed_kappa4(int n, int n_targets,
        +  1);
     }
 
-    return(log(w));
+    return(w);
   }
 
   vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) {
