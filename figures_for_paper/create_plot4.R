@@ -28,7 +28,6 @@ theta <- c(15, 4, 8, 6)
 mu <- c(0, pi/2, pi, 3*pi/2)
 kappa <- 10
 
-
 phi <- seq(-pi, pi, 0.01) 
 
 comp_vm <- function(k, theta, mu, kappa, phi) {
@@ -58,4 +57,34 @@ d %>% group_by(phi) %>%
 plt1 / plt2
   
 ggsave("figs/fig4_vm.pdf", width = 6, height = 4)
+
+
+
+
+comp_vm <- function(k, theta, mu, kappa, phi) {
+  
+  tibble(k = k, 
+         phi = phi,
+         w = theta * dvonmises(phi, mu, kappa),
+         kap = kappa)
+  
+}
+# create plot to illustrate difference between kappa values
+tibble(k = rep(1:4,3), theta = rep(c(2,2,2,2), 3), mu = rep(mu, 3), kappa = rep(c(10, 20, 40), each = 4 )) %>%
+  pmap_df(comp_vm,  phi) %>%
+  rename(kappa = kap) %>%
+  mutate(k = factor(k),
+         kappa = factor(kappa)) %>%
+  group_by(kappa, phi) %>%
+  summarise(w = sum(w)) %>%
+  ggplot(aes(phi, w, colour = kappa)) + 
+  geom_path(linewidth = 2, alpha = 0.75) +
+  scale_x_continuous(limits = c(-pi, pi), expand = c(0,0)) 
+
+
+
+ggsave("figs/fig4b_vm.pdf", width = 6, height = 3)
+
+
+
 
