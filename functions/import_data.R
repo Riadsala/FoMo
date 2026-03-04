@@ -34,6 +34,7 @@ import_data <- function(dataset, small_test=FALSE) {
               "hughes2024rsos" = import_hughes2024rsos(data_path, small_test),
               "bhat2025" = import_bhat2025(data_path, small_test),
               "bhat2024" = import_bhat2024(data_path, small_test),
+              "salo2025" = import_salo2025(data_path, small_test),
               "unknown dataset")
   
   return(list(
@@ -448,6 +449,24 @@ import_bhat2024 <- function(data_path = "../data/", small_test) {
   
 }
 
+
+import_salo2025 <- function(data_path = "../data/", small_test) {
+  
+  d_stim <- read_csv(paste0(data_path, "salo2025/salo2025_stim.csv"),
+                     show_col_types = FALSE) 
+  d_found <- read_csv(paste0(data_path, "salo2025/salo2025_found.csv"),
+                      show_col_types = FALSE)
+
+  d_found %>% 
+    mutate(condition = as_factor(condition)) -> d_found
+  
+  d_stim %>% 
+    mutate(condition = as_factor(condition)) -> d_stim
+  
+  return(list(stim = d_stim,
+              found = d_found))
+  
+}
   
 
 # some functions to sanity check our data... should be run after import_dat, but before anything else

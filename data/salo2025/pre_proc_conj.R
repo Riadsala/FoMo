@@ -1,19 +1,27 @@
 library(tidyverse)
 source("../../functions/import_data.R")
 
-d <- read_csv('E1_feature_all_targets_complete.csv')
+d <- read_csv('E1_conjunction_all_targets_complete.csv')
 
 d_found <- d %>%
   filter(collected == TRUE) %>%
   mutate(trial = trial_number + 1) %>%
-  select(person = "participant", condition = "trial_type", trial, interactable_type = "interactable_type", target_name = "target_name",
+  select(person = "participant", condition = "trial_type", trial, target_name = "target_name", 
          id = "target_name", found = "collection_order", x = "world_x",
          y = "world_z") %>%
   separate_wider_delim(id, delim = "Table", names = c("cup", "table")) %>%
-  mutate(cup = parse_number(cup),
+  mutate(item_class = str_sub(cup, 1, 4),
+         item_class = as.numeric(as.factor(item_class)),
+         cupno = parse_number(cup),
          table = as.numeric(table),
-         interactable_type = as.factor(interactable_type),
-         item_class = as.numeric(interactable_type))
+         condition = case_when(item_class == 1 ~ "Conjunction1",
+                               item_class == 2 ~ "Conjunction2",
+                               item_class == 3 ~ "Conjunction2",
+                               item_class == 4 ~ "Conjunction1"),
+         item_class = case_when(item_class == 1 ~ 1,
+                                item_class == 2 ~ 1,
+                                item_class == 3 ~ 2,
+                                item_class == 4 ~ 2))
 
 # sometimes d_found doesn't seem to be continuous
 # can fix this manually here but should check
@@ -23,16 +31,24 @@ d_found <- d_found %>%
 
 d_stim <- d %>%
   mutate(trial = trial_number + 1) %>%
-  select(person = "participant", condition = "trial_type", trial, interactable_type, 
-         ida = "target_name", idb = "generic_target_name", x = "world_x",
+  select(person = "participant", condition = "trial_type", trial, 
+         ida= "target_name", idb = "generic_target_name",  x = "world_x",
          y = "world_z") %>%
   unite("id", ida:idb, na.rm = TRUE) %>%
   mutate(target_name = id) %>%
   separate_wider_delim(id, delim = "Table", names = c("cup", "table")) %>%
-  mutate(cup = parse_number(cup),
+  mutate(item_class = str_sub(cup, 1, 4),
+         item_class = as.numeric(as.factor(item_class)),
+         cupno = parse_number(cup),
          table = as.numeric(table),
-         interactable_type = as.factor(interactable_type),
-         item_class = as.numeric(interactable_type)) %>%
+         condition = case_when(item_class == 1 ~ "Conjunction1",
+                               item_class == 2 ~ "Conjunction2",
+                               item_class == 3 ~ "Conjunction2",
+                               item_class == 4 ~ "Conjunction1"),
+         item_class = case_when(item_class == 1 ~ 1,
+                                item_class == 2 ~ 1,
+                                item_class == 3 ~ 2,
+                                item_class == 4 ~ 2)) %>%
   arrange(person, trial, table, cup) %>%
   group_by(person, trial) %>%
   mutate(id = row_number())
@@ -92,6 +108,8 @@ d_stim$y <- round(d_stim$y, 3)
 
 d_found <- fix_person_and_trial(d_found)
 d_stim <- fix_person_and_trial(d_stim)
+
+
 
 # saving
 write_csv(d_found, "salo2025_found.csv")
