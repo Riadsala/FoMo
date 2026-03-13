@@ -1,6 +1,6 @@
 Datasets from the following papers:
 
-Bhat 2025: As yet unpublished dataset where participants forage on a rotated grid.
+Bhat 2024/5: As yet unpublished datasets where participants forage on a rotated grid.
 
 Clarke 2022: Stable individual differences in strategies, within, but not between, visual search tasks.
 Full dataset available at https://osf.io/y6qbv/.
