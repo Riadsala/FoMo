@@ -58,7 +58,7 @@ Our first simple simulation will involve 1 target class, with 20 target items on
 
 ### Loading in our models
 
-We pre-run our data simulation and model fits in `fit_model_script.R`.
+We pre-run our data simulation and model fits in `1_create_examples.R`.
 
 ```{r}
 
@@ -91,10 +91,6 @@ plot_model_fixed(post, foraging_params)
 
 
 ```
-
-### Accuracies
-
-?
 
 ## A simulation with two conditions
 
