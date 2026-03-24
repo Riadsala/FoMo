@@ -1,8 +1,9 @@
 ---
 title: "Testing Simulation Code"
-author: "A Clarke"
+author: "A Clarke & A Hughes"
 format: html
 editor: source
+date: today
 ---
 
 This file contains for checking that our foraging simulation code runs correctly.
@@ -39,7 +40,7 @@ We first need to determine how many item types we have (`n_item_class`) and thei
 
 ```{r}
 stimuli_params <- list(n_item_class = 4,
-                       n_item_per_class = c(10, 10, 10, 10), 
+                       n_item_per_class = c(12, 12, 10, 10), 
                        item_labels = c("a", "b", "d1", "d2"))
 ```
 
@@ -57,7 +58,7 @@ In the below demonstration, we have a strong proximity bias, with other paramete
 foraging_params <- list(
   b_a = 0, 
   b_s = 0, 
-  rho_delta = 1,
+  rho_delta = 2,
   rho_psi = 0)
 
 d <- sim_foraging_trial(trl = 1, stimuli_params, foraging_params, d0 = 20)
@@ -88,12 +89,14 @@ For these examples, we have set the proximity bias to a 'standard' value. The re
 foraging_params <- list(
   b_a = 0, 
   b_s = 0, 
-  rho_delta = 0.5,
+  rho_delta = 0.75,
   rho_psi = 5)
 
-d <- sim_foraging_trial(trl = 1, stimuli_params, foraging_params)
+d <- sim_foraging_trial(trl = 1, stimuli_params, foraging_params, dev_output = TRUE)
 
-plot_a_trial(d$stim, d$found, "psi")
+plot_a_trial(d$stim, d$found, segLabel = "psi")
+
+ggplot(d$found, aes(psi)) + geom_histogram(bins = 8)
 ```
 
 ### Negative Momentum
@@ -104,12 +107,14 @@ Below, the simulated participant has strong negative momentum: they have a much 
 foraging_params <- list(
   b_a = 0, 
   b_s = 0, 
-  rho_delta = 0.5,
+  rho_delta = 0.75,
   rho_psi = -5)
 
-d <- sim_foraging_trial(trl = 1, stimuli_params, foraging_params)
+d <- sim_foraging_trial(trl = 1, stimuli_params, foraging_params, dev_output = TRUE)
 
-plot_a_trial(d$stim, d$found, "psi")
+plot_a_trial(d$stim, d$found, segLabel = "psi")
+
+ggplot(d$found, aes(psi)) + geom_histogram(bins = 8)
 
 ```
 
@@ -125,8 +130,10 @@ The following graph shows some a simulated tuning curve where all four cardinal 
 abs_dir_tuning = list(kappa = rep(2, 4), theta = c(5, 5, 5, 5))
 
 # plot absolute tuning curve
-d <- tibble(phi = seq(1, 360),
-            z = compute_all_von_mises(phi=phi, abs_dir_tuning$theta, abs_dir_tuning$kappa))
+d <- tibble(phi = seq(0, 2*pi, 0.01),
+            z = compute_all_von_mises(phi=phi, 
+                                      abs_dir_tuning$theta, 
+                                      abs_dir_tuning$kappa))
 
 ggplot(d, aes(phi, z)) + geom_path()
 
