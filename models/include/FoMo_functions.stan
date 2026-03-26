@@ -1,7 +1,7 @@
 vector compute_weights_v15(
 
-  // compute weights for FoMo v1.3
-  // this is  v1.2 + absolute (up/down/left/right) phi weights
+  // compute weights for FoMo v1.5
+  // this is  v1.3 without psi
 
   real b_a, real b_s, real rho_delta, vector log_theta, real kappa,
   vector item_class, vector match_prev_item, vector delta, vector phi, 
@@ -30,8 +30,8 @@ vector compute_weights_v15(
 
 vector compute_weights_v14(
 
-  // compute weights for FoMo v1.3
-  // this is  v1.2 + absolute (up/down/left/right) phi weights
+  // compute weights for FoMo v1.4
+  // this is  v1.0 + 8 absolute direction components
 
   real b_a, real b_s, real rho_delta, real rho_psi, vector log_theta, real kappa,
   vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
@@ -61,7 +61,7 @@ vector compute_weights_v14(
 vector compute_weights_v13(
 
   // compute weights for FoMo v1.3
-  // this is  v1.2 + absolute (up/down/left/right) phi weights
+  // this is  v1.0 + absolute (up/down/left/right) phi weights
 
   real b_a, real b_s, real rho_delta, real rho_psi, vector log_theta, real kappa,
   vector item_class, vector match_prev_item, vector delta, vector psi, vector phi, 
@@ -91,7 +91,7 @@ vector compute_weights_v13(
 
 vector compute_weights_v12(
 
-  // compute weights for FoMo v1.1
+  // compute weights for FoMo v1.2
   // this is the same as v1.0 but ignores psi
 
   real b_a, real b_s, real rho_delta,
