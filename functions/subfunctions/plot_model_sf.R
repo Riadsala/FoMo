@@ -1,3 +1,5 @@
+library(latex2exp)
+
 # the functions here are not designed to be called directly.
 # they're all used by the tools in ../plot_model.R
 
@@ -41,13 +43,18 @@ plt_post_prior <- function(post, prior, var, gt=NULL, clist=NULL) {
     as_tibble() %>%
     median_hdci(get(prior_var), .width = c(0.53, 0.97)) -> prior_hpdi
   
+  if (var == "rho_delta") varl <- TeX("$\\rho_{\\delta}$: proximity")
+  if (var == "rho_psi") varl <- TeX("$\\rho_{\\psi}$: rel. direction")
+  if (var == "b_a") varl <- TeX("$b_a$: class weights")
+  if (var == "b_s") varl <- TeX("$b_s$: stick/switch")
+  
   post %>% 
     ggplot() + 
     geom_rect(data = prior_hpdi,
               aes(ymin = -Inf, ymax = Inf, xmin = .lower, xmax = .upper), 
               fill = "grey", alpha = 0.25) +  
     geom_density(aes(get(var), fill = !!sym(fill_cond)), alpha = 0.5) +
-    scale_x_continuous(var) -> plt
+    scale_x_continuous(varl) -> plt
   
   if (!is.null(gt)) {
     

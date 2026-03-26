@@ -81,7 +81,7 @@ parameters {
   array[K] real rho_psi; // direction tuning
 
    // theta is a 4D vector containing the mixture weights for our direction model
-  array[K] vector[4] log_theta; // mixing proportions for abs directions
+  matrix[K, 4] log_theta; // mixing proportions for abs directions
 }
 
 model {

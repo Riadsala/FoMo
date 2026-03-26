@@ -70,6 +70,18 @@ ggplot(acc, aes(found, accuracy)) +
   geom_path(data = baseline, linetype = 2) + 
   ggh4x::facet_grid2(dataset~condition, independent = "x", scales = "free") -> plt2
 
+bind_rows(
+read_csv("../../FoMo2/analysis/clarke2022baseline.csv") %>% 
+  mutate(dataset = "clarke2022qjep"),
+read_csv("../../FoMo2/analysis/hughes2024baseline.csv") %>%
+  mutate(dataset = "hughes2024rsos")) %>%
+group_by(dataset, condition,found) %>%
+  summarise(accuracy = mean(baseline == id)) -> baseline_prox
+
+plt2 + geom_path(data = baseline_prox, linewidth = 2)
+
+
+
 plt1 + plt2 #+ plot_layout(widths = c(2,1))
 
 ggsave("figs/fig5_acc.pdf", width = 10, height = 4)  
