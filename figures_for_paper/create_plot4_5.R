@@ -83,7 +83,7 @@ tibble(k = rep(1:4,3), theta = rep(c(2,2,2,2), 3), mu = rep(mu, 3), kappa = rep(
 
 
 
-ggsave("figs/fig4b_vm.pdf", width = 6, height = 3)
+ggsave("figs/fig5_vm.pdf", width = 6, height = 3)
 
 
 
