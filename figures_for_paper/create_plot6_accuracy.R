@@ -66,8 +66,8 @@ acc %>% filter(found > 1) -> acc
 
 
 ggplot(acc, aes(found, accuracy)) +
-  stat_lineribbon(aes(fill = model), alpha = 0.5, linewidth = 0) +
-  geom_path(data = baseline, linetype = 2) + 
+  stat_lineribbon(aes(fill = model), alpha = 0.5, linewidth = 0.25) +
+  geom_path(data = baseline, linetype = 2) +
   ggh4x::facet_grid2(dataset~condition, independent = "x", scales = "free") -> plt2
 
 #bind_rows(
