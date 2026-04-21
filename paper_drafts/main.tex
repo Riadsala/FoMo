@@ -31,7 +31,7 @@
 
 \maketitle
 
-\section{Author Summary}
+\section*{Author Summary}
 Foraging is an important behaviour for humans and other animals, helping them to find food, habitats, and mates. It can involve searching both through visual space (such as searching for berries on a bush) and abstract space (such as when retrieving a word from memory). Here, we update our computational model of visual foraging behaviour (FoMo) which allows us to predict the behaviour of foragers in tasks where they must sequentially collect multiple targets. In particular, we allow the model to predict organised spatial behaviours, such as using a `reading-like' strategy where participants search systematically in horizontal directions. Importantly, this means that we can study individual differences in foraging strategies in a quantitative, principled manner. We also show that our model can act as a unifying framework for visual foraging research, as it is able to predict a wide range of different descriptive statistics that have been used in previous work. 
 
 \section{Introduction}
@@ -61,7 +61,7 @@ In addition to eye movements, our visual system employs spatial attention to sel
 
 The most influential models of visual search are generally relatively unconcerned with spatial features. The only mention in Feature Integration Theory (FIT) \citep{treisman1980} is to argue that there is no requirement to spatially locate target features. More recent iterations of the Guided Search (GS) Model \citep{wolfe2021guided} highlight the importance of spatial information and acknowledge ``\textit{in classic GS, spatial factors were largely ignored}". However, the discussion is largely limited to the functional field of view (i.e. the area around the current fixation that defines the current spatial limits of search), with little focus on the effects of spatial layout on the order in which items are inspected. Finally, ideal observer models of visual search \citep{najemnik2008} address the optimal distributions of saccadic directions and distances, but do not account for individual spatial search behaviour \citep{morvan_maloney2012, nowakowska2017, clarke2016}.
 
-One well-understood spatial effect is the fall off in visibility with increasing eccentricity: it is almost trivial to vision scientists that all other things being equal, a target that is further from fixation will take longer to find than one that is closer, even in the case where an observer is carrying out a parallel, `pop out' search that is thought to occur simultaneously across the visual field \citep{buetti2019predicting}. However, the importance of spatial effects goes beyond this. For example, search slopes vary with eccentricity, particularly when the target is distinguished from the distractors by shape \cite{hughes2024bayesian}. There are also other studies that demonstrate broader spatial effects in visual search tasks. For example, participants often use a `reading-like' strategy when completing a visual search task \cite{amor2016persistence}, and systematic scanning can happen around circular displays, suggesting that these biases do not simply reflect oculomotor biases but instead are related to the display structure \cite{hooge1996control}. These types of scanning strategies can also have practical consequences: for example, when searching through 3D medical images organised into layers, radiologists who adopted a 'scanning' strategy, searching an entire 2D scan before moving in depth \textcolor{blue}{had a lower true positive rate for detecting nodules} compared to participants who had a 'drilling' strategy, restricting their eye movements to one portion of the image and scrolling through in depth \citep{drew2013scanners}. However, these types of strategies are rarely considered in models of search, despite potentially explaining a high proportion of the variance in people's searching behaviours.
+One well-understood spatial effect is the fall off in visibility with increasing eccentricity: it is almost trivial to vision scientists that all other things being equal, a target that is further from fixation will take longer to find than one that is closer, even in the case where an observer is carrying out a parallel, `pop out' search that is thought to occur simultaneously across the visual field \citep{buetti2019predicting}. However, the importance of spatial effects goes beyond this. For example, search slopes vary with eccentricity, particularly when the target is distinguished from the distractors by shape \cite{hughes2024bayesian}. There are also other studies that demonstrate broader spatial effects in visual search tasks. For example, participants often use a `reading-like' strategy when completing a visual search task \cite{amor2016persistence}, and systematic scanning can happen around circular displays, suggesting that these biases do not simply reflect oculomotor biases but instead are related to the display structure \cite{hooge1996control}. These types of scanning strategies can also have practical consequences: for example, when searching through 3D medical images organised into layers, radiologists who adopted a 'scanning' strategy, searching an entire 2D scan before moving in depth had a lower true positive rate for detecting nodules compared to participants who had a 'drilling' strategy, restricting their eye movements to one portion of the image and scrolling through in depth \citep{drew2013scanners}. However, these types of strategies are rarely considered in models of search, despite potentially explaining a high proportion of the variance in people's searching behaviours.
 
 \subsection{Visual Foraging}
 
@@ -83,11 +83,11 @@ Beyond run statistics, a variety of other measures have been introduced with the
 
 Visual foraging requires a range of cognitive abilities from low-level attention to higher-order decision making. As such, it is an interesting paradigm to study individual differences. Early work identified potential \textit{super foragers} - a small subset of participants who appeared to be able to carry out the same strategy in both feature and conjunction foraging \cite{kristjansson2014}. However, later work \citep{tagu2020} demonstrated that participants who implement this strategy appear to make a larger number of errors, suggesting that these differences may reflect different strategies (perhaps different choices regarding a speed-accuracy trade-off) rather than differences in performance on this task. This conclusion is supported by \citep{clarke2022qjep}, where low correlations were found between an individual's performance on a visual foraging task when compared with other similar visual attention tasks, suggesting that individuals might display fairly consistent behaviours within a given task, but that these may reflect a chosen strategy rather than an innate cognitive skill that varies between people.
 
-Despite this, there is clear evidence for foraging behaviours varying across the lifespan \citep{olafsdottir2020, olafsdottir2021, bella2024}, with younger participants displaying less organised foraging behaviour \textcolor{blue}{(although these differences do not seem to lead to changes in MVT-related measures \cite{de2022quitting, de2022foragekid}).} Similarly, recent work has demonstrated that differences in foraging behaviour may be useful in a clinical context: individuals with higher trait anxiety are more affected by negative emotional stimuli in an `emotion foraging' task \cite{tagu2025foraging}, and learning to adjust one's exploration-exploitation balance based on environmental volatility in a patch-leaving foraging task is affected by anxiety \cite{lloyd2025stochastic}. Cancellation tasks are frequently used to assess visuospatial attention deficits in neurological populations \citep{checketts2021current, moore2022rapid}, and involve participants searching for multiple targets among distractors in a manner very similar to a foraging task. It therefore seems likely that visual foraging paradigms are sensitive to developmental differences, and that being able to model behaviour in this task could have benefits for clinical populations by potentially allowing earlier or more sensitive diagnoses.
+Despite this, there is clear evidence for foraging behaviours varying across the lifespan \citep{olafsdottir2020, olafsdottir2021, bella2024}, with younger participants displaying less organised foraging behaviour (although these differences do not seem to lead to changes in MVT-related measures \cite{de2022quitting, de2022foragekid}). Similarly, recent work has demonstrated that differences in foraging behaviour may be useful in a clinical context: individuals with higher trait anxiety are more affected by negative emotional stimuli in an `emotion foraging' task \cite{tagu2025foraging}, and learning to adjust one's exploration-exploitation balance based on environmental volatility in a patch-leaving foraging task is affected by anxiety \cite{lloyd2025stochastic}. Cancellation tasks are frequently used to assess visuospatial attention deficits in neurological populations \citep{checketts2021current, moore2022rapid}, and involve participants searching for multiple targets among distractors in a manner very similar to a foraging task. It therefore seems likely that visual foraging paradigms are sensitive to developmental differences, and that being able to model behaviour in this task could have benefits for clinical populations by potentially allowing earlier or more sensitive diagnoses.
 
-\section{\textcolor{blue}{Methods}}
+\section{Methods}
 
-In our work, we have taken a different approach to understanding foraging within a patch \textcolor{blue}{(functionally equivalent to a single trial in the datasets used in this manuscript)} by conceptualising it as a `\textit{sampling without replacement}' problem \citep{clarke2022foraging}. Our Foraging Model (FoMo) provides accurate predictions of target-by-target behaviour using relatively few parameters. Moreover, because our model is generative, we can simulate data to systematically evaluate how well it captures different aspects of human behaviour. This approach allows us to identify specific limitations in the model and use these insights to refine our theoretical understanding of visual foraging.
+In our work, we have taken a different approach to understanding foraging within a patch (functionally equivalent to a single trial in the datasets used in this manuscript) by conceptualising it as a `\textit{sampling without replacement}' problem \citep{clarke2022foraging}. Our Foraging Model (FoMo) provides accurate predictions of target-by-target behaviour using relatively few parameters. Moreover, because our model is generative, we can simulate data to systematically evaluate how well it captures different aspects of human behaviour. This approach allows us to identify specific limitations in the model and use these insights to refine our theoretical understanding of visual foraging.
 
 One weakness of the original version of FoMo \citep{clarke2022foraging} is that it made relatively poor predictions of absolute foraging directions (see Figure \ref{fig:fomo1.0_iisv}), potentially leading to decreased accuracy in cases where participants use an absolute direction strategy (e.g. follow cardinal directions) to structure their behaviour. In the current manuscript, we update FoMo to account for absolute direction biases, and hence characterise spatial behaviour and participant strategies more accurately. We use a flexible mixture model of directions and show that this improves overall model accuracy, predominantly by dramatically improving accuracy for a subset of individuals who use highly directional strategies to complete foraging tasks. We also demonstrate the flexibility of our model by showing how models with different parameter combinations can easily be compared in our framework, increasing the utility of our approach for a range of different foraging questions. Finally, we show how our modelling approach is able to act as a unifying framework, as it is able to accurately represent the individual differences present in a wide range of other foraging metrics that have been used in previous studies.
 
@@ -106,7 +106,7 @@ On the whole, we find that our model offers a compelling description of behaviou
 
 \begin{itemize}
   \item \textit{proximity tuning} ($\rho_{\delta}$): the extent to which participants select items that are in close proximity to the previously selected item. 
-    \item \textit{\textcolor{blue}{relative} direction tuning} ($\rho_{\psi}$): the extent to which participants select items that ``ahead'' of them. Negative values would indicate that items that are ``behind'' the participant are favoured. 
+    \item \textit{relative direction tuning} ($\rho_{\psi}$): the extent to which participants select items that ``ahead'' of them. Negative values would indicate that items that are ``behind'' the participant are favoured. 
     \item \textit{stick/switch rate} ($b_s$): values above 0 lead to increasingly long runs of the same target class while values below zero lead to a preference to alternate between target classes. 
     \item \textit{class weights} ($b_{a}$): This can be thought of as modelling the relative attractiveness of item class $A$ over $B$. This attractiveness could be due to a number of different reasons such as low-level visual saliency or value. When $b_{a}$ is above 0 the model favours selecting items of class $A$ while values below 0 lead to a preference for items of class $B$.
 
@@ -124,39 +124,39 @@ These four features are illustrated in Figure \ref{fig:gen_model_features}. Thes
 
 \subsection{FoMo v1.0: Model Specification}
 
-To formally define FoMo we first define some terms \textcolor{blue}{(an overview is provided in Table \ref{tab:notation})}. Let the $N$ target items in a stimulus be represented by $z_i = (x_i, y_i, c_i)$, where $i = 1, \ldots, N$; $(x_i, y_i)$ is the spatial location of the target $z_i$ and $c_i \in \{A, B\}$ represents its class.
+To formally define FoMo we first define some terms (an overview is provided in Table \ref{tab:notation}). Let the $N$ target items in a stimulus be represented by $z_i = (x_i, y_i, c_i)$, where $i = 1, \ldots, N$; $(x_i, y_i)$ is the spatial location of the target $z_i$ and $c_i \in \{A, B\}$ represents its class.
 
 \begin{table*}[]
 \centering
 \begin{tabular}{c|l|c}
-{\color{blue} \textbf{Symbol}} & {\color{blue} \textbf{Definition}} & {\color{blue} \textbf{Eq number}} \\
+\textbf{Symbol} & \textbf{Definition} & \textbf{Eq number} \\
 \hline
-{\color{blue} $N$}          & {\color{blue} number of items in a stimulus}        &      -  \\
-{\color{blue} $z_i, z_j$}   & {\color{blue} the $i$th and $j$th items in a stimulus}   & -  \\
-{\color{blue} $z_{i-1}$}    &\color{blue} the item selected before item $z_i$     &      -  \\
-{\color{blue} $x_i, y_j$}   & {\color{blue} location of item $z_i$}               &      -  \\
-{\color{blue} $c_i$}        & {\color{blue} class of item $z_i$}                  &      -  \\
+$N$          & number of items in a stimulus        &      -  \\
+$z_i, z_j$   & the $i$th and $j$th items in a stimulus   & -  \\
+$z_{i-1}$    & the item selected before item $z_i$     &      -  \\
+$x_i, y_j$   & location of item $z_i$               &      -  \\
+$c_i$        & class of item $z_i$                  &      -  \\
 \hline
-{\color{blue} $\delta(i, j)$} & {\color{blue} distance from item $z_i$ to $z_j$}  & {\color{blue} \ref{eq:delta}}  \\
-{\color{blue} $\delta_0$}   & {\color{blue} normalising constant}                 & {\color{blue} \ref{eq:delta0}} \\
-{\color{blue} $\phi(i, j)$} & {\color{blue} angle from item $z_i$ to $z_j$}        & {\color{blue} \ref{eq:phi}}   \\
-{\color{blue} $\psi(i, j)$} & {\color{blue} relative direction from $z_i$ to $z_j$ (relative to $z_{i-1}$)} & {\color{blue} \ref{eq:psi}} \\ 
+$\delta(i, j)$ & distance from item $z_i$ to $z_j$  & \ref{eq:delta}  \\
+$\delta_0$ & normalising constant                 &  \ref{eq:delta0} \\
+$\phi(i, j)$ & angle from item $z_i$ to $z_j$        & \ref{eq:phi}   \\
+$\psi(i, j)$ & relative direction from $z_i$ to $z_j$ (relative to $z_{i-1}$) &  \ref{eq:psi} \\ 
 \hline
-{\color{blue} $b_a$}        & {\color{blue} class weights}         & {\color{blue} \ref{eq:class_weights}}         \\
-{\color{blue} $b_s$}        & {\color{blue} stick/switch rate}     & {\color{blue} \ref{eq:switch_weights}}        \\
-{\color{blue} $\rho_{\delta}$} & {\color{blue} proximity tuning}   & {\color{blue} \ref{eq:rhonegexp}}             \\
-{\color{blue} $\rho_{\psi}$}   & {\color{blue} relative direction tuning}  & {\color{blue} \ref{eq:rhonegexp}}    \\
-{\color{blue}$ \kappa_k$}   & {\color{blue} the concentration of each direction} & {\color{blue} \ref{eq:vmsum}}   \\
-{\color{blue} $\theta_k$}   & {\color{blue} the relative weighting of the four directions}  & {\color{blue} \ref{eq:vmsum}} \\    
+$b_a$        & class weights         &  \ref{eq:class_weights}         \\
+$b_s$    & stick/switch rate     & \ref{eq:switch_weights}        \\
+$\rho_{\delta}$ & proximity tuning  & \ref{eq:rhonegexp}             \\
+$\rho_{\psi}$   &  relative direction tuning  &  \ref{eq:rhonegexp}    \\
+$\kappa_k$   & the concentration of each direction & \ref{eq:vmsum}   \\
+$\theta_k$   &  the relative weighting of the four directions  &  \ref{eq:vmsum} \\    
 \hline
-{\color{blue} $p(j|i)$} & {\color{blue} the conditional prob. of selecting item $j$ given $i$} & {\color{blue} \ref{eq:condprob}} \\
-{\color{blue} $\omega_{j,i}$} & {\color{blue} the weight of selecting item $j$ (unnormalised prob.)} & {\color{blue} \ref{eq:fomo_llh}, \ref{eq:weights2}} \\
-{\color{blue} $f_{\theta, \kappa}$} & {\color{blue} the sum of four vonMises functions}       & {\color{blue} \ref{eq:vmsum}} \\
-{\color{blue} $k=1,\ldots,4$}       & {\color{blue} an index for the four vonMises functions} & {\color{blue} \ref{eq:vmsum}} \\
-{\color{blue} $\mu_k$}              & {\color{blue} The mean of each vonMises functions}      & {\color{blue} \ref{eq:vmsum}} \\
+$p(j|i)$ &  the conditional prob. of selecting item $j$ given $i$ & \ref{eq:condprob} \\
+$\omega_{j,i}$ &  the weight of selecting item $j$ (unnormalised prob.) & \ref{eq:fomo_llh}, \ref{eq:weights2} \\
+$f_{\theta, \kappa}$ & the sum of four vonMises functions       & \ref{eq:vmsum} \\
+$k=1,\ldots,4$      & an index for the four vonMises functions &  \ref{eq:vmsum} \\
+$\mu_k$              &  the mean of each vonMises functions      & \ref{eq:vmsum} \\
        
 \end{tabular}
-\caption{\color{blue} Overview of notation used to define FoMo. Concepts are split into four components: stimulus definition; derived features; free parameters; and likelihood calculation.}
+\caption{Overview of notation used to define FoMo. Concepts are split into four components: stimulus definition; derived features; free parameters; and likelihood calculation.}
 \label{tab:notation}
 
 \end{table*}
@@ -211,7 +211,7 @@ before a final transform to calculate the shortest angular difference:
 
 This results in a value which equals 1 if the vectors $z_{i-1}\rightarrow z_i$ and  $z_{i}\rightarrow z_j$ are parallel in the same direction. A value of $\psi=0.5$ indicates that the vectors are perpendicular, while $\psi = 0$ corresponds to the situation in which $z_{i-1}\rightarrow z_i$ and $z_{i}\rightarrow z_j$ are parallel but in opposite directions.
 
-Following \cite{clarke2022foraging}, we calculate the contribution of $\delta$ and $\psi$ to the item-weights with a negative exponential (see Equation \ref{eq:rhonegexp}). \textcolor{blue}{This function was chosen as it allows for the (likely typical) case where there is a strong preference for e.g. a very nearby item, and then the preference falls off steeply e.g. items at medium and far distances should be treated similarly by the model.}  
+Following \cite{clarke2022foraging}, we calculate the contribution of $\delta$ and $\psi$ to the item-weights with a negative exponential (see Equation \ref{eq:rhonegexp}). This function was chosen as it allows for the (likely typical) case where there is a strong preference for e.g. a very nearby item, and then the preference falls off steeply e.g. items at medium and far distances should be treated similarly by the model. 
 
 \begin{equation}
 \label{eq:rhonegexp}
@@ -252,7 +252,7 @@ One limitation of the FoMo v1.0 is that it only cares about relative direction, 
 \begin{subfigure}{0.6\linewidth}
   \includegraphics[width =\linewidth]{figures/fig4_abs_dir_ex.png}
 \end{subfigure}
-\caption{(\textit{top}): Illustration of four von Mises distributions (top) that can be summed to give (middle) a multi-model distribution that is able to \color{blue}flexibly \color{black} weight horizontal and vertical directions. (\textit{bottom}): How these weights could encode different strategies.}
+\caption{(\textit{top}): Illustration of four von Mises distributions (top) that can be summed to give (middle) a multi-model distribution that is able to flexibly weight horizontal and vertical directions. (\textit{bottom}): How these weights could encode different strategies.}
 \label{fig:von_mises_features}
 \end{figure}
 
@@ -265,7 +265,7 @@ f_{\theta, \kappa}(\phi_j) = 1  + \sum_{k = 1}^4 \theta_{\psi}\texttt{vonMises}(
 \label{eq:vmsum}
 \end{equation}
 
-I.e., for each direction \textcolor{blue}{$k$} we need to fit a $\theta_k$, that gives the strength of preference for direction $\mu_k$ and a $\kappa_k$, that gives the concentration (i.e. the spread) around the direction. A high value means that only directions very close to $\mu_k$ receive a large weight, while low values spread the weight over a larger range of directions. We set the $\mu_k$ values to be equal to the four cardinal directions. 
+I.e., for each direction $k$ we need to fit a $\theta_k$, that gives the strength of preference for direction $\mu_k$ and a $\kappa_k$, that gives the concentration (i.e. the spread) around the direction. A high value means that only directions very close to $\mu_k$ receive a large weight, while low values spread the weight over a larger range of directions. We set the $\mu_k$ values to be equal to the four cardinal directions. 
 
 We can now adopt our weights calculation to take this new feature into account:
 
@@ -280,8 +280,8 @@ The inclusion of this directional information adds a further two parameters ($\t
 
 \begin{figure}[tb!]
 \centering
-\includegraphics[width = \linewidth]{figures/fig4b_vm.pdf}
-\caption{\color{blue} Illustration of three different $\kappa$ values. We used a value of $\kappa=20$ in the work presented here, which strikes a balance between minimising the overlap between our four components without assigning angles around the oblique directions all to 0. }
+\includegraphics[width = \linewidth]{figures/fig5_vm.pdf}
+\caption{Illustration of three different $\kappa$ values. We used a value of $\kappa=20$ in the work presented here, which strikes a balance between minimising the overlap between our four components without assigning angles around the oblique directions all to 0. }
 \label{fig:von_mises_features2}
 \end{figure}
 
@@ -402,9 +402,10 @@ condition, the targets and distractors were discriminable using just colour as a
 
 Their experiment used 16 student participants, foraging for 40 targets on each of 20 trials per condition. The dataset used for the following analysis was taken directly from the supplementary material of the journal article: we used trials 6-25 for each participant in each condition, as these were assumed to be the ones used in the original manuscript based on the description in the methods.
 
-Tagu et al \cite{tagu2022selection} is a paper using a foraging paradigm that also includes a manipulation involving value: in the 'value' blocks of the experiment, participants received more points for selecting a high-value target colour compared to low-value target colours. This condition thus manipulated participants' preference for a particular target type (compared to the 'no-value' block where all target types were equal). \textcolor{blue}{This dataset is inexhaustive; participants had to collect a certain number of points on each trial, but this did not necessarily correspond to collecting all targets on the screen}.
+Tagu et al \cite{tagu2022selection} is a paper using a foraging paradigm that also includes a manipulation involving value: in the 'value' blocks of the experiment, participants received more points for selecting a high-value target colour compared to low-value target colours. This condition thus manipulated participants' preference for a particular target type (compared to the 'no-value' block where all target types were equal). The task did not require that subjects collect all targets in one trial before moving onto the next trial: instead, they were required to select enough targets to reach a pre-specified number of points. Trials automatically ended once they had reached the required number of points.
 
-We analysed only the mouse foraging blocks, and trials where the targets were randomly distributed (as opposed to \textcolor{blue}{clumped}). Note that the paper had 3 different target types (one high value and two low value), but we have collapsed these into two target types for convenience. The dataset includes data from 24 participants, with 10 trials for each of the 'value' and 'no-value' blocks per participant, where they could find up to 54 targets on each trial (though they did not always have to find all the targets). For our reanalysis, we used 23 participants (we excluded one participant who did not complete all 10 trials).
+
+We analysed only the mouse foraging blocks, and trials where the targets were randomly distributed (as opposed to clumped). Note that the paper had 3 different target types (one high value and two low value), but we have collapsed these into two target types for convenience. The dataset includes data from 24 participants, with 10 trials for each of the 'value' and 'no-value' blocks per participant, where they could find up to 54 targets on each trial (though they did not always have to find all the targets). For our reanalysis, we used 23 participants (we excluded one participant who did not complete all 10 trials).
 
 Clarke et al \cite{clarke2022qjep} contains a near-replicate of \cite{kristjansson2014}, except using a larger number of
 participants: we used 58 participants in our re-analysis (the same number as in the original paper, except that we also removed one additional participant that was labelled as being a different version of the experiment).
@@ -437,7 +438,7 @@ Whereas our accuracy statistics are based on the item-wise ($P$) predictions, th
 
 \end{itemize}
 
-Our aim is to provide a comprehensive account of our model over as many of the commonly used metrics and descriptive statistics as possible. This naturally leads to \textit{a lot} of results and comparisons between different datasets, models, and descriptive statistics. As such, we focus on a selection of the more interesting results in this paper, and more comprehensive accounts can be generated using the code available from \url{https://github.com/Riadsala/FoMo} \citep{clarke2025}. This study was not preregistered. \textcolor{blue}{This GitHub repository also contains full instructions and example workflows for generating simulated data, how to prepare data to be used in FoMo, how to fit different FoMo model variants, and how to use the tools provided to examine model fits.}
+Our aim is to provide a comprehensive account of our model over as many of the commonly used metrics and descriptive statistics as possible. This naturally leads to \textit{a lot} of results and comparisons between different datasets, models, and descriptive statistics. As such, we focus on a selection of the more interesting results in this paper, and more comprehensive accounts can be generated using the code available from \url{https://github.com/Riadsala/FoMo} \citep{clarke2025}. This study was not preregistered. This GitHub repository also contains full instructions and example workflows for generating simulated data, how to prepare data to be used in FoMo, how to fit different FoMo model variants, and how to use the tools provided to examine model fits.
 
 \section{Results}
 
@@ -445,7 +446,7 @@ In this section we present the results from testing the different versions of Fo
 
 \subsection{Accuracy for predicting selected items}
 
-Overall accuracy is reported in Table \ref{tab:overall_all}. We can see that over the course of a trial, all versions of FoMo have an accuracy of around 50\% on the majority of datasets \textcolor{blue}{while chance performance is below 12\% in all cases}. That is, the model correctly predicted which items would be selected next around half the time.
+Overall accuracy is reported in Table \ref{tab:overall_all}. We can see that over the course of a trial, all versions of FoMo have an accuracy of around 50\% on the majority of datasets while chance performance is below 12\% in all cases. That is, the model correctly predicted which items would be selected next around half the time.
 
 \begin{table*}
     \centering
@@ -468,12 +469,12 @@ We can also see variation in predictive accuracy as a trial progresses (see Figu
 
 Our results suggest that, while the addition of a more complex representation of space only offers marginal benefits to the overall accuracy, for some individuals, they offer a large improvement in our ability to account for foraging behaviour. However, at least in these data, moving from four (v1.3) to eight (v1.4) directions in the mixture model appears to offer decreased accuracy. This likely reflects the fact that most foraging experiments have been conducted on a (slightly jittered) cardinal grid, and therefore four directions are often sufficient to describe behaviour: a strategy that involved diagonal directions would also involve longer distances, and proximity is generally a strong predictor of behaviour in these studies. 
 
-Interestingly, relative direction seems to offer only negligible improvements when absolute direction has been added to the model: model version 1.5 includes only the absolute direction parameter (with the relative direction parameter removed) and in three out of four datasets, performs equivalently to model version 1.3 \textcolor{blue}{(with relative and absolute direction parameters included)} in overall accuracy. The exception to this is \cite{kristjansson2014}, which is the only dataset we are using that makes use of 'finger-based' foraging on an iPad (compared to the mouse-based foraging in the other paradigms). While clearly speculative, this may hint at relative vs. absolute directions having different importances based on modality.
+Interestingly, relative direction seems to offer only negligible improvements when absolute direction has been added to the model: model version 1.5 includes only the absolute direction parameter (with the relative direction parameter removed) and in three out of four datasets, performs equivalently to model version 1.3 (with relative and absolute direction parameters included) in overall accuracy. The exception to this is \cite{kristjansson2014}, which is the only dataset we are using that makes use of 'finger-based' foraging on an iPad (compared to the mouse-based foraging in the other paradigms). While clearly speculative, this may hint at relative vs. absolute directions having different importances based on modality.
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\textwidth]{figures/fig5_acc.pdf}
-    \caption{(\textit{left}): Comparison in accuracy between FoMo v1.0 and 1.3 for the  \cite{clarke2022qjep} and \cite{hughes2024} data. Each point represents an individual participant, and the crosshairs provide the 95\% HPDI. Colours indicate the improvement in accuracy between models. (\textit{right}): 95\% HPDI for accuracy throughout a trial for FoMo v1.3. The dotted line indicates chance performance.}
+    \includegraphics[width=\textwidth]{figures/fig6_acc.pdf}
+    \caption{(\textit{left}): Comparison in accuracy between FoMo v1.0 and 1.3 for the  \cite{clarke2022qjep} and \cite{hughes2024} data. Each point represents an individual participant, and the crosshairs provide the 95\% Highest Posterior Density Interval (HPDI). Colours indicate the improvement in accuracy between models. (\textit{right}): 95\% HPDI for accuracy throughout a trial for FoMo v1.3. The dotted line indicates chance performance.}
     \label{fig:acc_perperson}
 \end{figure*}
 
@@ -484,7 +485,7 @@ We now evaluate our model in terms of predicting switches from a run of one clas
 \begin{table*}
     \centering
     \begin{tabular}{cc|cc|cc|r}
-     & & \multicolumn{2}{c|}{\textcolor{blue}{Le et al (2021)} \cite{le2021}}
+     & & \multicolumn{2}{c|}{Le et al (2021) \cite{le2021}}
       & \multicolumn{2}{c|}{FoMo version} & \\
         condition  & switch &initial & final & 1.0  & 1.3 & difference\\
         \hline
@@ -493,29 +494,29 @@ We now evaluate our model in terms of predicting switches from a run of one clas
                                   conjunction  & stick     & 99.4&93.5  & 92.0& 92.2 &-1.3\\
                                   conjunction  & switch    & 46.7& 75.7  & 76.4& 76.8 & 1.1\\     
     \end{tabular}
-    \caption{Comparison between FoMo and the classifier developed by \cite{le2021} on the \cite{kristjansson2014} dataset. We report their \color{blue} intial and final (post feature pruning and oversampling) modelling results, and compare them to FoMo v1.0 and v1.3. The difference coloumn compares performance between v1.3 and the final classifier from \cite{le2021}.}
+    \caption{Comparison between FoMo and the classifier developed by \cite{le2021} on the \cite{kristjansson2014} dataset. We report their intial and final (post feature pruning and oversampling) modelling results, and compare them to FoMo v1.0 and v1.3. The difference coloumn compares performance between v1.3 and the final classifier from \cite{le2021}.}
     \label{tab:acc_switch}
 \end{table*}
 
 \subsection{Posterior densities}
 
-Figure \ref{fig:post_densities} shows the posterior densities for Fomo v1.3 \textcolor{blue}{(the model with absolute spatial components included)} applied to the Hughes et al \cite{hughes2024} dataset (see the Supplementary Materials for others). The parameters for $b_{a}$, $b_{s}$, $\rho_{\delta}$ and $\rho_{\psi}$ are similar to those reported in v1.0 and show familiar patterns (e.g. the \textit{conjunction} condition has a stronger stick bias but a weaker proximity bias compared to the \textit{feature} condition). The bottom section of Figure \ref{fig:post_densities} shows the strength of the absolute direction parameters in this dataset: generally, horizontal preferences seem to be stronger than vertical ones, and it seems that the biases are generally stronger in the \textit{feature} compared to the \textit{conjunction} condition. This is consistent with behaviour in the \textit{feature} condition being more driven by spatial layout, whereas the \textit{conjunction} trials are more driven by target properties.
+Figure \ref{fig:post_densities} shows the posterior densities for Fomo v1.3 (the model with absolute spatial components included) applied to the Hughes et al \cite{hughes2024} dataset (see the Supplementary Materials for others). The parameters for $b_{a}$, $b_{s}$, $\rho_{\delta}$ and $\rho_{\psi}$ are similar to those reported in v1.0 and show familiar patterns (e.g. the \textit{conjunction} condition has a stronger stick bias but a weaker proximity bias compared to the \textit{feature} condition). The bottom section of Figure \ref{fig:post_densities} shows the strength of the absolute direction parameters in this dataset: generally, horizontal preferences seem to be stronger than vertical ones, and it seems that the biases are generally stronger in the \textit{feature} compared to the \textit{conjunction} condition. This is consistent with behaviour in the \textit{feature} condition being more driven by spatial layout, whereas the \textit{conjunction} trials are more driven by target properties.
 
 \begin{figure}
     \centering
-    \includegraphics[scale = 0.6]{figures/fig6_post_densities.pdf}
-    \caption{Posterior densities for FoMo v1.3, applied to the \cite{hughes2024} dataset. \color{blue}(\textit{top}): Posterior estimates for the four core FoMo parameters. (\textit{bottom}): Illustration of the 4 $\theta_k$ direction weights, for each of our two conditions. The shaded bar indicates the $97\%$HPDI, with the dark inner region giving the $53\%$ interval. We can see that in both conitions there is a preference for horizontal directions, and stronger directional effects in the feature condition.}
+    \includegraphics[scale = 0.6]{figures/fig7_post_densities.pdf}
+    \caption{Posterior densities for FoMo v1.3, applied to the \cite{hughes2024} dataset. (\textit{top}): Posterior estimates for the four core FoMo parameters. (\textit{bottom}): Illustration of the 4 $\theta_k$ direction weights, for each of our two conditions. The shaded bar indicates the $97\%$HPDI, with the dark inner region giving the $53\%$ interval. We can see that in both conitions there is a preference for horizontal directions, and stronger directional effects in the feature condition.}
     \label{fig:post_densities}
 \end{figure}
 
 \subsection{Posterior Predictions}
 
-By using a generative modelling framework, we can also make predictions: i.e. at a given point in any trial, we can ask the model what it thinks that participant will select next. The Bayesian framework of the model also means that we can quantify the uncertainty in this prediction by taking multiple draws from the model posterior. Figure \ref{fig:path_examples} shows some representative examples: the top row shows dramatic improvement for FoMo v1.3 \textcolor{blue}{(the model with absolute spatial components included)}, which is clearly driven by the participant's 'left-right' strategy. The absolute direction component allows the model to account for this strategy, and the model makes quite different (and more accurate) predictions from v1.0 (\textcolor{blue}{the baseline model}) accordingly. In the bottom row, we see an example where both v1.0 and v1.3 are relatively uncertain about the best option, although in this case model v1.0 is slightly better, perhaps because this participant seems to have a less consistent strategy.
+By using a generative modelling framework, we can also make predictions: i.e. at a given point in any trial, we can ask the model what it thinks that participant will select next. The Bayesian framework of the model also means that we can quantify the uncertainty in this prediction by taking multiple draws from the model posterior. Figure \ref{fig:path_examples} shows some representative examples: the top row shows dramatic improvement for FoMo v1.3 (the model with absolute spatial components included), which is clearly driven by the participant's 'left-right' strategy. The absolute direction component allows the model to account for this strategy, and the model makes quite different (and more accurate) predictions from v1.0 (the baseline model) accordingly. In the bottom row, we see an example where both v1.0 and v1.3 are relatively uncertain about the best option, although in this case model v1.0 is slightly better, perhaps because this participant seems to have a less consistent strategy.
 
 \begin{figure}
     \centering
-    \includegraphics[scale = 0.5]{figures/fig7_paths_tmp.pdf}
-    \caption{Comparison of simulated paths from FoMo v1.0 and v1.3 with observed data from a human participant from the \cite{hughes2024} dataset. \textcolor{blue}{The items are illustrated as red triangle and pale blue circles, and the white line illustrates the order in which the human particpant selected the items.} The purple lines indicate the weightings that the model assigns to each possible next target (thicker means more weight).}
+    \includegraphics[scale = 0.5]{figures/fig8_paths_tmp.pdf}
+    \caption{Comparison of simulated paths from FoMo v1.0 and v1.3 with observed data from a human participant from the \cite{hughes2024} dataset. The items are illustrated as red triangle and pale blue circles, and the white line illustrates the order in which the human particpant selected the items. The purple lines indicate the weightings that the model assigns to each possible next target (thicker means more weight).}
     \label{fig:path_examples}
 \end{figure}
 
@@ -523,7 +524,7 @@ As discussed above, an advantage of using a generative modelling framework is th
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\linewidth]{figures/fig8_run_stats.pdf}
+    \includegraphics[width=\linewidth]{figures/fig9_run_stats.pdf}
     \caption{Comparison of predicted and observed path statistics (FoMo v1.3) over a range of datasets. Each dot represents an individual participant in a condition, the dotted line indicates the $y=x$ identity line, while the solid black lines give the best fit linear regression. Note that the poorer performance for the \cite{tagu2022selection} is almost certainly due (at least in part) to our use of an exhaustive foraging model to account for an inexhastive paradigm.}
     \label{fig:path_stats}
 \end{figure*}
@@ -533,23 +534,23 @@ As discussed above, an advantage of using a generative modelling framework is th
 
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fig9_examples.pdf}
-    \caption{\textcolor{blue}{The items are illustrated as red triangle and pale blue circles. (\textit{left}) The while line illustrates the order in which the human particpant selected the items in a trial from the Hughes et al dataset \cite{hughes2024}. (\textit{right}) Six example predictions, shown in purple, of predictions from FoMo v1.3}. The three plots in the top row represent simulations in which we have constrained the initial item selection to match the item selected by the human participant on this trial. The three plots on the bottom are simulations in which the initial item selection is unconstrained.}
+    \includegraphics[width=\linewidth]{figures/fig10_examples.pdf}
+    \caption{The items are illustrated as red triangle and pale blue circles. (\textit{left}) The while line illustrates the order in which the human particpant selected the items in a trial from the Hughes et al dataset \cite{hughes2024}. (\textit{right}) Six example predictions, shown in purple, of predictions from FoMo v1.3. The three plots in the top row represent simulations in which we have constrained the initial item selection to match the item selected by the human participant on this trial. The three plots on the bottom are simulations in which the initial item selection is unconstrained.}
     \label{fig:path_examples_2}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/fig10_fixed_v_free.pdf}
+    \includegraphics[width=\linewidth]{figures/fig11_fixed_v_free.pdf}
     \caption{(\textit{top}): estimate of scaled absolute error averaged across first selection variants and statistics, for each dataset and model version. (\textit{bottom}): estimate of scaled absolute error averaged across datasets for model v1.3, for fixed and free first selection and for each statistic. }
     \label{fig:fixed_v_free}
 \end{figure}
 
-One factor that affects trialwise predictions is the initial starting point. In particular, we know that the real starting positions in visual foraging datasets are not random, with most participants beginning in the top \textcolor{blue}{left}-hand corner or in the centre of the screen \citep{clarke2022predict, clarke2022qjep}. However, these biases are not currently implemented in FoMo, and clearly, if the model starts at a different item to human participants, the overall path is likely to be quite different. We are now able to run model versions which `fix' the first item selection (i.e. tell the model which target the participant selected first) to assess how much this improves model performance. Figure \ref{fig:path_examples_2} shows examples of this. When the starting position is fixed (top row), the model gets the first 8 selections completely correct in one prediction, and generally the top row of targets are selected early in the trial (similar to the participant's real behaviour). The increasing variability in the start position shown in the bottom row leads to more variability in the selections, meaning that while the overall patterns still look similar, trialwise accuracy is likely lower. Across all predictions, Figure \ref{fig:fixed_v_free} (bottom) suggests that the fixed start point also improves predictions of the foraging metrics, as if we take the scaled difference between observed and predicted measures (so that they are comparable) and then average, we can see that the fixed start point model has lower average error for most metrics.  
+One factor that affects trialwise predictions is the initial starting point. In particular, we know that the real starting positions in visual foraging datasets are not random, with most participants beginning in the top {left}-hand corner or in the centre of the screen \citep{clarke2022predict, clarke2022qjep}. However, these biases are not currently implemented in FoMo, and clearly, if the model starts at a different item to human participants, the overall path is likely to be quite different. We are now able to run model versions which `fix' the first item selection (i.e. tell the model which target the participant selected first) to assess how much this improves model performance. Figure \ref{fig:path_examples_2} shows examples of this. When the starting position is fixed (top row), the model gets the first 8 selections completely correct in one prediction, and generally the top row of targets are selected early in the trial (similar to the participant's real behaviour). The increasing variability in the start position shown in the bottom row leads to more variability in the selections, meaning that while the overall patterns still look similar, trialwise accuracy is likely lower. Across all predictions, Figure \ref{fig:fixed_v_free} (bottom) suggests that the fixed start point also improves predictions of the foraging metrics, as if we take the scaled difference between observed and predicted measures (so that they are comparable) and then average, we can see that the fixed start point model has lower average error for most metrics.  
 
 \subsection{Different $\kappa$ values}
 
-$\kappa$ is passed as a hyperparameter to our models with absolute directions included: for the basic version of model v1.3 \textcolor{blue}{(the model with absolute spatial components included)}, its value was set as 20. However, to check that this is an appropriate value for $\kappa$, we re-ran the models for v1.3 on the Hughes et al dataset \cite{hughes2024} with a range of other $\kappa$ values ($\kappa$ = 10, 25 and 50). There were no strong differences in overall accuracy for these different values, and thus we used $\kappa = 20$ for the other datasets. However, it is not entirely clear to us how the best $\kappa$ value might differ across different datasets, particularly when moving away from the types of `screen-based' paradigms we have used in this manuscript (that likely encourage cardinal grid-following behaviour) and therefore we encourage other users of FoMo to carry out their own sensitivity analyses.
+$\kappa$ is passed as a hyperparameter to our models with absolute directions included: for the basic version of model v1.3 (the model with absolute spatial components included), its value was set as 20. However, to check that this is an appropriate value for $\kappa$, we re-ran the models for v1.3 on the Hughes et al dataset \cite{hughes2024} with a range of other $\kappa$ values ($\kappa$ = 10, 25 and 50). There were no strong differences in overall accuracy for these different values, and thus we used $\kappa = 20$ for the other datasets. However, it is not entirely clear to us how the best $\kappa$ value might differ across different datasets, particularly when moving away from the types of `screen-based' paradigms we have used in this manuscript (that likely encourage cardinal grid-following behaviour) and therefore we encourage other users of FoMo to carry out their own sensitivity analyses.
 
 \section{Discussion}
 
@@ -559,9 +560,9 @@ FoMo aims to predict visual foraging behaviour on a target-by-target basis. In t
 
 One strength of our approach is for characterising individual differences: our model can deal with people who show `outlier' behaviour, and can actually tell us something about why those people are outliers. For example, in the Hughes et al dataset \cite{hughes2024}, we found a number of participants for whom including an absolute direction parameter starkly improved the model's prediction of their behaviour. We think this is particularly exciting because it does not seem to matter that this is relatively rare behaviour: the model predictions improve, without affecting predictions for participants for whom absolute direction matters less. Often modelling approaches deal poorly with outliers or `rare' events, but FoMo seems to be able to incorporate them well. This modelling approach also provides a principled way to tackle the idea of `strategies', which are often quite hard to define: for example, we could determine that participants whose model prediction accuracy increases more than a certain percentage when tested with model v1.3 (compared to model v1.0) are using an `absolute direction' strategy. This has the potential to be very powerful for developmental and clinical work, where we may want to be able to group participants based on characteristic behaviours.
 
-It is interesting to note that we see bigger improvements as we move from model version 1.0 to 1.3 for some datasets compared to others: for example, the Clarke et al dataset \cite{clarke2022qjep} shows a smaller increase than the Hughes et al dataset \cite{hughes2024}. Hughes et al \cite{hughes2024} involved a `scarcity' based task where on some trials, one target was less common than the other. We had originally hypothesised that participants might show a scarcity bias, preferring to collect the rarer targets first, which we did not find evidence for in our original manuscript, but it does seem that at least for a subset of participants, this manipulation may have pushed them into a scanning-based strategy to ensure they had found all the `rare' targets. In addition, it is likely that the structure of the foraging stimulus \textcolor{blue}{and the instructions about strategy that are given to participants} will strongly affect behavioural patterns: for example, to date, most visual foraging studies have used `grid-like' 2D stimuli that are likely to encourage participants to use an absolute-direction-based strategy, which may be less evident if targets are found in patches, or if participants must forage in a real-world environment where not all targets are immediately visible. Eye and head movements are also likely to become more important in paradigms that move away from screen-based foraging. We therefore think it may be unrealistic to expect the parameter values in our model to look similar for each foraging dataset, but with more data, we may be able to understand better which environmental conditions change the importance of each parameter, and which parameters are most likely to see large individual differences.
+It is interesting to note that we see bigger improvements as we move from model version 1.0 to 1.3 for some datasets compared to others: for example, the Clarke et al dataset \cite{clarke2022qjep} shows a smaller increase than the Hughes et al dataset \cite{hughes2024}. Hughes et al \cite{hughes2024} involved a `scarcity' based task where on some trials, one target was less common than the other. We had originally hypothesised that participants might show a scarcity bias, preferring to collect the rarer targets first, which we did not find evidence for in our original manuscript, but it does seem that at least for a subset of participants, this manipulation may have pushed them into a scanning-based strategy to ensure they had found all the `rare' targets. In addition, it is likely that the structure of the foraging stimulus and the instructions about strategy that are given to participants will strongly affect behavioural patterns: for example, to date, most visual foraging studies have used `grid-like' 2D stimuli that are likely to encourage participants to use an absolute-direction-based strategy, which may be less evident if targets are found in patches, or if participants must forage in a real-world environment where not all targets are immediately visible. Eye and head movements are also likely to become more important in paradigms that move away from screen-based foraging. We therefore think it may be unrealistic to expect the parameter values in our model to look similar for each foraging dataset, but with more data, we may be able to understand better which environmental conditions change the importance of each parameter, and which parameters are most likely to see large individual differences.
 
-The foraging literature to date has used a wide range of different metrics for evaluating performance, from run-length statistics (e.g. \cite{kristjansson2014}) to scanpath metrics such as best-$r$ (e.g. \textcolor{blue}{\cite{olafsdottir2021, bella2025one})} or L\'evy flight metrics (e.g. \cite{edwards2008using}). We show here that by using predictions from the FoMo model, we can generate very good approximations to the true empirical values for essentially all of these metrics. We would therefore argue that FoMo can act as a unifying theory: the model is not explicitly designed to account for these metrics, and yet it is able to make good estimations in most cases, suggesting that it is capturing something fundamental about how behaviour unfolds in this task. 
+The foraging literature to date has used a wide range of different metrics for evaluating performance, from run-length statistics (e.g. \cite{kristjansson2014}) to scanpath metrics such as best-$r$ (e.g. \cite{olafsdottir2021, bella2025one}) or L\'evy flight metrics (e.g. \cite{edwards2008using}). We show here that by using predictions from the FoMo model, we can generate very good approximations to the true empirical values for essentially all of these metrics. We would therefore argue that FoMo can act as a unifying theory: the model is not explicitly designed to account for these metrics, and yet it is able to make good estimations in most cases, suggesting that it is capturing something fundamental about how behaviour unfolds in this task. 
 
 \subsection{Limitations and future directions}
 
@@ -569,15 +570,15 @@ Although our model is capable of making good predictions of human behavior in a 
 
 We used von Mises mixture models to implement absolute direction parameters into FoMo, which involves adding $\theta$ and $\kappa$ parameters into our model. However, it can be challenging to fit these parameters simultaneously: in particular, you can end up with one parameter compensating for the other, essentially leading to $\kappa$ being unconstrained (as if $\theta$ is small, $\kappa$ can be large, and vice versa). We circumvent this issue by using a hyperparameter for $\kappa$. Our testing suggests that the exact value of $\kappa$ has a relatively small effect and does not influence any of the conclusions we draw. However, it is possible that a more sophisticated modelling approach with more tailored priors could avoid the need to use hyperparameters in this way.
 
-FoMo is currently designed to predict target-by-target selection in exhaustive foraging paradigms. It does a reasonable job at predicting inexhaustive search in the Tagu et al dataset \cite{tagu2020}, but the accuracy is notably lower compared to the other datasets considered in this manuscript; though since we have only one inexhaustive dataset, it is unclear whether this lower accuracy is due to this, or other unique aspects of that dataset (such as its value vs. no value manipulation). However, broadening FoMo to be able to work better with inexhaustive foraging by including a parameter for when to `give up' on a given area of targets would also allow the model to make predictions for `patch leaving' paradigms, helping to bridge the gap between these two types of foraging experiment that have normally been studied separately. \textcolor{blue}{This would be particularly exciting given recent evidence that spatial factors may predict patch leaving behaviour better than classic intake rates used in MVT \cite{bella2025one}}.
+FoMo is currently designed to predict target-by-target selection in exhaustive foraging paradigms. It does a reasonable job at predicting inexhaustive search in the Tagu et al dataset \cite{tagu2020}, but the accuracy is notably lower compared to the other datasets considered in this manuscript; though since we have only one inexhaustive dataset, it is unclear whether this lower accuracy is due to this, or other unique aspects of that dataset (such as its value vs. no value manipulation). However, broadening FoMo to be able to work better with inexhaustive foraging by including a parameter for when to `give up' on a given area of targets would also allow the model to make predictions for `patch leaving' paradigms, helping to bridge the gap between these two types of foraging experiment that have normally been studied separately. This would be particularly exciting given recent evidence that spatial factors may predict patch leaving behaviour better than classic intake rates used in MVT \cite{bella2025one}.
 
-\textcolor{blue}{Finally, our work on FoMo to date largely considers two-dimensional, static target collection environments (although see \cite{bhat2026information} for an example of implementing FoMo in an experiment that used first-person avatars in a virtual environment). A future goal for FoMo is to understand how well it can predict behaviour in more realistic environments, including VR-based tasks \citep{kristjansson2022moving} and tasks where targets move dynamically \citep{grossle2023testing}. We believe that the basic principles underlying the model are likely to remain constant, although the importance of particular parameters may vary; for example, we might expect relative direction to be more important where participants have to physically walk through an environment, as momentum to keep going in the same direction is likely to be strong. Real-world environments may also require new parameters, such as heading direction, to help explain behaviour, but as demonstrated here, these are easy to implement and test in FoMo.}
+Finally, our work on FoMo to date largely considers two-dimensional, static target collection environments (although see \cite{bhat2026information} for an example of implementing FoMo in an experiment that used first-person avatars in a virtual environment). A future goal for FoMo is to understand how well it can predict behaviour in more realistic environments, including VR-based tasks \citep{kristjansson2022moving} and tasks where targets move dynamically \citep{grossle2023testing}. We believe that the basic principles underlying the model are likely to remain constant, although the importance of particular parameters may vary; for example, we might expect relative direction to be more important where participants have to physically walk through an environment, as momentum to keep going in the same direction is likely to be strong. Real-world environments may also require new parameters, such as heading direction, to help explain behaviour, but as demonstrated here, these are easy to implement and test in FoMo.
 
 \subsection{Conclusion}
 
 We have updated our model of foraging, FoMo, to incorporate absolute direction parameters and have shown that we can make good predictions of target-by-target over a range of datasets. Futhermore we have demonstrated that our model can account for human behaviour over a wide range of secondary metrics and summary statistics that have previously been used in the foraging literature. We would therefore argue that FoMo is the first visual foraging model that can be considered `unifying', in that it can bring together data and approaches from different research groups and explain them using a single framework. This approach is exciting both for studying foraging and for wider cognitive psychology research for several reasons. Firstly, we believe that emphasising prediction in psychological theories is important as it provides a good way of truly measuring how successfully we are answering the question we actually want to know about i.e. how well can we predict behaviour? Furthermore, we have designed the model to be modular in order to facilitate hypothesis testing i.e. does a given parameter affect behaviour in my paradigm? Finally, we have aimed to make the model as accessible and open source as possible to encourage other researchers to attempt to use it - and break it! - with their own data. By finding situations in which FoMo fails to make good predictions, we can learn more about which aspects of foraging behaviour are still poorly explained and gain insight about how to improve our modelling efforts. Overall, we aim to demonstrate how a formal model can be iteratively applied, evaluated, and improved, and we believe that our approach may have broader applicability for model development in other areas of psychology.
 
-\color{blue}
+
 
 \subsection{CRediT Author Contributions}
 % Please add the following required packages to your document preamble:
@@ -585,22 +586,22 @@ We have updated our model of foraging, FoMo, to incorporate absolute direction p
 % Beamer presentation requires \usepackage{colortbl} instead of \usepackage[table,xcdraw]{xcolor}
 \begin{table}[H]
 \begin{tabular}{r|c}
-\color{blue} Role                  &   \color{blue}    Contributor    \\
+Role                  &     Contributor    \\
 \hline
-\color{blue} Conceptualization                  & \color{blue}  AC \& AH \\
-\color{blue} Data Curation                    & \color{blue}  AC \& AH \\
-\color{blue} Formal Analysis                     & \color{blue}  AC \& AH \\
-\color{blue} Funding Acquisition                  &\color{blue}  \textit{NA}       \\
-\color{blue} Investigation                      & \color{blue}  AC \& AH \\
-\color{blue} Methodology                         & \color{blue}  AC \& AH \\
-\color{blue} Project Administration               & \color{blue}  AC \& AH \\
-\color{blue} Resources                           & \color{blue}  AC \& AH \\
-\color{blue} Software                             & \color{blue}  AC \& AH \\
-\color{blue} Supervision                          & \color{blue}  AC \& AH \\
-\color{blue} Validation                           & \color{blue}  AC \& AH \\
-\color{blue} Visualization                        & \color{blue}  AC \& AH \\
-\color{blue} Writing – Original Draft Preparation & \color{blue}  AC \& AH \\
-\color{blue} Writing – Review \& Editing          & \color{blue} AC \& AH
+Conceptualization                  &  AC \& AH \\
+Data Curation                    & AC \& AH \\
+Formal Analysis                     &  AC \& AH \\
+Funding Acquisition                  & \textit{NA}       \\
+Investigation                      &  AC \& AH \\
+Methodology                         &  AC \& AH \\
+Project Administration               &  AC \& AH \\
+Resources                           &  AC \& AH \\
+Software                             &  AC \& AH \\
+Supervision                          &  AC \& AH \\
+Validation                           &  AC \& AH \\
+Visualization                        &   AC \& AH \\
+Writing – Original Draft Preparation &   AC \& AH \\
+Writing – Review \& Editing          &  AC \& AH
 \end{tabular}
 \end{table}
 

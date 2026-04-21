@@ -24,6 +24,11 @@ v2 <- "1_3"
 
 plt1 <- plot_model_accuracy_comparison(c("clarke2022qjep", "hughes2024rsos"), v1, v2, scratch_folder = sf)
 
+plt1 <- plt1 + facet_grid(dataset ~ condition,
+                        labeller = labeller(
+                          dataset = c(`clarke2022qjep` = "Clarke et al (2022)", `hughes2024rsos` = "Hughes et al (2024)"))
+) 
+
 acc <- tibble()
 
 for (ds in datasets) {
@@ -68,7 +73,9 @@ acc %>% filter(found > 1) -> acc
 ggplot(acc, aes(found, accuracy)) +
   stat_lineribbon(aes(fill = model), alpha = 0.5, linewidth = 0.25) +
   geom_path(data = baseline, linetype = 2) +
-  ggh4x::facet_grid2(dataset~condition, independent = "x", scales = "free") -> plt2
+  ggh4x::facet_grid2(dataset~condition, independent = "x", scales = "free",
+                     labeller = labeller(
+                       dataset = c(`clarke2022qjep` = "Clarke et al (2022)", `hughes2024rsos` = "Hughes et al (2024)"))) -> plt2
 
 #bind_rows(
 #read_csv("../../FoMo2/analysis/clarke2022baseline.csv") %>% 
@@ -84,4 +91,4 @@ ggplot(acc, aes(found, accuracy)) +
 
 plt1 + plt2 #+ plot_layout(widths = c(2,1))
 
-ggsave("figs/fig6_acc.pdf", width = 10, height = 4)  
+ggsave("figs/fig6_acc.tif", width = 10, height = 4)  

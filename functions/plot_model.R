@@ -98,12 +98,17 @@ plot_model_accuracy_comparison <- function(dataset, v1, v2, scratch_folder = "sc
     geom_errorbarh(alpha = 0.25) + 
     geom_abline(linetype = 2) + 
     # coord_equal() +
-    scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."))) + 
-    scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."))) + 
+    scale_x_continuous(paste0("FoMo v", str_replace(v1, "_", "."), " accuracy")) + 
+    scale_y_continuous(paste0("FoMo v", str_replace(v2, "_", "."), " accuracy")) + 
     scale_color_paletteer_d("MoMAColors::Abbott", direction = -1) -> plt
   
+  # making the labelling of dataset more useful
+  
+
+  
   if (length(dataset) > 1) {
-    plt <- plt + facet_grid(dataset ~ condition) 
+    plt <- plt + facet_grid(dataset ~ condition)
+                            
   } else {
     plt <- plt + facet_grid(. ~ condition) 
   }
