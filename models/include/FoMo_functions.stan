@@ -282,7 +282,7 @@ vector compute_absdir_weights_fixed_kappa4(int n, int n_targets,
     vector[n_targets] w;
     vector[8] theta = exp(log_theta);
 
-    w = rep_vector(0, n_targets); 
+    w = rep_vector(1, n_targets); 
 
     if (n > 1) {
 
