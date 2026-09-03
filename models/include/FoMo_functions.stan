@@ -298,7 +298,7 @@ vector compute_absdir_weights_fixed_kappa4(int n, int n_targets,
        +  1);
     }
 
-    return(w);
+    return(log(w));
   }
 
   vector compute_prox_weights(int n, int n_targets, real rho_delta, vector delta) {
