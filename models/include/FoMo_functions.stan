@@ -248,7 +248,7 @@ return(S);
 
 real mod(real a, real b) {
 
-  return( a - floor(a/b));
+  return( a - b *floor(a/b));
 
 }
   
