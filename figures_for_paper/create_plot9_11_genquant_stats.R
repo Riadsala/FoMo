@@ -166,7 +166,7 @@ rl_z <- rl %>%
   summarise(abs_err = mean(abs_err)) 
 
 rl_z %>% 
-  filter(model_ver == "1" | model_ver == "1.3") %>%
+  filter(model_ver == "1" | model_ver == "1.3" | model_ver == "1.4") %>%
   filter(first_selection == "free") %>%
   # mutate(percent = 100*(fixed-free)/(free)) %>%
   ggplot(aes(dataset, abs_err, fill = as.factor(model_ver))) + 
@@ -230,6 +230,9 @@ rl_z2 %>%
   ylab("absolute error") +
   labs(fill="first selection")  -> rl_z_c
 
+rl_z_a
+
+ggsave("figs/fig1_correction.pdf", width = 5, height = 5)
 
 rl_z_a / rl_z_c
 
